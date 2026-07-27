@@ -42,6 +42,15 @@ const pixelModeView = document.getElementById("pixelModeView");
 const pixelModeFrame = document.getElementById("pixelModeFrame");
 const pixelAgentRosterCount = document.getElementById("pixelAgentRosterCount");
 const pixelAgentRosterList = document.getElementById("pixelAgentRosterList");
+const pixelFloorButtons = Array.from(document.querySelectorAll("[data-pixel-floor]"));
+const pixelRosterResizeHandle = document.getElementById("pixelRosterResizeHandle");
+const runPauseAllButton = document.getElementById("runPauseAllButton");
+const quickAddAgentButton = document.getElementById("quickAddAgentButton");
+const stopAllAgentsButton = document.getElementById("stopAllAgentsButton");
+const retryFailedAgentsButton = document.getElementById("retryFailedAgentsButton");
+const askStatusButton = document.getElementById("askStatusButton");
+const focusModeButton = document.getElementById("focusModeButton");
+const stageAgentCount = document.getElementById("stageAgentCount");
 const artifactList = document.getElementById("artifactList");
 const artifactPreview = document.getElementById("artifactPreview");
 const outputViewer = document.getElementById("outputViewer");
@@ -120,6 +129,12 @@ const spotifyPlayPauseButton = document.getElementById("spotifyPlayPauseButton")
 const spotifyNextButton = document.getElementById("spotifyNextButton");
 const spotifyTrackName = document.getElementById("spotifyTrackName");
 const spotifyTrackDetail = document.getElementById("spotifyTrackDetail");
+const gitStatusText = document.getElementById("gitStatusText");
+const testStatusText = document.getElementById("testStatusText");
+const queueStatusText = document.getElementById("queueStatusText");
+const apiStatusText = document.getElementById("apiStatusText");
+const tokenCostText = document.getElementById("tokenCostText");
+const selectedAgentStatusText = document.getElementById("selectedAgentStatusText");
 
 let workspaces = [];
 let activeWorkspaceId = null;
@@ -146,6 +161,10 @@ let etaTimer = null;
 let spotifyRefreshBusy = false;
 let pixelModeEnabled = false;
 let pixelFrameReady = false;
+let activePixelFloor = Number(localStorage.getItem("agentWorkbenchPixelFloor")) || 1;
+let pixelBaseLayout = null;
+let selectedAgentId = null;
+let agentsPaused = false;
 let unreadAgentNotifications = 0;
 const pixelKnownAgentIds = new Set();
 const pendingSshAuthExits = new Map();
@@ -467,6 +486,122 @@ function pixelRosterEtaText(session, now = Date.now()) {
   return Number.isFinite(seconds) ? formatEtaClock(seconds) : "—";
 }
 
+function updatePixelFloorButtons() {
+  pixelFloorButtons.forEach((button) => {
+    const active = Number(button.dataset.pixelFloor) === activePixelFloor;
+    button.classList.toggle("active", active);
+    if (active) button.setAttribute("aria-current", "true");
+    else button.removeAttribute("aria-current");
+  });
+}
+
+async function pixelLayoutForFloor(floor) {
+  const saved = localStorage.getItem(`agentWorkbenchPixelLayout:${floor}`);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (error) {
+    }
+  }
+  if (!pixelBaseLayout) {
+    const response = await fetch("pixel-agents-mode/assets/default-layout-1.json");
+    pixelBaseLayout = await response.json();
+  }
+  const layout = JSON.parse(JSON.stringify(pixelBaseLayout));
+  if (floor === 2) {
+    layout.tiles = Array(layout.cols * layout.rows).fill(255);
+    for (let row = 10; row <= 20; row += 1) {
+      for (let column = 0; column <= 19; column += 1) {
+        const edge = row === 10 || column === 0 || column === 19;
+        const studioWall = column === 8 && ![14, 15].includes(row);
+        const reviewWall = row === 16 && column > 8 && column < 19 && ![13, 14].includes(column);
+        const tile = edge || studioWall || reviewWall
+          ? 0
+          : column < 8
+            ? 4
+            : row < 16
+              ? 5
+              : 6;
+        layout.tiles[row * layout.cols + column] = tile;
+      }
+    }
+    layout.tileColors = Array(layout.tiles.length).fill(null);
+    layout.furniture = [
+      { uid: "f2-desk-1", type: "DESK_FRONT", col: 1, row: 12 },
+      { uid: "f2-pc-1", type: "PC_FRONT_OFF", col: 2, row: 12 },
+      { uid: "f2-chair-1", type: "CUSHIONED_BENCH", col: 2, row: 14 },
+      { uid: "f2-desk-2", type: "DESK_FRONT", col: 5, row: 12 },
+      { uid: "f2-pc-2", type: "PC_FRONT_OFF", col: 6, row: 12 },
+      { uid: "f2-chair-2", type: "CUSHIONED_BENCH", col: 6, row: 14 },
+      { uid: "f2-books-1", type: "DOUBLE_BOOKSHELF", col: 10, row: 10 },
+      { uid: "f2-books-2", type: "DOUBLE_BOOKSHELF", col: 15, row: 10 },
+      { uid: "f2-review-table", type: "TABLE_FRONT", col: 12, row: 13 },
+      { uid: "f2-review-chair-1", type: "WOODEN_CHAIR_SIDE", col: 11, row: 13 },
+      { uid: "f2-review-chair-2", type: "WOODEN_CHAIR_SIDE:left", col: 16, row: 13 },
+      { uid: "f2-test-desk", type: "DESK_FRONT", col: 10, row: 18 },
+      { uid: "f2-test-pc", type: "PC_FRONT_OFF", col: 11, row: 18 },
+      { uid: "f2-deploy-desk", type: "DESK_FRONT", col: 15, row: 18 },
+      { uid: "f2-deploy-pc", type: "PC_FRONT_OFF", col: 16, row: 18 },
+      { uid: "f2-plant-1", type: "PLANT_2", col: 7, row: 10 },
+      { uid: "f2-plant-2", type: "PLANT", col: 18, row: 17 },
+      { uid: "f2-bin", type: "BIN", col: 1, row: 20 }
+    ];
+  } else if (floor === 3) {
+    layout.tiles = Array(layout.cols * layout.rows).fill(255);
+    for (let row = 10; row <= 20; row += 1) {
+      for (let column = 0; column <= 19; column += 1) {
+        const edge = row === 10 || column === 0 || column === 19;
+        const designWall = column === 13 && ![14, 15].includes(row);
+        const loungeWall = row === 17 && column > 0 && column < 13 && ![6, 7].includes(column);
+        const tile = edge || designWall || loungeWall
+          ? 0
+          : column >= 13
+            ? 8
+            : row >= 17
+              ? 3
+              : 2;
+        layout.tiles[row * layout.cols + column] = tile;
+      }
+    }
+    layout.tileColors = Array(layout.tiles.length).fill(null);
+    layout.furniture = [
+      { uid: "f3-sofa-top", type: "SOFA_FRONT", col: 4, row: 12 },
+      { uid: "f3-sofa-left", type: "SOFA_SIDE", col: 3, row: 13 },
+      { uid: "f3-sofa-right", type: "SOFA_SIDE:left", col: 8, row: 13 },
+      { uid: "f3-coffee-table", type: "COFFEE_TABLE", col: 5, row: 14 },
+      { uid: "f3-coffee", type: "COFFEE", col: 6, row: 14 },
+      { uid: "f3-art", type: "LARGE_PAINTING", col: 15, row: 10 },
+      { uid: "f3-art-side", type: "SMALL_PAINTING_2", col: 18, row: 10 },
+      { uid: "f3-design-table", type: "TABLE_FRONT", col: 15, row: 14 },
+      { uid: "f3-design-chair-1", type: "WOODEN_CHAIR_SIDE", col: 14, row: 15 },
+      { uid: "f3-design-chair-2", type: "WOODEN_CHAIR_SIDE:left", col: 18, row: 15 },
+      { uid: "f3-doc-books", type: "DOUBLE_BOOKSHELF", col: 1, row: 17 },
+      { uid: "f3-doc-table", type: "SMALL_TABLE_FRONT", col: 8, row: 19 },
+      { uid: "f3-doc-chair", type: "CUSHIONED_BENCH", col: 9, row: 19 },
+      { uid: "f3-plant-1", type: "PLANT", col: 1, row: 11 },
+      { uid: "f3-plant-2", type: "PLANT_2", col: 12, row: 11 },
+      { uid: "f3-plant-3", type: "PLANT", col: 18, row: 18 }
+    ];
+  }
+  return layout;
+}
+
+async function applyPixelFloor(floor, { persist = true } = {}) {
+  activePixelFloor = Math.max(1, Math.min(3, Number(floor) || 1));
+  if (persist) localStorage.setItem("agentWorkbenchPixelFloor", String(activePixelFloor));
+  updatePixelFloorButtons();
+  if (!pixelFrameReady) return;
+  try {
+    const layout = await pixelLayoutForFloor(activePixelFloor);
+    postPixelMessage({ type: "layoutLoaded", layout });
+    setTimeout(() => {
+      for (const session of activePixelSessions()) syncPixelSession(session);
+    }, 60);
+  } catch (error) {
+    showToast("Could not open that floor.");
+  }
+}
+
 function syncPixelMode(reset = false) {
   if (!pixelFrameReady) return;
   const workspace = activeWorkspace();
@@ -489,6 +624,11 @@ function syncPixelMode(reset = false) {
     folders: workspace ? [{ name: workspace.name, path: workspace.root }] : []
   });
   postPixelMessage({
+    type: "houseConfig",
+    floors: 3,
+    slots: workspace ? workspaceLayoutFor(workspace.id) : 4
+  });
+  postPixelMessage({
     type: "existingAgents",
     agents,
     agentMeta: {},
@@ -501,6 +641,7 @@ function syncPixelMode(reset = false) {
   // office loads before our parent bridge replies, so flush against that
   // already-loaded layout without replacing the user's room.
   postPixelMessage({ type: "layoutLoaded", layout: null });
+  applyPixelFloor(activePixelFloor, { persist: false });
   for (const session of activeSessions) {
     syncPixelSession(session);
   }
@@ -511,7 +652,10 @@ function syncPixelSession(session) {
   if (!pixelFrameReady || session.workspaceId !== activeWorkspaceId) return;
   const id = session.slotIndex + 1;
   const status = session.metadata.status || "working";
-  const active = status === "working";
+  const communicating = /collaborat|meeting|code review|pairing|communicat/i.test(
+    `${session.metadata.currentTask || ""} ${session.metadata.tldr || ""}`
+  );
+  const active = status === "working" && !communicating;
   if (!pixelKnownAgentIds.has(id)) {
     pixelKnownAgentIds.add(id);
     postPixelMessage({
@@ -524,14 +668,16 @@ function syncPixelSession(session) {
     type: "agentTeamInfo",
     id,
     agentName: session.metadata.name || `Agent ${id}`,
-    teamName: session.kind === "codex" ? "Codex" : session.kind === "claude" ? "Claude" : "Shell",
+    teamName: `${
+      session.kind === "codex" ? "Codex" : session.kind === "claude" ? "Claude" : "Shell"
+    } · Eta ${pixelRosterEtaText(session)}`,
     isTeamLead: false
   });
   postPixelMessage({
     type: "agentStatus",
     id,
-    status: active ? "active" : "waiting",
-    awaitingInput: status === "waiting"
+    status: status === "error" ? "error" : active ? "active" : "waiting",
+    awaitingInput: status === "waiting" || communicating
   });
   postPixelMessage({ type: "agentToolsClear", id });
   if (active) {
@@ -543,6 +689,17 @@ function syncPixelSession(session) {
       status: session.metadata.tldr || session.metadata.name || "Working"
     });
   }
+  postPixelMessage({
+    type: "agentEta",
+    id,
+    eta: pixelRosterEtaText(session),
+    etaSeconds: remainingEtaSeconds(session),
+    name: session.metadata.name || `Agent ${id}`,
+    team: session.kind === "codex" ? "Codex" : session.kind === "claude" ? "Claude" : "Shell",
+    status: status === "done" ? "done" : active ? "active" : status,
+    tldr: session.metadata.tldr || (active ? "Working…" : "Waiting for work"),
+    present: true
+  });
 }
 
 function setPixelMode(enabled, { persist = true } = {}) {
@@ -566,6 +723,217 @@ function setPixelMode(enabled, { persist = true } = {}) {
   });
 }
 
+function normalizedAgentState(metadata = {}) {
+  const explicit = String(metadata.state || "").toLowerCase();
+  if (["planning", "coding", "waiting", "failed", "complete"].includes(explicit)) return explicit;
+  const status = String(metadata.status || "working").toLowerCase();
+  if (status === "done") return "complete";
+  if (status === "error") return "failed";
+  if (status === "waiting") return "waiting";
+  return Number(metadata.progressPercent) < 12 ? "planning" : "coding";
+}
+
+function formatElapsedClock(startedAt, now = Date.now()) {
+  const started = Date.parse(startedAt || "");
+  const seconds = Number.isFinite(started) ? Math.max(0, Math.floor((now - started) / 1000)) : 0;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
+  return hours
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`
+    : `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+}
+
+function formatCompactNumber(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  if (number >= 1000000) return `${(number / 1000000).toFixed(number >= 10000000 ? 0 : 1)}m`;
+  if (number >= 1000) return `${(number / 1000).toFixed(number >= 10000 ? 0 : 1)}k`;
+  return String(Math.round(number));
+}
+
+function updateAgentStatusCard(session, now = Date.now()) {
+  if (!session?.statusCard) return;
+  const metadata = session.metadata || {};
+  const state = normalizedAgentState(metadata);
+  const progress = Math.max(0, Math.min(100, Number(metadata.progressPercent) || (state === "complete" ? 100 : 0)));
+  session.statusCard.dataset.state = state;
+  session.statusCard.querySelector(".agent-state").textContent = state;
+  session.statusCard.querySelector(".agent-model").textContent = metadata.model || (
+    session.kind === "codex" ? "Codex" : session.kind === "claude" ? "Claude" : "Shell"
+  );
+  session.statusCard.querySelector(".agent-current-task").textContent =
+    metadata.currentTask || metadata.tldr || metadata.name || "Waiting for a task";
+  session.statusCard.querySelector(".agent-progress-label").textContent = `${Math.round(progress)}%`;
+  session.statusCard.querySelector(".agent-progress-track i").style.width = `${progress}%`;
+  session.statusCard.querySelector(".agent-elapsed").textContent = formatElapsedClock(metadata.createdAt, now);
+  const tokenValues = [metadata.inputTokens, metadata.outputTokens]
+    .filter((value) => value !== null && value !== undefined && value !== "")
+    .map(Number)
+    .filter(Number.isFinite);
+  const totalTokens = tokenValues
+    .reduce((total, value) => total + value, 0);
+  session.statusCard.querySelector(".agent-tokens").textContent =
+    tokenValues.length
+      ? formatCompactNumber(totalTokens)
+      : "—";
+  session.statusCard.querySelector(".agent-cost").textContent =
+    metadata.costUsd !== null && metadata.costUsd !== undefined && metadata.costUsd !== ""
+      && Number.isFinite(Number(metadata.costUsd))
+      ? Number(metadata.costUsd).toFixed(2)
+      : "—";
+}
+
+function activeWorkspaceSessions() {
+  return Array.from(sessions.values()).filter((session) => session.workspaceId === activeWorkspaceId);
+}
+
+function updateRuntimeStatus(now = Date.now()) {
+  const workspaceSessions = activeWorkspaceSessions();
+  const capacity = activeWorkspaceLayout();
+  stageAgentCount.textContent = `${workspaceSessions.length}/${capacity}`;
+  const running = workspaceSessions.filter((session) => ["planning", "coding"].includes(normalizedAgentState(session.metadata))).length;
+  const waiting = workspaceSessions.filter((session) => normalizedAgentState(session.metadata) === "waiting").length;
+  const blocked = workspaceSessions.filter((session) => (
+    /blocked|approval|permission/i.test(`${session.metadata.currentTask || ""} ${session.metadata.tldr || ""}`)
+  )).length;
+  queueStatusText.textContent = `Queue ${waiting} waiting · ${running} running · ${blocked} blocked`;
+
+  const totalTokens = workspaceSessions.reduce((total, session) => {
+    const input = Number(session.metadata.inputTokens);
+    const output = Number(session.metadata.outputTokens);
+    return total + (Number.isFinite(input) ? input : 0) + (Number.isFinite(output) ? output : 0);
+  }, 0);
+  const knownCost = workspaceSessions
+    .map((session) => session.metadata.costUsd)
+    .filter((value) => value !== null && value !== undefined && value !== "")
+    .map(Number)
+    .filter(Number.isFinite);
+  tokenCostText.textContent = `${formatCompactNumber(totalTokens)} tokens · ${
+    knownCost.length ? `$${knownCost.reduce((total, value) => total + value, 0).toFixed(2)}` : "$—"
+  }`;
+
+  const passed = workspaceSessions.reduce((total, session) => total + (Number(session.metadata.testsPassed) || 0), 0);
+  const failed = workspaceSessions.reduce((total, session) => total + (Number(session.metadata.testsFailed) || 0), 0);
+  testStatusText.textContent = failed ? `✕ ${failed}` : `✓ ${passed || "—"}`;
+  testStatusText.classList.toggle("failed", failed > 0);
+
+  const selected = selectedAgentId ? sessions.get(selectedAgentId) : null;
+  selectedAgentStatusText.textContent = selected && selected.workspaceId === activeWorkspaceId
+    ? `Agent ${selected.slotIndex + 1} · ${normalizedAgentState(selected.metadata)} · ${formatElapsedClock(selected.metadata.createdAt, now)}`
+    : "No agent selected";
+  const allPaused = workspaceSessions.length > 0 && workspaceSessions.every((session) => session.pausedByUser);
+  agentsPaused = allPaused;
+  runPauseAllButton.textContent = allPaused ? "▶" : "Ⅱ";
+  runPauseAllButton.title = allPaused ? "Run all agents" : "Pause all agents";
+  runPauseAllButton.setAttribute("aria-label", runPauseAllButton.title);
+  runPauseAllButton.disabled = workspaceSessions.length === 0;
+}
+
+function selectAgentSession(session) {
+  selectedAgentId = session?.id || null;
+  document.querySelectorAll(".agent-slot.selected").forEach((slot) => slot.classList.remove("selected"));
+  if (session?.slot) session.slot.classList.add("selected");
+  updateRuntimeStatus();
+}
+
+function toggleRunPauseAll() {
+  const workspaceSessions = activeWorkspaceSessions();
+  if (!workspaceSessions.length) return;
+  const shouldResume = workspaceSessions.every((session) => session.pausedByUser);
+  for (const session of workspaceSessions) {
+    if (shouldResume) {
+      session.pausedByUser = false;
+      api.writeAgent(session.id, "Continue from where you paused.\\r");
+      session.metadata = { ...session.metadata, status: "working", state: "coding", currentTask: "Resuming task" };
+    } else {
+      session.pausedByUser = true;
+      api.writeAgent(session.id, "\u001b");
+      session.metadata = { ...session.metadata, status: "waiting", state: "waiting", currentTask: "Paused" };
+    }
+    updateAgentStatusCard(session);
+  }
+  updateRuntimeStatus();
+  renderAgentSidebar();
+  syncPixelMode(true);
+}
+
+async function stopAllAgents() {
+  const workspaceSessions = activeWorkspaceSessions();
+  if (!workspaceSessions.length || !window.confirm("Stop all agents in this workspace?")) return;
+  for (const session of [...workspaceSessions]) await stopAgent(session.id);
+}
+
+async function retryFailedAgents() {
+  const failed = activeWorkspaceSessions().filter((session) => normalizedAgentState(session.metadata) === "failed");
+  if (!failed.length) {
+    showToast("No failed agents to retry.");
+    return;
+  }
+  for (const session of failed) {
+    const retry = {
+      slotIndex: session.slotIndex,
+      kind: session.kind,
+      task: session.metadata.currentTask || session.metadata.tldr || session.metadata.name || ""
+    };
+    await stopAgent(session.id);
+    await startAgent(retry.slotIndex, retry.kind, retry.task);
+  }
+}
+
+function askAgentsForStatus(targetSession = null) {
+  const targets = targetSession ? [targetSession] : activeWorkspaceSessions();
+  for (const session of targets) {
+    api.writeAgent(
+      session.id,
+      "Please report a concise status update and refresh all Agent Workbench metadata fields now.\\r"
+    );
+  }
+  if (targets.length) showToast(`Asked ${targets.length} ${targets.length === 1 ? "agent" : "agents"} for status.`);
+}
+
+function reassignAgentTask(session) {
+  const task = window.prompt("Reassign task", session.metadata.currentTask || session.metadata.tldr || "");
+  if (!task?.trim()) return;
+  api.writeAgent(session.id, `${task.trim()}\\r`);
+  updateAgentMetadata(session, {
+    currentTask: task.trim(),
+    tldr: task.trim(),
+    status: "working",
+    state: "planning",
+    progressPercent: 0
+  });
+}
+
+async function duplicateAgent(session) {
+  const slotIndex = firstEmptySlot();
+  if (slotIndex === -1) {
+    showToast("No empty agent slot.");
+    return;
+  }
+  await startAgent(
+    slotIndex,
+    session.kind,
+    session.metadata.currentTask || session.metadata.tldr || session.metadata.name || ""
+  );
+}
+
+function toggleFocusMode() {
+  const active = !document.body.classList.contains("focus-mode");
+  document.body.classList.toggle("focus-mode", active);
+  focusModeButton.classList.toggle("active", active);
+  focusModeButton.title = active ? "Exit focus mode" : "Focus mode";
+  focusModeButton.setAttribute("aria-label", focusModeButton.title);
+  requestAnimationFrame(() => {
+    for (const session of activeWorkspaceSessions()) {
+      try {
+        session.fitAddon.fit();
+      } catch (error) {
+      }
+    }
+  });
+}
+
 function paletteCommands() {
   const commands = [
     { id: "agent-codex", icon: "◉", label: "New Codex agent", detail: "Start in the first empty slot", run: () => startFromToolbar("codex") },
@@ -579,8 +947,39 @@ function paletteCommands() {
     { id: "files-toggle", icon: "↙", label: document.body.classList.contains("files-collapsed") ? "Open files pane" : "Close files pane", detail: "Toggle workspace files", run: () => setFilesCollapsed(!document.body.classList.contains("files-collapsed")) },
     { id: "outputs-toggle", icon: "↗", label: document.body.classList.contains("output-collapsed") ? "Open output pane" : "Close output pane", detail: "Toggle generated output files", run: () => setOutputCollapsed(!document.body.classList.contains("output-collapsed")) },
     { id: "refresh", icon: "↻", label: "Refresh workspace", detail: "Reload files and generated outputs", run: () => refreshWorkspacePanels({ syncRemote: true }) },
+    { id: "agents-run-pause", icon: agentsPaused ? "▶" : "Ⅱ", label: agentsPaused ? "Run all agents" : "Pause all agents", detail: "Toggle every agent in the active workspace", run: toggleRunPauseAll },
+    { id: "agents-stop", icon: "■", label: "Stop all agents", detail: "Stop every agent in the active workspace", run: stopAllAgents },
+    { id: "agents-retry", icon: "↻", label: "Retry failed agents", detail: "Restart failed tasks in their current slots", run: retryFailedAgents },
+    { id: "agents-status", icon: "?", label: "Ask for status", detail: "Request fresh progress, usage, and ETA metadata", run: () => askAgentsForStatus() },
+    { id: "focus-mode", icon: "⌗", label: document.body.classList.contains("focus-mode") ? "Exit focus mode" : "Enter focus mode", detail: "Hide side panels and maximize the workspace", run: toggleFocusMode },
     { id: "settings", icon: "⚙", label: "Open settings", detail: "Appearance, workspace, and profile", run: openSettings }
   ];
+  for (const session of activeWorkspaceSessions()) {
+    commands.push({
+      id: `agent-focus-${session.id}`,
+      icon: String(session.slotIndex + 1),
+      label: `Open Agent ${session.slotIndex + 1}: ${session.metadata.name || session.kind}`,
+      detail: session.metadata.currentTask || session.metadata.tldr || normalizedAgentState(session.metadata),
+      run: () => focusAgentWindow(session.slotIndex)
+    });
+  }
+  const addFileCommands = (nodes) => {
+    for (const node of nodes || []) {
+      if (node.type === "directory") {
+        addFileCommands(node.children);
+        continue;
+      }
+      if (commands.length > 180) return;
+      commands.push({
+        id: `file-${node.relativePath}`,
+        icon: "▱",
+        label: `Open ${node.name}`,
+        detail: node.relativePath,
+        run: () => previewWorkspaceFile(activeWorkspaceId, node.relativePath)
+      });
+    }
+  };
+  addFileCommands(fileNodes);
   for (const workspace of workspaces) {
     commands.push({
       id: `workspace-${workspace.id}`,
@@ -1835,6 +2234,7 @@ function renderArtifactSidebar() {
 }
 
 function resetArtifactPreview() {
+  activeArtifactPath = "";
   artifactPreview.innerHTML = `
     <div class="preview-empty">
       <strong>Outputs</strong>
@@ -1976,7 +2376,17 @@ async function previewWorkspaceFile(workspaceId, relativePath) {
     openButton.title = "Expand output";
     openButton.setAttribute("aria-label", "Expand output");
     openButton.addEventListener("click", () => openOutputViewer(artifact, workspaceId));
-    toolbar.append(title, openButton);
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "output-preview-close";
+    closeButton.textContent = "×";
+    closeButton.title = "Close output";
+    closeButton.setAttribute("aria-label", "Close output");
+    closeButton.addEventListener("click", resetArtifactPreview);
+    const actions = document.createElement("div");
+    actions.className = "preview-toolbar-actions";
+    actions.append(openButton, closeButton);
+    toolbar.append(title, actions);
     shellNode.appendChild(toolbar);
 
     const previewContent = document.createElement("div");
@@ -2110,6 +2520,7 @@ async function startAgent(slotIndex, kind, task = "") {
     const descriptor = await api.createAgent(workspace.id, kind, task, slotIndex, { cols: 90, rows: 20 });
     slots[slotIndex] = descriptor.id;
     renderAgentCard(slot, slotIndex, descriptor);
+    selectAgentSession(sessions.get(descriptor.id));
     renderAgentSidebar();
     setFooter(`${descriptor.metadata.name} started in ${workspace.name}`);
   } catch (error) {
@@ -2144,12 +2555,29 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         </div>
       </header>
       <div class="agent-action-menu" role="menu" hidden>
+        <div class="agent-menu-item ask-agent-status" role="menuitem" tabindex="0"><span>?</span><span>Ask for status</span></div>
+        <div class="agent-menu-item reassign-agent" role="menuitem" tabindex="0"><span>↪</span><span>Reassign task</span></div>
+        <div class="agent-menu-item duplicate-agent" role="menuitem" tabindex="0"><span>⧉</span><span>Duplicate agent</span></div>
         <div class="agent-menu-item clear-terminal" role="menuitem" tabindex="0"><span>⌫</span><span>Clear terminal</span></div>
         <div class="agent-menu-item stop-terminal" role="menuitem" tabindex="0"><span>×</span><span>Stop agent</span></div>
       </div>
       <div class="agent-summary">
         <span class="agent-tldr"></span>
       </div>
+      <section class="agent-status-card" aria-label="Agent status">
+        <div class="agent-status-primary">
+          <span class="agent-state"></span>
+          <strong class="agent-model"></strong>
+          <span class="agent-current-task"></span>
+          <b class="agent-progress-label"></b>
+        </div>
+        <div class="agent-status-metrics">
+          <span title="Elapsed time">◷ <b class="agent-elapsed"></b></span>
+          <span title="Token usage">◇ <b class="agent-tokens"></b></span>
+          <span title="Estimated cost">$ <b class="agent-cost"></b></span>
+        </div>
+        <div class="agent-progress-track"><i></i></div>
+      </section>
       <div class="terminal-host"></div>
       <footer class="agent-recent-footer" hidden>
         <div class="recent-files" aria-label="Relevant files reported by this agent"></div>
@@ -2171,6 +2599,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   kindBadge.title = descriptor.kind;
   const nameInput = slot.querySelector(".agent-name-input");
   const tldrNode = slot.querySelector(".agent-tldr");
+  const statusCard = slot.querySelector(".agent-status-card");
   const recentFooter = slot.querySelector(".agent-recent-footer");
   const recentFilesNode = slot.querySelector(".recent-files");
   const terminalHost = slot.querySelector(".terminal-host");
@@ -2213,11 +2642,14 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     observer,
     nameInput,
     tldrNode,
+    statusCard,
     recentFooter,
     recentFilesNode,
     actionMenu: slot.querySelector(".agent-action-menu"),
     lastPreviewFile: "",
     exited: false,
+    notifiedFailure: false,
+    notifiedApproval: false,
     finishNotified: descriptor.metadata.status === "done"
   };
   sessions.set(descriptor.id, session);
@@ -2236,6 +2668,10 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     }
   });
   slot.querySelector(".agent-close").addEventListener("click", () => stopAgent(descriptor.id));
+  slot.addEventListener("pointerdown", (event) => {
+    if (event.target.closest("button, input, [role='menuitem']")) return;
+    selectAgentSession(session);
+  });
   slot.querySelector(".agent-more").addEventListener("click", (event) => {
     event.stopPropagation();
     session.actionMenu.hidden = !session.actionMenu.hidden;
@@ -2245,6 +2681,18 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   slot.querySelector(".agent-tall").addEventListener("click", () => swapAgentSlot(session, "vertical"));
   makeInteractive(slot.querySelector(".clear-terminal"), () => {
     term.clear();
+    session.actionMenu.hidden = true;
+  });
+  makeInteractive(slot.querySelector(".ask-agent-status"), () => {
+    askAgentsForStatus(session);
+    session.actionMenu.hidden = true;
+  });
+  makeInteractive(slot.querySelector(".reassign-agent"), () => {
+    reassignAgentTask(session);
+    session.actionMenu.hidden = true;
+  });
+  makeInteractive(slot.querySelector(".duplicate-agent"), () => {
+    duplicateAgent(session);
     session.actionMenu.hidden = true;
   });
   makeInteractive(slot.querySelector(".stop-terminal"), () => stopAgent(descriptor.id));
@@ -2284,6 +2732,7 @@ function focusAgentWindow(slotIndex) {
   const sessionId = slots[slotIndex];
   const session = sessionId ? sessions.get(sessionId) : null;
   if (session) {
+    selectAgentSession(session);
     session.slot.classList.add("maximized");
     agentGrid.classList.add("has-maximized");
     updateAgentMaximizeControls();
@@ -2362,7 +2811,10 @@ function renderAgentSidebar() {
     makeInteractive(item, () => {
       const slot = agentGrid.querySelector(`[data-slot="${index}"]`);
       if (!slot) return;
-      if (session) session.term.focus();
+      if (session) {
+        selectAgentSession(session);
+        session.term.focus();
+      }
       else slot.querySelector(".agent-task-input")?.focus();
     });
     agentSidebarList.appendChild(item);
@@ -2409,8 +2861,21 @@ function updateAgentEta() {
       `[data-agent-slot="${session.slotIndex}"] .pixel-roster-eta`
     );
     if (eta) eta.textContent = pixelRosterEtaText(session, now);
+    postPixelMessage({
+      type: "agentEta",
+      id: session.slotIndex + 1,
+      eta: pixelRosterEtaText(session, now),
+      etaSeconds: remainingEtaSeconds(session, now),
+      name: session.metadata.name || `Agent ${session.slotIndex + 1}`,
+      team: session.kind === "codex" ? "Codex" : session.kind === "claude" ? "Claude" : "Shell",
+      status: session.metadata.status === "working" ? "active" : session.metadata.status || "waiting",
+      tldr: session.metadata.tldr || "Waiting for work",
+      present: true
+    });
   }
+  for (const session of sessions.values()) updateAgentStatusCard(session, now);
   updateCommandCenterStatus();
+  updateRuntimeStatus(now);
 }
 
 async function openReportedAgentPreview(session, relativePath) {
@@ -2438,6 +2903,27 @@ function updateAgentMetadata(session, metadata) {
     session.etaDeadline = null;
   }
   session.metadata = nextMetadata;
+  updateAgentStatusCard(session);
+  const agentState = normalizedAgentState(session.metadata);
+  if (agentState === "failed" && !session.notifiedFailure) {
+    session.notifiedFailure = true;
+    unreadAgentNotifications += 1;
+    renderNotificationBell();
+    showToast(`Agent ${session.slotIndex + 1} failed`);
+  } else if (agentState !== "failed") {
+    session.notifiedFailure = false;
+  }
+  const needsApproval = /approval|permission/i.test(
+    `${session.metadata.currentTask || ""} ${session.metadata.tldr || ""}`
+  );
+  if (needsApproval && !session.notifiedApproval) {
+    session.notifiedApproval = true;
+    unreadAgentNotifications += 1;
+    renderNotificationBell();
+    showToast(`Agent ${session.slotIndex + 1} needs approval`);
+  } else if (!needsApproval) {
+    session.notifiedApproval = false;
+  }
   if (nextStatus !== "done") session.finishNotified = false;
   if (nextStatus === "done" && previousStatus !== "done" && !session.finishNotified) {
     session.finishNotified = true;
@@ -2499,6 +2985,7 @@ async function stopAgent(id) {
   session.observer.disconnect();
   session.term.dispose();
   sessions.delete(id);
+  if (selectedAgentId === id) selectedAgentId = null;
   slots[session.slotIndex] = null;
   agentGrid.classList.remove("has-maximized");
   renderEmptySlot(session.slot, session.slotIndex);
@@ -2543,7 +3030,10 @@ async function refreshUsage() {
 
 async function refreshSystemMetrics() {
   try {
-    const metrics = await api.getSystemMetrics(activeWorkspaceId);
+    const [metrics, diagnostics] = await Promise.all([
+      api.getSystemMetrics(activeWorkspaceId),
+      api.getWorkspaceDiagnostics(activeWorkspaceId)
+    ]);
     const sourceLabel = metrics.source === "ssh"
       ? `Remote ${metrics.label}`
       : metrics.source === "ssh-error"
@@ -2555,6 +3045,12 @@ async function refreshSystemMetrics() {
     memoryUsageText.textContent = metrics.memoryTotalBytes
       ? `${formatCompactBytes(metrics.memoryUsedBytes)} / ${formatCompactBytes(metrics.memoryTotalBytes)}`
       : "—";
+    gitStatusText.textContent = diagnostics.gitAvailable
+      ? `${diagnostics.branch} · ${diagnostics.changes} ${diagnostics.changes === 1 ? "change" : "changes"}`
+      : "—";
+    const connected = metrics.source !== "ssh-error" && diagnostics.connected !== false;
+    apiStatusText.classList.toggle("unavailable", !connected);
+    apiStatusText.lastChild.textContent = connected ? " Connected" : " Unavailable";
     gpuMetrics.innerHTML = "";
     gpuMetrics.title = metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : "";
     for (const gpu of metrics.gpus || []) {
@@ -2585,6 +3081,9 @@ async function refreshSystemMetrics() {
   } catch (error) {
     cpuUsageText.textContent = "—";
     memoryUsageText.textContent = "—";
+    gitStatusText.textContent = "—";
+    apiStatusText.classList.add("unavailable");
+    apiStatusText.lastChild.textContent = " Unavailable";
   }
 }
 
@@ -2598,7 +3097,16 @@ async function refreshSpotifyStatus() {
     if (!hasTrack) return;
     spotifyTrackName.textContent = status.name;
     spotifyTrackName.title = status.name;
-    spotifyTrackDetail.textContent = [status.artist, status.album].filter(Boolean).join(" · ");
+    const rawDuration = Number(status.duration);
+    const durationSeconds = rawDuration > 10000 ? rawDuration / 1000 : rawDuration;
+    const positionSeconds = Number(status.position);
+    const remainingSeconds = Number.isFinite(durationSeconds) && Number.isFinite(positionSeconds)
+      ? Math.max(0, durationSeconds - positionSeconds)
+      : null;
+    const remainingLabel = Number.isFinite(remainingSeconds)
+      ? `−${formatEtaClock(remainingSeconds)}`
+      : "";
+    spotifyTrackDetail.textContent = [status.artist, status.album, remainingLabel].filter(Boolean).join(" · ");
     spotifyTrackDetail.title = spotifyTrackDetail.textContent;
     const artworkUrl = String(status.artworkUrl || "").trim();
     spotifyArtwork.hidden = !artworkUrl;
@@ -2680,9 +3188,13 @@ function setupPanelResizing() {
   const root = document.documentElement;
   const savedFiles = Number(localStorage.getItem("agentWorkbenchFilesWidth"));
   const savedArtifacts = Number(localStorage.getItem("agentWorkbenchArtifactsWidth"));
+  const savedPixelRoster = Number(localStorage.getItem("agentWorkbenchPixelRosterWidth"));
   const rememberWidths = booleanPreference("agentWorkbenchRememberWidths", true);
   if (rememberWidths && savedFiles) root.style.setProperty("--files-width", `${Math.max(170, Math.min(380, savedFiles))}px`);
   if (rememberWidths && savedArtifacts) root.style.setProperty("--artifacts-width", `${Math.max(200, Math.min(500, savedArtifacts))}px`);
+  if (rememberWidths && savedPixelRoster) {
+    root.style.setProperty("--pixel-roster-width", `${Math.max(150, Math.min(420, savedPixelRoster))}px`);
+  }
 
   const attach = (handle, collapsedTab, property, storageKey, direction, min, max, collapsedClass, setCollapsed) => {
     handle.addEventListener("pointerdown", (event) => {
@@ -2766,6 +3278,27 @@ function setupPanelResizing() {
 
   attach(fileResizeHandle, toggleFilesButton, "--files-width", "agentWorkbenchFilesWidth", 1, 170, 380, "files-collapsed", setFilesCollapsed);
   attach(artifactResizeHandle, toggleOutputButton, "--artifacts-width", "agentWorkbenchArtifactsWidth", -1, 200, 500, "output-collapsed", setOutputCollapsed);
+  pixelRosterResizeHandle.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const current = Number.parseFloat(getComputedStyle(root).getPropertyValue("--pixel-roster-width")) || 218;
+    document.body.classList.add("is-resizing");
+    const move = (moveEvent) => {
+      const next = Math.max(150, Math.min(420, current - (moveEvent.clientX - startX)));
+      root.style.setProperty("--pixel-roster-width", `${next}px`);
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.classList.remove("is-resizing");
+      const value = Number.parseFloat(getComputedStyle(root).getPropertyValue("--pixel-roster-width"));
+      if (booleanPreference("agentWorkbenchRememberWidths", true)) {
+        localStorage.setItem("agentWorkbenchPixelRosterWidth", String(Math.round(value)));
+      }
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  });
 }
 
 function scheduleWorkspaceRefresh(payload) {
@@ -2852,6 +3385,18 @@ openCodeButton.addEventListener("click", async () => {
   if (activeWorkspaceId) await api.openInCode(activeWorkspaceId);
 });
 pixelModeButton.addEventListener("click", () => setPixelMode(!pixelModeEnabled));
+runPauseAllButton.addEventListener("click", toggleRunPauseAll);
+quickAddAgentButton.addEventListener("click", () => {
+  const kind = localStorage.getItem("agentWorkbenchDefaultAgent") || "codex";
+  startFromToolbar(["codex", "claude", "shell"].includes(kind) ? kind : "codex");
+});
+stopAllAgentsButton.addEventListener("click", stopAllAgents);
+retryFailedAgentsButton.addEventListener("click", retryFailedAgents);
+askStatusButton.addEventListener("click", () => askAgentsForStatus());
+focusModeButton.addEventListener("click", toggleFocusMode);
+pixelFloorButtons.forEach((button) => {
+  button.addEventListener("click", () => applyPixelFloor(button.dataset.pixelFloor));
+});
 spotifyPreviousButton.addEventListener("click", () => controlSpotify("previous"));
 spotifyPlayPauseButton.addEventListener("click", () => controlSpotify("playpause"));
 spotifyNextButton.addEventListener("click", () => controlSpotify("next"));
@@ -2980,7 +3525,7 @@ window.addEventListener("message", (event) => {
     return;
   }
   if (message.type === "saveLayout" && message.layout) {
-    localStorage.setItem("agentWorkbenchPixelLayout", JSON.stringify(message.layout));
+    localStorage.setItem(`agentWorkbenchPixelLayout:${activePixelFloor}`, JSON.stringify(message.layout));
     return;
   }
   if (message.type === "saveAgentSeats" && message.seats) {
@@ -3009,10 +3554,19 @@ api.onAgentExit(({ id, code, signal }) => {
   const previousStatus = session.metadata.status || "";
   const finalStatus = code === 0 && !signal ? "done" : "error";
   session.metadata.status = finalStatus;
+  session.metadata.state = finalStatus === "done" ? "complete" : "failed";
+  session.metadata.progressPercent = finalStatus === "done" ? 100 : Number(session.metadata.progressPercent) || 0;
   session.metadata.etaMinutes = 0;
   session.etaDeadline = null;
   session.term.writeln("");
   session.term.writeln(`\x1b[38;5;244m[process exited: ${signal || code || 0}]\x1b[0m`);
+  updateAgentStatusCard(session);
+  if (finalStatus === "error" && !session.notifiedFailure) {
+    session.notifiedFailure = true;
+    unreadAgentNotifications += 1;
+    renderNotificationBell();
+    showToast(`Agent ${session.slotIndex + 1} failed`);
+  }
   updateAgentEta();
   renderAgentSidebar();
   syncPixelSession(session);
@@ -3051,6 +3605,26 @@ api.onWindowFullScreen((active) => {
 api.onWorkspaceChanged(scheduleWorkspaceRefresh);
 
 window.addEventListener("keydown", (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.code === "Space") {
+    event.preventDefault();
+    toggleRunPauseAll();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "r") {
+    event.preventDefault();
+    retryFailedAgents();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "a") {
+    event.preventDefault();
+    askAgentsForStatus();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "f") {
+    event.preventDefault();
+    toggleFocusMode();
+    return;
+  }
   if ((event.metaKey || event.ctrlKey) && /^[1-4]$/.test(event.key)) {
     event.preventDefault();
     focusAgentWindow(Number(event.key) - 1);

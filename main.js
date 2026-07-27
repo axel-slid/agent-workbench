@@ -779,8 +779,9 @@ function agentProtocol(metadataPath, workspaceRoot) {
     `Your workspace is ${workspaceRoot}.`,
     `Maintain your session metadata at ${metadataPath}.`,
     "Immediately, and whenever your task or progress changes, write valid JSON to that file.",
-    'Use exactly these fields: {"name":"short task-specific name","tldr":"one sentence under 140 characters","status":"working|waiting|done|error","etaMinutes":number|null,"relevantFiles":["workspace-relative/path"],"previewFile":"workspace-relative/path"|null}.',
+    'Use exactly these fields: {"name":"short task-specific name","tldr":"one sentence under 140 characters","status":"working|waiting|done|error","state":"planning|coding|waiting|failed|complete","model":"model name","currentTask":"short current step","etaMinutes":number|null,"progressPercent":number,"inputTokens":number|null,"outputTokens":number|null,"costUsd":number|null,"testsPassed":number|null,"testsFailed":number|null,"relevantFiles":["workspace-relative/path"],"previewFile":"workspace-relative/path"|null}.',
     "Choose your own short name based on what you are doing. Keep relevantFiles current, ordered most useful first, with only files the user is likely to want to open. Use workspace-relative paths and omit incidental implementation files.",
+    "Keep model, currentTask, progressPercent, token counts, costUsd, test results, and state current. Use null when your runtime does not expose a metric; never invent usage, cost, or test results.",
     "Set etaMinutes to your honest whole-number estimate of minutes remaining. Re-estimate and rewrite the metadata at least once per minute while working and after every major step. Use null while waiting for a task and 0 when done.",
     "Set status to done immediately when the task is complete so Agent Workbench can notify the user.",
     "Whenever you create or materially update a viewable output such as an image, PDF, HTML, SVG, Markdown, text report, chart, or data file, set previewFile to its workspace-relative path so Agent Workbench opens it in the Agent Output pane.",
@@ -797,7 +798,16 @@ function initialAgentMetadata(id, kind, task, workspaceId, agentNumber) {
     name: task ? task.slice(0, 34) : `${kind === "claude" ? "Claude" : kind === "codex" ? "Codex" : "Shell"} agent`,
     tldr: task || "Waiting for a task.",
     status: task ? "working" : "waiting",
+    state: task ? "planning" : "waiting",
+    model: kind === "codex" ? "Codex" : kind === "claude" ? "Claude" : "Shell",
+    currentTask: task || "Waiting for a task",
     etaMinutes: task ? 5 : null,
+    progressPercent: task ? 5 : 0,
+    inputTokens: null,
+    outputTokens: null,
+    costUsd: null,
+    testsPassed: null,
+    testsFailed: null,
     relevantFiles: [],
     recentFiles: [],
     previewFile: null,
@@ -1209,6 +1219,56 @@ async function getSystemMetrics(_event, workspaceId) {
   return await localSystemMetrics();
 }
 
+async function getWorkspaceDiagnostics(_event, workspaceId) {
+  const workspace = workspaceId
+    ? (await readWorkspaces()).find((item) => item.id === workspaceId)
+    : null;
+  if (!workspace) return { connected: true, branch: "—", changes: 0, gitAvailable: false };
+  try {
+    let branchOutput = "";
+    let statusOutput = "";
+    if (workspace.type === "ssh" && workspace.remote) {
+      const remote = validateRemote(workspace.remote);
+      const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+      const command = [
+        `git -C ${shellQuoteRemotePath(remoteRoot)} branch --show-current 2>/dev/null || true`,
+        "printf '\\036'",
+        `git -C ${shellQuoteRemotePath(remoteRoot)} status --porcelain 2>/dev/null || true`
+      ].join("; ");
+      const { stdout } = await execFileAsync(
+        resolveExecutable("ssh"),
+        [...sshConnectionArgs(remote), remoteTarget(remote), command],
+        { timeout: 8000, maxBuffer: 512 * 1024 }
+      );
+      [branchOutput, statusOutput] = String(stdout || "").split("\u001e");
+    } else {
+      const branch = await execFileAsync(
+        resolveExecutable("git"),
+        ["-C", workspace.root, "branch", "--show-current"],
+        { timeout: 4000, maxBuffer: 64 * 1024 }
+      );
+      const status = await execFileAsync(
+        resolveExecutable("git"),
+        ["-C", workspace.root, "status", "--porcelain"],
+        { timeout: 4000, maxBuffer: 512 * 1024 }
+      );
+      branchOutput = branch.stdout;
+      statusOutput = status.stdout;
+    }
+    const branch = String(branchOutput || "").trim() || "detached";
+    const changes = String(statusOutput || "").split(/\r?\n/).filter(Boolean).length;
+    return { connected: true, branch, changes, gitAvailable: true };
+  } catch (error) {
+    return {
+      connected: workspace.type !== "ssh",
+      branch: "—",
+      changes: 0,
+      gitAvailable: false,
+      error: error.message
+    };
+  }
+}
+
 const SPOTIFY_STATUS_SCRIPT = `
 const spotify = Application("Spotify");
 if (!spotify.running()) {
@@ -1433,6 +1493,7 @@ app.whenReady().then(() => {
   ipcMain.on("agent:resize", resizeAgent);
   ipcMain.handle("usage:get", getUsage);
   ipcMain.handle("system:metrics", getSystemMetrics);
+  ipcMain.handle("workspace:diagnostics", getWorkspaceDiagnostics);
   ipcMain.handle("power:status", getPowerStatus);
   ipcMain.handle("spotify:status", getSpotifyStatus);
   ipcMain.handle("spotify:control", controlSpotify);

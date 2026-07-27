@@ -18,6 +18,7 @@
   --workspace-width: 156px;
   --files-width: 238px;
   --artifacts-width: 310px;
+  --pixel-roster-width: 218px;
   --font: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
   --mono: "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
 }
@@ -3394,6 +3395,14 @@ body.output-collapsed #artifactResizeHandle:hover {
 /* Agent identity */
 .agent-card-header {
   grid-template-columns: auto auto minmax(0, 1fr) auto;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--theme-accent) 20%, var(--theme-panel)),
+      color-mix(in srgb, var(--theme-accent) 9%, var(--theme-panel))
+    );
+  border-bottom-color: color-mix(in srgb, var(--theme-accent) 36%, var(--theme-border));
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--theme-accent) 12%, transparent);
 }
 
 .agent-number,
@@ -4435,10 +4444,12 @@ body.reduce-motion .workspace-editor-tab.active {
 
 .workspace-editor-tab.active {
   background: var(--theme-bg);
+  border-bottom: 0;
   border-radius: 14px 14px 0 0;
-  border-color: var(--theme-accent);
+  border-color: var(--theme-border);
   height: 31px;
-  margin: 0 12px;
+  margin: 0 14px;
+  box-shadow: none;
   z-index: 2;
 }
 
@@ -4446,26 +4457,92 @@ body.reduce-motion .workspace-editor-tab.active {
 .workspace-editor-tab.active::after {
   bottom: -1px;
   content: "";
-  height: 13px;
+  height: 14px;
   pointer-events: none;
   position: absolute;
-  width: 13px;
+  width: 14px;
 }
 
 .workspace-editor-tab.active::before {
-  border-bottom-right-radius: 13px;
-  box-shadow:
-    6px 6px 0 6px var(--theme-bg),
-    6px 6px 0 7px var(--theme-accent);
-  left: -13px;
+  border-bottom-right-radius: 14px;
+  border-bottom: 1px solid var(--theme-border);
+  border-right: 1px solid var(--theme-border);
+  box-shadow: 7px 7px 0 7px var(--theme-bg);
+  left: -14px;
 }
 
 .workspace-editor-tab.active::after {
-  border-bottom-left-radius: 13px;
-  box-shadow:
-    -6px 6px 0 6px var(--theme-bg),
-    -6px 6px 0 7px var(--theme-accent);
-  right: -13px;
+  border-bottom-left-radius: 14px;
+  border-bottom: 1px solid var(--theme-border);
+  border-left: 1px solid var(--theme-border);
+  box-shadow: -7px 7px 0 7px var(--theme-bg);
+  right: -14px;
+}
+
+/* Keep the preview controls compact so the output itself owns the available space. */
+.artifact-preview {
+  overflow: hidden;
+}
+
+.artifact-preview-media {
+  gap: 0;
+  grid-template-rows: 30px minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+}
+
+.preview-toolbar {
+  border-bottom: 1px solid var(--theme-border);
+  gap: 5px;
+  min-height: 30px;
+  padding: 2px 5px 2px 8px;
+}
+
+.preview-toolbar-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 3px;
+}
+
+.preview-toolbar button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.preview-toolbar button:hover {
+  background: color-mix(in srgb, var(--theme-text) 9%, transparent);
+  color: var(--theme-text);
+}
+
+.output-preview-close {
+  font-size: 16px !important;
+}
+
+.artifact-preview-content {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 6px;
+}
+
+.artifact-preview-content > img {
+  height: 100%;
+  max-height: none;
+  max-width: none;
+  object-fit: contain;
+  width: 100%;
+}
+
+.artifact-preview-content > iframe {
+  height: 100%;
+  min-height: 0;
 }
 
 /* The center tab strip owns workspace switching; the Files pane only shows files. */
@@ -4838,4 +4915,423 @@ body.window-full-screen .titlebar-actions {
 .dialog-icon-button.danger:focus-visible {
   background: #cf2f3a;
   outline: 0;
+}
+
+/* Pixel mode uses the bundled Pixel Agents environment; these are floor previews, not a replacement renderer. */
+.pixel-mode-view {
+  grid-template-columns: minmax(0, 1fr) 4px var(--pixel-roster-width);
+  position: relative;
+}
+
+.pixel-roster-resize-handle {
+  background: var(--theme-border);
+  cursor: col-resize;
+  min-height: 0;
+  position: relative;
+  z-index: 8;
+}
+
+.pixel-roster-resize-handle::before {
+  content: "";
+  inset: 0 -7px;
+  position: absolute;
+}
+
+.pixel-roster-resize-handle:hover {
+  background: var(--theme-accent);
+}
+
+.pixel-floor-stack {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  right: calc(var(--pixel-roster-width) + 16px);
+  top: 14px;
+  z-index: 12;
+}
+
+.pixel-floor-stack button {
+  --floor-offset: 0px;
+  background: #111720;
+  border: 0;
+  border-radius: 10px;
+  box-shadow: 0 9px 18px rgba(0, 0, 0, 0.26);
+  height: 74px;
+  margin-top: -15px;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  transform: translateX(var(--floor-offset));
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  width: 118px;
+}
+
+.pixel-floor-stack button:first-child {
+  margin-top: 0;
+}
+
+.pixel-floor-stack button:nth-child(2) {
+  --floor-offset: -13px;
+}
+
+.pixel-floor-stack button:nth-child(3) {
+  --floor-offset: -26px;
+}
+
+.pixel-floor-stack button:nth-child(1) img {
+  filter: hue-rotate(40deg) saturate(0.82) brightness(0.72);
+}
+
+.pixel-floor-stack button:nth-child(2) img {
+  filter: hue-rotate(285deg) saturate(0.78) brightness(0.78);
+}
+
+.pixel-floor-stack button:nth-child(3) img {
+  filter: brightness(0.8);
+}
+
+.pixel-floor-stack button:hover,
+.pixel-floor-stack button:focus-visible {
+  outline: 0;
+  transform: translateX(calc(var(--floor-offset) - 5px));
+}
+
+.pixel-floor-stack button.active {
+  box-shadow:
+    0 0 17px color-mix(in srgb, var(--theme-accent) 25%, transparent),
+    0 12px 24px rgba(0, 0, 0, 0.42);
+  transform: translateX(calc(var(--floor-offset) - 10px));
+  z-index: 4;
+}
+
+.pixel-floor-stack img {
+  display: block;
+  height: 100%;
+  image-rendering: pixelated;
+  object-fit: cover;
+  opacity: 0.96;
+  width: 100%;
+}
+
+.pixel-floor-stack span {
+  color: #fff;
+  font: 750 10px/1 var(--mono);
+  position: absolute;
+  right: 7px;
+  text-shadow: 0 1px 3px #000, 0 0 6px #000;
+  top: 7px;
+}
+
+/* LaTeX-style tabs merge into the editor baseline without rectangular shoulder artifacts. */
+.workspace-editor-tabs {
+  align-items: flex-end;
+  overflow-y: visible;
+  padding: 4px 10px 0;
+}
+
+.editor-tab,
+.workspace-editor-tab {
+  border: 1px solid color-mix(in srgb, var(--theme-border) 88%, transparent);
+  border-bottom-color: var(--theme-border);
+  border-radius: 0;
+  height: 30px;
+  margin: 0 1px;
+}
+
+.workspace-editor-tab.active {
+  background: var(--theme-bg);
+  border-color: var(--theme-border);
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--theme-accent) 18%, transparent));
+  height: 30px;
+  margin: 0 10px;
+  z-index: 3;
+}
+
+.workspace-editor-tab.active::before,
+.workspace-editor-tab.active::after {
+  border: 0;
+  bottom: -1px;
+  box-shadow: none;
+  height: 10px;
+  width: 10px;
+}
+
+.workspace-editor-tab.active::before {
+  background:
+    radial-gradient(
+      circle at 0 0,
+      transparent 8.7px,
+      var(--theme-bg) 9.2px
+    );
+  left: -10px;
+}
+
+.workspace-editor-tab.active::after {
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      transparent 8.7px,
+      var(--theme-bg) 9.2px
+    );
+  right: -10px;
+}
+
+.agent-task-input {
+  border-radius: 9px;
+}
+
+.slot-number {
+  border-radius: 9px;
+}
+
+.spotify-now-playing {
+  grid-template-columns: 36px 19px 19px 19px minmax(70px, 150px);
+}
+
+.spotify-artwork {
+  margin-right: 12px;
+}
+
+.stage-heading {
+  overflow: visible;
+  position: relative;
+}
+
+.workspace-editor-tabs {
+  padding-right: 272px;
+}
+
+.stage-run-control,
+.stage-agent-controls button {
+  align-items: center;
+  background: color-mix(in srgb, var(--theme-panel) 92%, transparent);
+  border: 1px solid var(--theme-border);
+  border-radius: 5px;
+  color: var(--theme-text);
+  display: inline-flex;
+  font-family: var(--mono);
+  justify-content: center;
+}
+
+.stage-run-control {
+  height: 24px;
+  left: 50%;
+  padding: 0;
+  position: absolute;
+  top: 5px;
+  transform: translateX(-50%);
+  width: 30px;
+  z-index: 7;
+}
+
+.stage-run-control:disabled {
+  opacity: 0.38;
+}
+
+.stage-agent-controls {
+  align-items: center;
+  background: linear-gradient(90deg, transparent, var(--theme-panel) 14%);
+  display: flex;
+  gap: 4px;
+  height: 33px;
+  padding-left: 24px;
+  position: absolute;
+  right: 4px;
+  top: 0;
+  z-index: 6;
+}
+
+.stage-agent-controls > span {
+  color: var(--theme-muted);
+  font: 9px/1 var(--mono);
+}
+
+.stage-agent-controls button {
+  font-size: 9px;
+  height: 24px;
+  padding: 0 7px;
+}
+
+.stage-agent-controls button:not(#quickAddAgentButton) {
+  font-size: 14px;
+  padding: 0;
+  width: 26px;
+}
+
+.stage-run-control:hover,
+.stage-agent-controls button:hover,
+.stage-agent-controls button.active {
+  background: var(--theme-active);
+  border-color: var(--theme-accent);
+  color: var(--theme-accent);
+}
+
+.agent-card {
+  grid-template-rows: 35px auto auto minmax(0, 1fr) auto;
+}
+
+.agent-status-card {
+  background: color-mix(in srgb, var(--theme-elevated) 74%, var(--theme-bg));
+  border-bottom: 1px solid var(--theme-border);
+  display: grid;
+  gap: 3px 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 21px 18px 3px;
+  min-width: 0;
+  padding: 3px 7px 4px;
+}
+
+.agent-status-primary {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  grid-column: 1 / -1;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  min-width: 0;
+}
+
+.agent-state {
+  background: color-mix(in srgb, var(--theme-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-accent) 32%, var(--theme-border));
+  border-radius: 5px;
+  color: var(--theme-accent);
+  font: 650 7px/16px var(--mono);
+  height: 17px;
+  padding: 0 5px;
+}
+
+.agent-status-card[data-state="waiting"] .agent-state {
+  color: #f1c56f;
+}
+
+.agent-status-card[data-state="failed"] .agent-state {
+  color: #ff7b87;
+}
+
+.agent-status-card[data-state="complete"] .agent-state {
+  color: #79ddb0;
+}
+
+.agent-model {
+  color: var(--theme-text);
+  font: 650 8px/1 var(--mono);
+  white-space: nowrap;
+}
+
+.agent-current-task {
+  color: var(--theme-muted);
+  font-size: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-progress-label {
+  color: var(--theme-muted);
+  font: 650 8px/1 var(--mono);
+}
+
+.agent-status-metrics {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+  min-width: 0;
+}
+
+.agent-status-metrics span {
+  color: var(--theme-muted);
+  font: 7px/1 var(--mono);
+  white-space: nowrap;
+}
+
+.agent-status-metrics b {
+  color: var(--theme-text);
+  font-weight: 550;
+}
+
+.agent-progress-track {
+  background: color-mix(in srgb, var(--theme-border) 78%, transparent);
+  border-radius: 99px;
+  grid-column: 1 / -1;
+  height: 3px;
+  overflow: hidden;
+}
+
+.agent-progress-track i {
+  background: var(--theme-accent);
+  display: block;
+  height: 100%;
+  transition: width 200ms ease;
+  width: 0;
+}
+
+.agent-status-card[data-state="failed"] .agent-progress-track i {
+  background: #ff6374;
+}
+
+.agent-slot.selected {
+  box-shadow: inset 0 0 0 1px var(--theme-accent);
+}
+
+.runtime-status {
+  align-items: center;
+  display: flex;
+  font: 8px/1 var(--mono);
+  gap: 10px;
+  min-width: 0;
+}
+
+.runtime-status > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.api-status {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.api-status i {
+  background: #68e0a8;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(104, 224, 168, 0.7);
+  height: 6px;
+  width: 6px;
+}
+
+.api-status.unavailable i {
+  background: #ff6775;
+  box-shadow: 0 0 5px rgba(255, 103, 117, 0.65);
+}
+
+.test-status.failed {
+  color: #ffd1d6;
+}
+
+body.focus-mode .files-panel,
+body.focus-mode #fileResizeHandle,
+body.focus-mode #artifactResizeHandle,
+body.focus-mode .output-panel {
+  display: none !important;
+}
+
+body.focus-mode .main-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body.focus-mode .agent-stage {
+  grid-column: 1;
+}
+
+body.focus-mode .pixel-mode-view {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body.focus-mode .pixel-agent-roster,
+body.focus-mode .pixel-roster-resize-handle {
+  display: none;
 }

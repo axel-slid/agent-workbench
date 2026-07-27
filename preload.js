@@ -38,6 +38,7 @@ contextBridge.exposeInMainWorld("agentWorkbench", {
   renameAgent: (id, name) => ipcRenderer.invoke("agent:rename", { id, name }),
   getUsage: () => ipcRenderer.invoke("usage:get"),
   getSystemMetrics: (workspaceId) => ipcRenderer.invoke("system:metrics", workspaceId),
+  getWorkspaceDiagnostics: (workspaceId) => ipcRenderer.invoke("workspace:diagnostics", workspaceId),
   getPowerStatus: () => ipcRenderer.invoke("power:status"),
   getSpotifyStatus: () => ipcRenderer.invoke("spotify:status"),
   controlSpotify: (action) => ipcRenderer.invoke("spotify:control", action),

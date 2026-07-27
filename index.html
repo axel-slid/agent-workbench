@@ -198,10 +198,31 @@
       <main class="agent-stage">
         <div class="stage-heading">
           <div id="workspaceEditorTabs" class="workspace-editor-tabs" role="tablist" aria-label="Open workspace editors"></div>
+          <button id="runPauseAllButton" class="stage-run-control" type="button" title="Pause all agents" aria-label="Pause all agents">Ⅱ</button>
+          <div class="stage-agent-controls">
+            <span id="stageAgentCount">0/4</span>
+            <button id="quickAddAgentButton" type="button" title="Quick-add agent" aria-label="Quick-add agent">+ Agent</button>
+            <button id="stopAllAgentsButton" type="button" title="Stop all agents" aria-label="Stop all agents">■</button>
+            <button id="retryFailedAgentsButton" type="button" title="Retry failed agents" aria-label="Retry failed agents">↻</button>
+            <button id="askStatusButton" type="button" title="Ask for status" aria-label="Ask for status">?</button>
+            <button id="focusModeButton" type="button" title="Focus mode" aria-label="Focus mode">⌗</button>
+          </div>
         </div>
         <section id="agentGrid" class="agent-grid" aria-label="Agent terminals"></section>
         <section id="pixelModeView" class="pixel-mode-view" aria-label="Pixel Agents office" hidden>
           <iframe id="pixelModeFrame" title="Pixel Agents office" src="pixel-agents-mode/index.html"></iframe>
+          <nav id="pixelFloorStack" class="pixel-floor-stack" aria-label="Pixel Agents floors">
+            <button type="button" data-pixel-floor="3" title="Floor 3 · design, documentation, lounge" aria-label="Open floor 3: design, documentation, and lounge">
+              <img src="pixel-agents-mode/office.png" alt=""><span>3</span>
+            </button>
+            <button type="button" data-pixel-floor="2" title="Floor 2 · coding, testing, review, deployment" aria-label="Open floor 2: coding, testing, code review, and deployment">
+              <img src="pixel-agents-mode/office.png" alt=""><span>2</span>
+            </button>
+            <button type="button" data-pixel-floor="1" class="active" title="Floor 1 · office and meeting rooms" aria-label="Open floor 1: office and meeting rooms" aria-current="true">
+              <img src="pixel-agents-mode/office.png" alt=""><span>1</span>
+            </button>
+          </nav>
+          <div id="pixelRosterResizeHandle" class="pixel-roster-resize-handle" role="separator" aria-label="Resize agent roster"></div>
           <aside class="pixel-agent-roster" aria-label="Active agents">
             <header>
               <span>Agents</span>
@@ -271,7 +292,15 @@
         <span id="metricSource" class="metric-source">Local</span>
         <span>Processor <strong id="cpuUsageText">—</strong></span>
         <span>Memory <strong id="memoryUsageText">—</strong></span>
+        <span>Git <strong id="gitStatusText">—</strong></span>
+        <span id="testStatusText" class="test-status">✓ —</span>
         <span id="gpuMetrics" class="gpu-metrics"></span>
+      </div>
+      <div class="runtime-status">
+        <span id="queueStatusText">Queue —</span>
+        <span id="apiStatusText" class="api-status"><i></i> Connected</span>
+        <span id="tokenCostText">0 tokens · $—</span>
+        <span id="selectedAgentStatusText">No agent selected</span>
       </div>
       <div class="footer-spacer"></div>
       <span id="footerStatus" class="footer-status">No workspace</span>
