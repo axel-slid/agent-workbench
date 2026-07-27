@@ -746,6 +746,14 @@ function formatCompactNumber(value) {
   return String(Math.round(number));
 }
 
+function runtimeModelFromTerminal(data) {
+  const plain = String(data || "")
+    .replace(/\u001b\][^\u0007]*(?:\u0007|\u001b\\)/g, "")
+    .replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "");
+  const match = plain.match(/\b(gpt-\d+(?:\.\d+)*(?:-[a-z0-9.-]+)?)\s+(low|medium|high|xhigh|max|ultra)\b/i);
+  return match ? `${match[1]} [${match[2].toLowerCase()}]` : "";
+}
+
 function updateAgentStatusCard(session, now = Date.now()) {
   if (!session?.statusCard) return;
   const metadata = session.metadata || {};
@@ -753,7 +761,7 @@ function updateAgentStatusCard(session, now = Date.now()) {
   const progress = Math.max(0, Math.min(100, Number(metadata.progressPercent) || (state === "complete" ? 100 : 0)));
   session.statusCard.dataset.state = state;
   session.statusCard.querySelector(".agent-state").textContent = state;
-  session.statusCard.querySelector(".agent-model").textContent = metadata.model || (
+  session.statusCard.querySelector(".agent-model").textContent = session.runtimeModel || metadata.model || (
     session.kind === "codex" ? "Codex" : session.kind === "claude" ? "Claude" : "Shell"
   );
   session.statusCard.querySelector(".agent-current-task").textContent =
@@ -2525,9 +2533,6 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         <div class="agent-menu-item clear-terminal" role="menuitem" tabindex="0"><span>⌫</span><span>Clear terminal</span></div>
         <div class="agent-menu-item stop-terminal" role="menuitem" tabindex="0"><span>×</span><span>Stop agent</span></div>
       </div>
-      <div class="agent-summary">
-        <span class="agent-tldr"></span>
-      </div>
       <section class="agent-status-card" aria-label="Agent status">
         <div class="agent-status-primary">
           <span class="agent-state"></span>
@@ -2535,10 +2540,13 @@ function renderAgentCard(slot, slotIndex, descriptor) {
           <span class="agent-current-task"></span>
           <b class="agent-progress-label"></b>
         </div>
-        <div class="agent-status-metrics">
-          <span title="Elapsed time">◷ <b class="agent-elapsed"></b></span>
-          <span title="Token usage">◇ <b class="agent-tokens"></b></span>
-          <span title="Estimated cost">$ <b class="agent-cost"></b></span>
+        <div class="agent-status-secondary">
+          <span class="agent-tldr"></span>
+          <div class="agent-status-metrics">
+            <span title="Elapsed time"><b class="agent-elapsed"></b></span>
+            <span title="Token usage"><b class="agent-tokens"></b> tok</span>
+            <span title="Estimated cost">$<b class="agent-cost"></b></span>
+          </div>
         </div>
         <div class="agent-progress-track"><i></i></div>
       </section>
@@ -2614,8 +2622,12 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     exited: false,
     notifiedFailure: false,
     notifiedApproval: false,
-    finishNotified: descriptor.metadata.status === "done"
+    finishNotified: descriptor.metadata.status === "done",
+    modelDetectionBuffer: ""
   };
+  session.runtimeModel = descriptor.metadata.model && !/^(codex|claude|shell)$/i.test(descriptor.metadata.model)
+    ? descriptor.metadata.model
+    : "";
   sessions.set(descriptor.id, session);
   updateAgentMetadata(session, descriptor.metadata);
   term.writeln(`\x1b[38;5;114m${descriptor.commandLabel}\x1b[0m`);
@@ -3492,6 +3504,14 @@ window.addEventListener("message", (event) => {
 api.onAgentData(({ id, data }) => {
   const session = sessions.get(id);
   if (session) {
+    session.modelDetectionBuffer = `${session.modelDetectionBuffer || ""}${data}`.slice(-600);
+    const runtimeModel = session.kind === "codex"
+      ? runtimeModelFromTerminal(session.modelDetectionBuffer)
+      : "";
+    if (runtimeModel && runtimeModel !== session.runtimeModel) {
+      session.runtimeModel = runtimeModel;
+      updateAgentStatusCard(session);
+    }
     session.term.write(data);
   } else {
     const pending = pendingTerminalData.get(id) || [];

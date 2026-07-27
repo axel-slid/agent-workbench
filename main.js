@@ -789,7 +789,18 @@ function agentProtocol(metadataPath, workspaceRoot) {
   ].join("\n");
 }
 
-function initialAgentMetadata(id, kind, task, workspaceId, agentNumber) {
+function localCodexRuntimeLabel() {
+  try {
+    const config = fs.readFileSync(path.join(os.homedir(), ".codex", "config.toml"), "utf8");
+    const model = config.match(/^\s*model\s*=\s*"([^"]+)"/m)?.[1];
+    const effort = config.match(/^\s*model_reasoning_effort\s*=\s*"([^"]+)"/m)?.[1];
+    if (model) return effort ? `${model} [${effort}]` : model;
+  } catch (error) {
+  }
+  return "Codex";
+}
+
+function initialAgentMetadata(id, kind, task, workspaceId, agentNumber, modelLabel = "") {
   return {
     id,
     workspaceId,
@@ -799,7 +810,7 @@ function initialAgentMetadata(id, kind, task, workspaceId, agentNumber) {
     tldr: task || "Waiting for a task.",
     status: task ? "working" : "waiting",
     state: task ? "planning" : "waiting",
-    model: kind === "codex" ? "Codex" : kind === "claude" ? "Claude" : "Shell",
+    model: modelLabel || (kind === "codex" ? "Codex" : kind === "claude" ? "Claude" : "Shell"),
     currentTask: task || "Waiting for a task",
     etaMinutes: task ? 5 : null,
     progressPercent: task ? 5 : 0,
@@ -895,7 +906,8 @@ async function createAgent(_event, payload = {}) {
   const remoteMetadataPath = remote ? `${remoteMetadataDirectory}/${id}.json` : "";
   const requestedSlot = payload.slotIndex ?? payload.slot;
   const agentNumber = Math.max(1, Math.min(4, Number(requestedSlot) + 1 || 1));
-  const metadata = initialAgentMetadata(id, kind, task, workspace.id, agentNumber);
+  const modelLabel = kind === "codex" && !remote ? localCodexRuntimeLabel() : "";
+  const metadata = initialAgentMetadata(id, kind, task, workspace.id, agentNumber, modelLabel);
   await writeJson(metadataPath, metadata);
 
   const protocol = agentProtocol(remoteMetadataPath || metadataPath, agentWorkspaceRoot);
