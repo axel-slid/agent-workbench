@@ -28,7 +28,6 @@ const sidebarViews = Array.from(document.querySelectorAll("[data-sidebar-view]")
 const agentSidebarList = document.getElementById("agentSidebarList");
 const artifactSidebarList = document.getElementById("artifactSidebarList");
 const activeWorkspaceName = document.getElementById("activeWorkspaceName");
-const workspaceStatusDot = document.getElementById("workspaceStatusDot");
 const fileTree = document.getElementById("fileTree");
 const fileEmpty = document.getElementById("fileEmpty");
 const collapseFolderTreeButton = document.getElementById("collapseFolderTreeButton");
@@ -317,7 +316,6 @@ function formatEtaClock(seconds) {
 
 function updateCommandCenterStatus() {
   const workspace = activeWorkspace();
-  workspaceStatusDot.className = "workspace-status-dot";
   if (!workspace) {
     activeWorkspaceName.textContent = "Choose a workspace · ⌘P";
     commandCenter.title = "Open Command Palette (⌘P)";
@@ -342,12 +340,9 @@ function updateCommandCenterStatus() {
   else if (working) parts.push(`${working} working`);
   else if (waiting) parts.push(`${waiting} waiting`);
   else parts.push("idle");
-  if (etas.length) parts.push(`ETA ${formatEtaClock(Math.min(...etas))}`);
+  if (etas.length) parts.push(`Eta ${formatEtaClock(Math.min(...etas))}`);
   activeWorkspaceName.textContent = parts.join(" · ");
   commandCenter.title = `${parts.join(" · ")} · Open Command Palette (⌘P)`;
-  workspaceStatusDot.classList.add(
-    errors ? "error" : working ? "working" : waiting ? "waiting" : workspace.available ? "connected" : "offline"
-  );
 }
 
 function setFooter(message) {
@@ -379,7 +374,7 @@ function notifyAgentFinished(session) {
   renderNotificationBell();
   const workspace = workspaces.find((item) => item.id === session.workspaceId);
   api.notifyAgentFinished({
-    agentNumber: String(session.slotIndex + 1).padStart(2, "0"),
+    agentNumber: String(session.slotIndex + 1),
     name: session.metadata.name || `${session.kind} agent`,
     tldr: session.metadata.tldr || "Task finished.",
     workspaceName: workspace?.name || ""
@@ -424,6 +419,7 @@ function activePixelSessions() {
 function renderPixelAgentRoster() {
   const activeSessions = activePixelSessions();
   const workspace = activeWorkspace();
+  const now = Date.now();
   pixelAgentRosterCount.textContent = `${activeSessions.length}/${workspace ? workspaceLayoutFor(workspace.id) : 4}`;
   pixelAgentRosterList.replaceChildren();
   for (const session of activeSessions) {
@@ -432,16 +428,18 @@ function renderPixelAgentRoster() {
     const item = document.createElement("button");
     item.className = "pixel-roster-agent";
     item.type = "button";
-    item.title = `Open Agent ${String(session.slotIndex + 1).padStart(2, "0")}`;
+    item.dataset.agentSlot = String(session.slotIndex);
+    item.title = `Open Agent ${session.slotIndex + 1}`;
     item.innerHTML = `
-      <span class="pixel-roster-status" data-status="${status}" aria-hidden="true"></span>
-      <span class="pixel-roster-number">${String(session.slotIndex + 1).padStart(2, "0")}</span>
+      <span class="pixel-roster-eta"></span>
+      <span class="pixel-roster-number">${session.slotIndex + 1}</span>
       <span class="pixel-roster-copy">
         <strong></strong>
         <small></small>
       </span>
       <span class="pixel-roster-state">${status}</span>
     `;
+    item.querySelector(".pixel-roster-eta").textContent = pixelRosterEtaText(session, now);
     item.querySelector(".pixel-roster-copy strong").textContent =
       session.metadata.name || `${session.kind} agent`;
     item.querySelector(".pixel-roster-copy small").textContent =
@@ -449,6 +447,14 @@ function renderPixelAgentRoster() {
     item.addEventListener("click", () => focusAgentWindow(session.slotIndex));
     pixelAgentRosterList.appendChild(item);
   }
+}
+
+function pixelRosterEtaText(session, now = Date.now()) {
+  const status = session.metadata.status || "working";
+  if (status === "done") return "✓";
+  if (status === "error") return "err";
+  const seconds = remainingEtaSeconds(session, now);
+  return Number.isFinite(seconds) ? formatEtaClock(seconds) : "—";
 }
 
 function syncPixelMode(reset = false) {
@@ -507,7 +513,7 @@ function syncPixelSession(session) {
   postPixelMessage({
     type: "agentTeamInfo",
     id,
-    agentName: session.metadata.name || `Agent ${String(id).padStart(2, "0")}`,
+    agentName: session.metadata.name || `Agent ${id}`,
     teamName: session.kind === "codex" ? "Codex" : session.kind === "claude" ? "Claude" : "Shell",
     isTeamLead: false
   });
@@ -558,7 +564,7 @@ function paletteCommands() {
     { id: "workspace-add", icon: "＋", label: "Add workspace", detail: "Open the workspace setup flow", run: openWorkspaceSetup },
     { id: "file-new", icon: "▱＋", label: "New file", detail: "Create in the selected folder", run: () => beginCreateWorkspaceEntry("file") },
     { id: "folder-new", icon: "▰＋", label: "New folder", detail: "Create in the selected folder", run: () => beginCreateWorkspaceEntry("folder") },
-    { id: "workspace-code", icon: "〈〉", label: "Open workspace in VS Code", detail: activeWorkspace() ? activeWorkspace().name : "No workspace selected", run: () => activeWorkspaceId && api.openInCode(activeWorkspaceId) },
+    { id: "workspace-code", icon: "〈〉", label: "Open workspace in Visual Studio Code", detail: activeWorkspace() ? activeWorkspace().name : "No workspace selected", run: () => activeWorkspaceId && api.openInCode(activeWorkspaceId) },
     { id: "pixel-mode", icon: "◉", label: pixelModeEnabled ? "Show terminals" : "Show Pixel Mode", detail: "Toggle the Pixel Agents office", run: () => setPixelMode(!pixelModeEnabled) },
     { id: "files-toggle", icon: "↙", label: document.body.classList.contains("files-collapsed") ? "Open files pane" : "Close files pane", detail: "Toggle workspace files", run: () => setFilesCollapsed(!document.body.classList.contains("files-collapsed")) },
     { id: "outputs-toggle", icon: "↗", label: document.body.classList.contains("output-collapsed") ? "Open output pane" : "Close output pane", detail: "Toggle generated output files", run: () => setOutputCollapsed(!document.body.classList.contains("output-collapsed")) },
@@ -713,14 +719,14 @@ function renderWorkspaceEditorTabs() {
     divider.textContent = "·";
     const etaLabel = document.createElement("span");
     etaLabel.className = "agent-eta-label";
-    etaLabel.textContent = "ETA";
+    etaLabel.textContent = "Eta";
     const etaGroup = document.createElement("span");
     etaGroup.className = "agent-eta";
-    etaGroup.setAttribute("aria-label", `${workspace.name} agent ETAs`);
+    etaGroup.setAttribute("aria-label", `${workspace.name} agent estimates`);
     for (let index = 0; index < count; index += 1) {
       const eta = document.createElement("span");
       eta.dataset.etaSlot = String(index);
-      eta.textContent = `${String(index + 1).padStart(2, "0")} —`;
+      eta.textContent = `${index + 1} —`;
       etaGroup.appendChild(eta);
     }
     workspaceEtaNodes.set(workspace.id, etaGroup);
@@ -772,7 +778,7 @@ function renderWorkspaceAgentPreview() {
     const card = document.createElement("div");
     card.className = "workspace-agent-preview-card";
     const number = document.createElement("span");
-    number.textContent = String(index + 1).padStart(2, "0");
+    number.textContent = String(index + 1);
     const providers = document.createElement("div");
     providers.innerHTML = '<img src="assets/openai-blossom.svg" alt=""><img src="assets/claude-symbol.svg" alt=""><i>›_</i>';
     card.append(number, providers);
@@ -1264,17 +1270,17 @@ async function runSshAuthentication(remote) {
   });
 
   if (Number(exitResult && exitResult.code) !== 0) {
-    throw new Error("SSH authentication did not complete. Check the terminal prompt and your SSH key, then try again.");
+    throw new Error("Secure-shell authentication did not complete. Check the terminal prompt and your key, then try again.");
   }
 }
 
 function formatSshConnectionError(error) {
   const message = String(error && error.message ? error.message : error || "");
   if (/Permission denied\s*\(publickey/i.test(message)) {
-    return "SSH authentication was rejected. Check the authentication terminal and confirm the correct key or account.";
+    return "Secure-shell authentication was rejected. Check the authentication terminal and confirm the correct key or account.";
   }
-  if (/Could not resolve hostname/i.test(message)) return "The SSH server could not be resolved. Check the host or your SSH config.";
-  if (/Connection timed out|Operation timed out/i.test(message)) return "The SSH connection timed out. Check the server, VPN, and network.";
+  if (/Could not resolve hostname/i.test(message)) return "The remote server could not be resolved. Check the host or your secure-shell config.";
+  if (/Connection timed out|Operation timed out/i.test(message)) return "The remote connection timed out. Check the server, network tunnel, and network.";
   if (/Remote path is not a directory/i.test(message)) {
     const match = message.match(/Remote path is not a directory:[^\r\n]*/i);
     return match ? match[0] : "The remote path is not a directory.";
@@ -1283,7 +1289,7 @@ function formatSshConnectionError(error) {
     .replace(/^Error invoking remote method '[^']+':\s*/i, "")
     .replace(/^Error:\s*/i, "")
     .split("\n")[0]
-    .trim() || "SSH connection failed.";
+    .trim() || "Remote connection failed.";
 }
 
 function parseSshTarget(value) {
@@ -1304,7 +1310,7 @@ async function connectSshWorkspace() {
     return;
   }
   connectSshButton.disabled = true;
-  sshStatus.textContent = "Authenticating SSH connection…";
+  sshStatus.textContent = "Authenticating remote connection…";
   sshStatus.className = "ssh-status";
   try {
     await runSshAuthentication(remote);
@@ -1571,7 +1577,7 @@ async function refreshWorkspacePanels({ syncRemote = false } = {}) {
   }
   setFooter(`Loading ${workspace.name}…`);
   if (syncRemote && workspace.type === "ssh") {
-    setFooter(`Syncing ${workspace.name} over SSH…`);
+    setFooter(`Syncing ${workspace.name} remotely…`);
     await api.syncWorkspace(workspace.id);
   }
   const [nextFiles, nextArtifacts] = await Promise.all([
@@ -1792,7 +1798,7 @@ function createArtifactItem(artifact, { compact = false } = {}) {
   if (artifact.agentNumber) {
     const ownerNumber = document.createElement("span");
     ownerNumber.className = "artifact-agent-number";
-    ownerNumber.textContent = String(artifact.agentNumber).padStart(2, "0");
+    ownerNumber.textContent = String(artifact.agentNumber);
     owner.appendChild(ownerNumber);
   }
   const ownerName = document.createElement("span");
@@ -1900,7 +1906,7 @@ function renderOutputContent(container, artifact, { expanded = false } = {}) {
   empty.className = "preview-empty";
   const icon = document.createElement("span");
   icon.className = "preview-icon";
-  icon.textContent = artifact.extension.replace(".", "").toUpperCase() || "FILE";
+  icon.textContent = artifact.extension.replace(".", "").toLowerCase() || "file";
   const label = document.createElement("strong");
   label.textContent = expanded
     ? "This file type cannot be displayed inside Agent Workbench."
@@ -2034,13 +2040,13 @@ function renderEmptySlot(slot, index) {
   launcher.className = "agent-launcher";
   const number = document.createElement("span");
   number.className = "slot-number";
-  number.textContent = String(index + 1).padStart(2, "0");
+  number.textContent = String(index + 1);
   const input = document.createElement("textarea");
   input.className = "agent-task-input";
-  input.placeholder = `Task for Agent ${String(index + 1).padStart(2, "0")}…`;
+  input.placeholder = `Task for Agent ${index + 1}…`;
   input.rows = 3;
   input.spellcheck = true;
-  input.setAttribute("aria-label", `Task for Agent ${String(index + 1).padStart(2, "0")}`);
+  input.setAttribute("aria-label", `Task for Agent ${index + 1}`);
   const buttons = document.createElement("div");
   buttons.className = "launcher-buttons";
   for (const kind of ["codex", "claude", "shell"]) {
@@ -2109,7 +2115,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     <div class="agent-card">
       <header class="agent-card-header">
         <span class="agent-kind"></span>
-        <span class="agent-number">${String(slotIndex + 1).padStart(2, "0")}</span>
+        <span class="agent-number">${slotIndex + 1}</span>
         <input class="agent-name-input" maxlength="48" aria-label="Agent name">
         <div class="agent-actions">
           <button class="agent-action agent-more" type="button" title="More actions" aria-label="More actions">⋯</button>
@@ -2308,12 +2314,12 @@ function swapAgentSlot(session, axis) {
   session.slot.dataset.slot = String(targetIndex);
   session.slot.style.order = String(targetIndex);
   session.slotIndex = targetIndex;
-  session.slot.querySelector(".agent-number").textContent = String(targetIndex + 1).padStart(2, "0");
+  session.slot.querySelector(".agent-number").textContent = String(targetIndex + 1);
   targetSlot.dataset.slot = String(currentIndex);
   targetSlot.style.order = String(currentIndex);
   if (targetSession) {
     targetSession.slotIndex = currentIndex;
-    targetSession.slot.querySelector(".agent-number").textContent = String(currentIndex + 1).padStart(2, "0");
+    targetSession.slot.querySelector(".agent-number").textContent = String(currentIndex + 1);
   } else {
     renderEmptySlot(targetSlot, currentIndex);
   }
@@ -2335,7 +2341,7 @@ function renderAgentSidebar() {
     item.setAttribute("role", "button");
     const number = document.createElement("span");
     number.className = "agent-sidebar-number";
-    number.textContent = String(index + 1).padStart(2, "0");
+    number.textContent = String(index + 1);
     const copy = document.createElement("span");
     const name = document.createElement("strong");
     name.textContent = session ? (session.metadata.name || `${session.kind} agent`) : "Empty slot";
@@ -2365,7 +2371,7 @@ function updateAgentEta() {
       const session = Array.from(sessions.values()).find((candidate) => (
         candidate.workspaceId === workspace.id && candidate.slotIndex === index
       ));
-      const prefix = String(index + 1).padStart(2, "0");
+      const prefix = String(index + 1);
       if (!session) {
         item.textContent = `${prefix} —`;
         item.title = `${workspace.name} · Agent ${prefix}: empty`;
@@ -2385,8 +2391,14 @@ function updateAgentEta() {
           item.textContent = `${prefix} ${formatEtaClock(etaSeconds)}`;
         }
       }
-      item.title = `${workspace.name} · ${session.metadata.name || `${session.kind} agent`}: ${item.textContent.slice(3)}`;
+      item.title = `${workspace.name} · ${session.metadata.name || `${session.kind} agent`}: ${item.textContent.slice(prefix.length + 1)}`;
     }
+  }
+  for (const session of activePixelSessions()) {
+    const eta = pixelAgentRosterList.querySelector(
+      `[data-agent-slot="${session.slotIndex}"] .pixel-roster-eta`
+    );
+    if (eta) eta.textContent = pixelRosterEtaText(session, now);
   }
   updateCommandCenterStatus();
 }
@@ -2521,10 +2533,10 @@ async function refreshSystemMetrics() {
   try {
     const metrics = await api.getSystemMetrics(activeWorkspaceId);
     const sourceLabel = metrics.source === "ssh"
-      ? `● SSH ${metrics.label}`
+      ? `Remote ${metrics.label}`
       : metrics.source === "ssh-error"
-        ? `○ SSH ${metrics.label}`
-        : "● Local";
+        ? `Remote ${metrics.label}`
+        : "Local";
     metricSource.textContent = sourceLabel;
     metricSource.classList.toggle("error", metrics.source === "ssh-error");
     cpuUsageText.textContent = Number.isFinite(metrics.cpuPercent) ? `${Math.round(metrics.cpuPercent)}%` : "—";
@@ -2537,7 +2549,7 @@ async function refreshSystemMetrics() {
       const item = document.createElement("span");
       item.className = "gpu-metric";
       item.title = [
-        gpu.name || `GPU ${gpu.index}`,
+        gpu.name || `Graphics ${gpu.index}`,
         metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : ""
       ].filter(Boolean).join("\n");
       const utilization = Number.isFinite(gpu.utilizationPercent)
@@ -2549,13 +2561,13 @@ async function refreshSystemMetrics() {
           ? `—/${formatMiB(gpu.memoryTotalMiB)}`
           : "—";
       item.classList.toggle("muted", !gpu.metricsAvailable && !Number.isFinite(gpu.utilizationPercent));
-      item.textContent = `GPU ${gpu.index} · VRAM ${memory} · UTIL ${utilization}`;
+      item.textContent = `Graphics ${gpu.index} · memory ${memory} · usage ${utilization}`;
       gpuMetrics.appendChild(item);
     }
     if (metrics.source === "ssh" && !(metrics.gpus || []).length) {
       const empty = document.createElement("span");
       empty.className = "gpu-metric muted";
-      empty.textContent = "GPU —";
+      empty.textContent = "Graphics —";
       gpuMetrics.appendChild(empty);
     }
   } catch (error) {
@@ -2618,12 +2630,12 @@ async function refreshPowerStatus() {
 
 function formatCompactBytes(value) {
   const bytes = Number(value) || 0;
-  return `${(bytes / (1024 ** 3)).toFixed(bytes >= 10 * (1024 ** 3) ? 0 : 1)}G`;
+  return `${(bytes / (1024 ** 3)).toFixed(bytes >= 10 * (1024 ** 3) ? 0 : 1)} GiB`;
 }
 
 function formatMiB(value) {
   const mib = Number(value) || 0;
-  return mib >= 1024 ? `${(mib / 1024).toFixed(mib >= 10240 ? 0 : 1)}G` : `${Math.round(mib)}M`;
+  return mib >= 1024 ? `${(mib / 1024).toFixed(mib >= 10240 ? 0 : 1)} GiB` : `${Math.round(mib)} MiB`;
 }
 
 function formatReset(value) {
@@ -2635,8 +2647,8 @@ function formatReset(value) {
 function formatBytes(value) {
   const bytes = Number(value) || 0;
   if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
 }
 
 function timeAgo(value) {
@@ -2656,7 +2668,7 @@ function setupPanelResizing() {
   if (rememberWidths && savedFiles) root.style.setProperty("--files-width", `${Math.max(170, Math.min(380, savedFiles))}px`);
   if (rememberWidths && savedArtifacts) root.style.setProperty("--artifacts-width", `${Math.max(200, Math.min(500, savedArtifacts))}px`);
 
-  const attach = (handle, property, storageKey, direction, min, max, collapsedClass, setCollapsed) => {
+  const attach = (handle, collapsedTab, property, storageKey, direction, min, max, collapsedClass, setCollapsed) => {
     handle.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       if (document.body.classList.contains(collapsedClass)) setCollapsed(false);
@@ -2691,16 +2703,59 @@ function setupPanelResizing() {
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
     });
+
+    let suppressTabClick = false;
+    collapsedTab.addEventListener("click", (event) => {
+      if (!suppressTabClick) return;
+      suppressTabClick = false;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true);
+    collapsedTab.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0 || !document.body.classList.contains(collapsedClass)) return;
+      const startX = event.clientX;
+      let dragging = false;
+
+      const move = (moveEvent) => {
+        const outwardDistance = (moveEvent.clientX - startX) * direction;
+        if (!dragging && outwardDistance > 6) {
+          dragging = true;
+          suppressTabClick = true;
+          setCollapsed(false);
+          document.body.classList.add("is-resizing");
+        }
+        if (!dragging) return;
+        moveEvent.preventDefault();
+        const next = Math.max(min, Math.min(max, min + outwardDistance));
+        root.style.setProperty(property, `${next}px`);
+      };
+      const up = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        if (!dragging) return;
+        document.body.classList.remove("is-resizing");
+        setCollapsed(false);
+        window.setTimeout(() => {
+          suppressTabClick = false;
+        }, 0);
+        const value = Number.parseFloat(getComputedStyle(root).getPropertyValue(property));
+        if (booleanPreference("agentWorkbenchRememberWidths", true)) {
+          localStorage.setItem(storageKey, String(Math.round(value)));
+        }
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+    });
   };
 
-  attach(fileResizeHandle, "--files-width", "agentWorkbenchFilesWidth", 1, 170, 380, "files-collapsed", setFilesCollapsed);
-  attach(artifactResizeHandle, "--artifacts-width", "agentWorkbenchArtifactsWidth", -1, 200, 500, "output-collapsed", setOutputCollapsed);
+  attach(fileResizeHandle, toggleFilesButton, "--files-width", "agentWorkbenchFilesWidth", 1, 170, 380, "files-collapsed", setFilesCollapsed);
+  attach(artifactResizeHandle, toggleOutputButton, "--artifacts-width", "agentWorkbenchArtifactsWidth", -1, 200, 500, "output-collapsed", setOutputCollapsed);
 }
 
 function scheduleWorkspaceRefresh(payload) {
   if (payload.workspaceId !== activeWorkspaceId) return;
   if (payload.remoteSyncError) {
-    showToast(`SSH connected, but file sync failed: ${payload.remoteSyncError}`);
+    showToast(`Remote connection succeeded, but file sync failed: ${payload.remoteSyncError}`);
   }
   clearTimeout(refreshTimer);
   refreshTimer = setTimeout(() => refreshWorkspacePanels().catch(() => {}), 350);

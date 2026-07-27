@@ -10,15 +10,29 @@
 <body>
   <div class="app-shell">
     <header class="titlebar">
-      <div class="titlebar-spacer"></div>
+      <div id="spotifyNowPlaying" class="spotify-now-playing titlebar-spotify" hidden>
+        <button id="spotifyPreviousButton" class="spotify-control" type="button" title="Previous track" aria-label="Previous track">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3v10M12.5 3.5 5.5 8l7 4.5z"/></svg>
+        </button>
+        <button id="spotifyPlayPauseButton" class="spotify-control" type="button" title="Play" aria-label="Play">
+          <svg class="spotify-play-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m5 3 7 5-7 5z"/></svg>
+          <svg class="spotify-pause-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9M11 3.5v9"/></svg>
+        </button>
+        <button id="spotifyNextButton" class="spotify-control" type="button" title="Next track" aria-label="Next track">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 3.5 7 4.5-7 4.5zM12.5 3v10"/></svg>
+        </button>
+        <div class="spotify-track-copy">
+          <strong id="spotifyTrackName">Spotify</strong>
+          <span id="spotifyTrackDetail"></span>
+        </div>
+      </div>
       <div id="commandCenter" class="command-center" role="button" tabindex="0" title="Command Palette (⌘P)" aria-label="Open Command Palette">
-        <span class="workspace-status-dot" id="workspaceStatusDot" aria-hidden="true"></span>
         <span id="activeWorkspaceName">No workspace selected</span>
       </div>
       <div class="titlebar-actions">
         <button id="newCodexButton" class="top-action accent-action" type="button" title="New Codex agent" aria-label="New Codex agent"><img class="brand-symbol" src="assets/openai-blossom.svg" alt=""></button>
         <button id="newClaudeButton" class="top-action claude-action" type="button" title="New Claude agent" aria-label="New Claude agent"><img class="brand-symbol" src="assets/claude-symbol.svg" alt=""></button>
-        <button id="openCodeButton" class="top-action" type="button" title="Open workspace in VS Code" aria-label="Open workspace in VS Code"><img class="vscode-symbol" src="assets/vscode.svg" alt=""></button>
+        <button id="openCodeButton" class="top-action" type="button" title="Open workspace in Visual Studio Code" aria-label="Open workspace in Visual Studio Code"><img class="vscode-symbol" src="assets/vscode.svg" alt=""></button>
         <button id="pixelModeButton" class="top-action pixel-mode-button" type="button" title="Pixel mode" aria-label="Pixel mode" aria-pressed="false">
           <svg viewBox="0 0 20 20" aria-hidden="true">
             <path d="M2.2 10s2.8-5 7.8-5 7.8 5 7.8 5-2.8 5-7.8 5-7.8-5-7.8-5Z"/>
@@ -123,7 +137,7 @@
                   </div>
                   <div id="addSshWorkspaceOption" class="workspace-add-option" role="button" tabindex="0">
                     <span class="option-icon" aria-hidden="true">⌘</span>
-                    <span><strong>SSH</strong><small>Connect to a remote server</small></span>
+                    <span><strong>Remote</strong><small>Connect with secure shell</small></span>
                     <span class="option-arrow" aria-hidden="true">→</span>
                   </div>
                 </div>
@@ -253,26 +267,10 @@
       </div>
       <div class="usage-divider"></div>
       <div id="systemMetrics" class="system-metrics">
-        <span id="metricSource" class="metric-source">● Local</span>
-        <span>CPU <strong id="cpuUsageText">—</strong></span>
-        <span>RAM <strong id="memoryUsageText">—</strong></span>
+        <span id="metricSource" class="metric-source">Local</span>
+        <span>Processor <strong id="cpuUsageText">—</strong></span>
+        <span>Memory <strong id="memoryUsageText">—</strong></span>
         <span id="gpuMetrics" class="gpu-metrics"></span>
-      </div>
-      <div id="spotifyNowPlaying" class="spotify-now-playing" hidden>
-        <button id="spotifyPreviousButton" class="spotify-control" type="button" title="Previous track" aria-label="Previous track">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3v10M12.5 3.5 5.5 8l7 4.5z"/></svg>
-        </button>
-        <button id="spotifyPlayPauseButton" class="spotify-control" type="button" title="Play" aria-label="Play">
-          <svg class="spotify-play-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m5 3 7 5-7 5z"/></svg>
-          <svg class="spotify-pause-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9M11 3.5v9"/></svg>
-        </button>
-        <button id="spotifyNextButton" class="spotify-control" type="button" title="Next track" aria-label="Next track">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 3.5 7 4.5-7 4.5zM12.5 3v10"/></svg>
-        </button>
-        <div class="spotify-track-copy">
-          <strong id="spotifyTrackName">Spotify</strong>
-          <span id="spotifyTrackDetail"></span>
-        </div>
       </div>
       <div class="footer-spacer"></div>
       <span id="footerStatus" class="footer-status">No workspace</span>
@@ -349,7 +347,7 @@
         </div>
 
         <div class="pdf-setting">
-          <h2>Dark PDF rendering</h2>
+          <h2>Dark document rendering</h2>
           <div class="pdf-options">
             <div class="pdf-option" data-pdf-mode="adaptive" role="button" tabindex="0"><span>☼</span><strong>Adaptive<small>Dark, keep figures</small></strong></div>
             <div class="pdf-option" data-pdf-mode="original" role="button" tabindex="0"><span>▯</span><strong>Original<small>Unchanged pages</small></strong></div>
@@ -363,7 +361,7 @@
           <div><span>Current workspace</span><strong id="settingsWorkspacePath">No workspace selected</strong></div>
           <label><span>Default layout<small>Used for newly added workspaces</small></span><select id="settingsDefaultLayout"><option value="1">1×1</option><option value="2">1×2</option><option value="4">2×2</option></select></label>
           <label><span>Remember sidebar widths<small>Restore both resize positions on launch</small></span><input id="settingsRememberWidths" type="checkbox"></label>
-          <div><span>Connections</span><strong>Local + SSH</strong></div>
+          <div><span>Connections</span><strong>Local + remote</strong></div>
         </div>
       </section>
 
@@ -371,7 +369,7 @@
         <div class="settings-controls">
           <label><span>Default agent<small>Used when Enter starts an empty cell</small></span><select id="settingsDefaultAgent"><option value="codex">Codex</option><option value="claude">Claude</option><option value="shell">Shell</option></select></label>
           <label><span>Auto-open generated files<small>Show viewable agent output as soon as it is reported</small></span><input id="settingsAutoPreview" type="checkbox"></label>
-          <label><span>Show TLDR strip<small>Keep the agent summary above its terminal</small></span><input id="settingsShowTldr" type="checkbox"></label>
+          <label><span>Show summary strip<small>Keep the agent summary above its terminal</small></span><input id="settingsShowTldr" type="checkbox"></label>
           <label><span>Recent file history<small>Scrollable files retained in each agent footer</small></span><select id="settingsRecentFilesLimit"><option value="8">8 files</option><option value="20">20 files</option><option value="40">40 files</option></select></label>
         </div>
       </section>
@@ -388,15 +386,15 @@
       <section class="settings-page" data-settings-page="outputs" hidden>
         <div class="settings-controls">
           <label><span>Open pane for previews<small>Expand Outputs when an agent reports a preview file</small></span><input id="settingsAutoOpenOutput" type="checkbox"></label>
-          <label><span>Compact file rows<small>Use dense VS Code-style generated-file rows</small></span><input id="settingsCompactOutputs" type="checkbox"></label>
+          <label><span>Compact file rows<small>Use dense Visual Studio Code-style generated-file rows</small></span><input id="settingsCompactOutputs" type="checkbox"></label>
           <div><span>File attribution</span><strong>Agent icon + number + name</strong></div>
-          <div><span>Preview support</span><strong>Images, PDF, HTML, text, data</strong></div>
+          <div><span>Preview support</span><strong>Images, documents, web pages, text, data</strong></div>
         </div>
       </section>
 
       <section class="settings-page" data-settings-page="performance" hidden>
         <div class="settings-controls">
-          <label><span>System metrics refresh<small>CPU, memory, and remote GPU polling</small></span><select id="settingsMetricsInterval"><option value="2000">2 seconds</option><option value="5000">5 seconds</option><option value="10000">10 seconds</option></select></label>
+          <label><span>System metrics refresh<small>Processor, memory, and remote graphics polling</small></span><select id="settingsMetricsInterval"><option value="2000">2 seconds</option><option value="5000">5 seconds</option><option value="10000">10 seconds</option></select></label>
           <label><span>Reduce motion<small>Disable glow and transition animation</small></span><input id="settingsReduceMotion" type="checkbox"></label>
           <div><span>Remote workspace sync</span><strong>Every 4 seconds while agents run</strong></div>
           <div><span>Terminal renderer</span><strong>xterm.js</strong></div>
@@ -439,7 +437,7 @@
       <header class="ssh-dialog-header">
         <div>
           <span class="eyebrow">Remote workspace</span>
-          <h2 id="sshDialogTitle">Connect with SSH</h2>
+          <h2 id="sshDialogTitle">Connect to a remote server</h2>
         </div>
         <button id="closeSshDialogButton" class="icon-button" type="button" title="Close" aria-label="Close">×</button>
       </header>
@@ -464,9 +462,9 @@
           <span>Server path</span>
           <input id="sshPathInput" type="text" value="~" placeholder="~/project">
         </label>
-        <p class="ssh-help">Uses your existing SSH config and keys. The remote folder is mirrored for fast Explorer previews; agents run on the server.</p>
+        <p class="ssh-help">Uses your existing secure-shell config and keys. The remote folder is mirrored for fast Explorer previews; agents run on the server.</p>
         <div id="sshAuthTerminalShell" class="ssh-auth-terminal-shell" hidden>
-          <div class="ssh-auth-terminal-title"><span>SSH authentication</span><small>Complete any password, passphrase, or host prompt below.</small></div>
+          <div class="ssh-auth-terminal-title"><span>Secure-shell authentication</span><small>Complete any password, passphrase, or host prompt below.</small></div>
           <div id="sshAuthTerminal" class="ssh-auth-terminal"></div>
         </div>
         <p id="sshStatus" class="ssh-status"></p>

@@ -110,19 +110,6 @@ button {
   white-space: nowrap;
 }
 
-.workspace-status-dot {
-  background: var(--faint);
-  border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(98, 107, 120, 0.12);
-  height: 7px;
-  width: 7px;
-}
-
-.workspace-status-dot.connected {
-  background: var(--accent);
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12), 0 0 12px rgba(var(--accent-rgb), 0.38);
-}
-
 .titlebar-actions {
   -webkit-app-region: no-drag;
   align-items: center;
@@ -255,7 +242,6 @@ button {
   font-weight: 720;
   letter-spacing: 0.04em;
   padding: 0 8px 0 12px;
-  text-transform: uppercase;
 }
 
 .icon-button {
@@ -313,7 +299,6 @@ button {
   font-weight: 800;
   height: 24px;
   justify-content: center;
-  text-transform: uppercase;
   width: 24px;
 }
 
@@ -384,7 +369,6 @@ button {
   font-weight: 720;
   letter-spacing: 0.08em;
   margin-bottom: 2px;
-  text-transform: uppercase;
 }
 
 .panel-heading h2,
@@ -520,21 +504,6 @@ body.is-resizing .resize-handle::after {
   align-items: center;
   display: flex;
   gap: 4px;
-}
-
-.legend-dot {
-  border-radius: 50%;
-  display: inline-block;
-  height: 6px;
-  width: 6px;
-}
-
-.legend-dot.working {
-  background: var(--accent);
-}
-
-.legend-dot.waiting {
-  background: var(--amber);
 }
 
 .agent-grid {
@@ -677,7 +646,6 @@ body.is-resizing .resize-handle::after {
   justify-content: center;
   min-width: 22px;
   padding: 0 4px;
-  text-transform: uppercase;
 }
 
 .agent-kind.codex {
@@ -705,40 +673,6 @@ body.is-resizing .resize-handle::after {
   background: #0f1216;
   border-radius: 4px;
   box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.3);
-}
-
-.agent-status {
-  align-items: center;
-  color: var(--muted);
-  display: flex;
-  font-size: 8px;
-  gap: 4px;
-  text-transform: uppercase;
-}
-
-.agent-status::before {
-  background: var(--faint);
-  border-radius: 50%;
-  content: "";
-  height: 6px;
-  width: 6px;
-}
-
-.agent-status[data-status="working"]::before {
-  background: var(--accent);
-  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5);
-}
-
-.agent-status[data-status="waiting"]::before {
-  background: var(--amber);
-}
-
-.agent-status[data-status="done"]::before {
-  background: var(--blue);
-}
-
-.agent-status[data-status="error"]::before {
-  background: var(--red);
 }
 
 .agent-close {
@@ -778,7 +712,7 @@ body.is-resizing .resize-handle::after {
 
 .agent-tldr::before {
   color: #566170;
-  content: "TLDR  ";
+  content: "Summary  ";
   font-size: 7px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -875,7 +809,6 @@ body.is-resizing .resize-handle::after {
   font-weight: 800;
   height: 28px;
   justify-content: center;
-  text-transform: uppercase;
   width: 28px;
 }
 
@@ -1196,7 +1129,6 @@ body.is-resizing .resize-handle::after {
   font-size: 7px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .usage-brand strong {
@@ -1444,7 +1376,6 @@ body.is-resizing .resize-handle::after {
   color: #737373;
   font-size: 8px;
   margin-top: 2px;
-  text-transform: uppercase;
 }
 
 .settings-summary {
@@ -1920,16 +1851,6 @@ button:focus-visible,
   white-space: nowrap;
 }
 
-.workspace-status-dot {
-  box-shadow: none;
-  height: 6px;
-  width: 6px;
-}
-
-.workspace-status-dot.connected {
-  box-shadow: none;
-}
-
 .titlebar-actions {
   gap: 2px;
 }
@@ -2046,7 +1967,6 @@ button:focus-visible,
   justify-content: space-between;
   letter-spacing: 0.02em;
   padding: 0 7px 0 18px;
-  text-transform: uppercase;
 }
 
 .icon-button {
@@ -2804,7 +2724,6 @@ body.output-files-collapsed .output-panel .artifact-preview {
   font-weight: 700;
   letter-spacing: 0.08em;
   margin: 0 7px 12px;
-  text-transform: uppercase;
 }
 
 .settings-nav-item {
@@ -3313,11 +3232,6 @@ body {
   background: var(--theme-active);
 }
 
-.workspace-status-dot.connected,
-.legend-dot.working {
-  background: var(--theme-accent);
-}
-
 .editor-tab.active,
 .appearance-category.active,
 .theme-option.active,
@@ -3412,6 +3326,7 @@ body.output-collapsed .output-panel {
 body.files-collapsed #toggleFilesButton,
 body.output-collapsed #toggleOutputButton {
   border-radius: 0;
+  cursor: col-resize;
   height: 100%;
   width: 100%;
 }
@@ -3965,7 +3880,6 @@ body.output-collapsed #artifactResizeHandle:hover {
   color: var(--theme-text);
   font-size: 9px;
   font-weight: 650;
-  text-transform: uppercase;
 }
 
 .ssh-auth-terminal-title small {
@@ -4205,7 +4119,7 @@ body.output-collapsed #artifactResizeHandle:hover {
 .main-layout > .resize-handle::before {
   content: "";
   cursor: col-resize;
-  inset: 0 -5px;
+  inset: 0 -10px;
   position: absolute;
 }
 
@@ -4623,7 +4537,6 @@ body.reduce-motion .workspace-editor-tab.active {
   justify-content: space-between;
   letter-spacing: 0.08em;
   padding: 0 9px;
-  text-transform: uppercase;
 }
 
 .pixel-agent-roster > header strong {
@@ -4646,7 +4559,7 @@ body.reduce-motion .workspace-editor-tab.active {
   color: var(--theme-text);
   display: grid;
   gap: 6px;
-  grid-template-columns: 7px 25px minmax(0, 1fr) auto;
+  grid-template-columns: 35px 25px minmax(0, 1fr) auto;
   min-height: 48px;
   padding: 5px 6px;
   text-align: left;
@@ -4659,24 +4572,11 @@ body.reduce-motion .workspace-editor-tab.active {
   border-color: color-mix(in srgb, var(--theme-accent) 30%, var(--theme-border));
 }
 
-.pixel-roster-status {
-  background: var(--theme-muted);
-  border-radius: 50%;
-  height: 6px;
-  width: 6px;
-}
-
-.pixel-roster-status[data-status="working"] {
-  background: #69d5b7;
-  box-shadow: 0 0 6px color-mix(in srgb, #69d5b7 60%, transparent);
-}
-
-.pixel-roster-status[data-status="waiting"] {
-  background: #f0b95f;
-}
-
-.pixel-roster-status[data-status="error"] {
-  background: #f26d78;
+.pixel-roster-eta {
+  color: var(--theme-accent);
+  font: 650 8px/18px var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .pixel-roster-number {
@@ -4712,35 +4612,15 @@ body.reduce-motion .workspace-editor-tab.active {
   color: var(--theme-muted);
   font-family: var(--mono);
   font-size: 7px;
-  text-transform: uppercase;
 }
 
-/* The command-center dot mirrors the aggregate state of the active workspace. */
-.workspace-status-dot.working {
-  background: #69d5b7;
-  box-shadow: 0 0 7px color-mix(in srgb, #69d5b7 65%, transparent);
-}
-
-.workspace-status-dot.waiting {
-  background: #f0b95f;
-  box-shadow: 0 0 7px color-mix(in srgb, #f0b95f 65%, transparent);
-}
-
-.workspace-status-dot.error {
-  background: #f26d78;
-  box-shadow: 0 0 7px color-mix(in srgb, #f26d78 65%, transparent);
-}
-
-.workspace-status-dot.offline {
-  background: var(--theme-muted);
-}
-
-/* Compact native Spotify controls in the status bar. */
+/* Compact native Spotify controls in the titlebar. */
 .spotify-now-playing[hidden] {
   display: none !important;
 }
 
 .spotify-now-playing {
+  -webkit-app-region: no-drag;
   align-items: center;
   display: grid;
   gap: 3px;
@@ -4749,12 +4629,18 @@ body.reduce-motion .workspace-editor-tab.active {
   min-width: 0;
 }
 
+.titlebar-spotify {
+  justify-self: start;
+  overflow: hidden;
+  width: min(220px, 100%);
+}
+
 .spotify-control {
   align-items: center;
   background: transparent;
   border: 0;
   border-radius: 3px;
-  color: #fff;
+  color: var(--theme-text);
   display: inline-flex;
   height: 19px;
   justify-content: center;
@@ -4764,7 +4650,7 @@ body.reduce-motion .workspace-editor-tab.active {
 
 .spotify-control:hover,
 .spotify-control:focus-visible {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--theme-hover);
   outline: 0;
 }
 
@@ -4808,13 +4694,13 @@ body.reduce-motion .workspace-editor-tab.active {
 }
 
 .spotify-track-copy strong {
-  color: #fff;
+  color: var(--theme-text);
   font-size: 9px;
   font-weight: 650;
 }
 
 .spotify-track-copy span {
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--theme-muted);
   font-size: 7px;
 }
 
