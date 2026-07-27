@@ -5203,7 +5203,9 @@ body.window-full-screen .titlebar-actions {
 }
 
 .agent-status-secondary .agent-tldr::before {
-  content: none;
+  color: var(--theme-muted);
+  content: "tl;dr  ";
+  font-weight: 700;
 }
 
 .agent-status-metrics {
