@@ -2869,6 +2869,7 @@ async function openReportedAgentPreview(session, relativePath) {
 
 function updateAgentMetadata(session, metadata) {
   const previousStatus = session.metadata?.status || "";
+  const recentFooterWasHidden = session.recentFooter.hidden;
   const nextMetadata = { ...session.metadata, ...metadata };
   const nextStatus = nextMetadata.status || "";
   if (Object.prototype.hasOwnProperty.call(metadata, "etaMinutes")) {
@@ -2947,6 +2948,9 @@ function updateAgentMetadata(session, metadata) {
   requestAnimationFrame(() => {
     try {
       session.fitAddon.fit();
+      if (recentFooterWasHidden && !session.recentFooter.hidden) {
+        session.term.scrollToBottom();
+      }
     } catch (error) {
     }
   });

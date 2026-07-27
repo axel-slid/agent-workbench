@@ -5253,6 +5253,14 @@ body.hide-agent-tldr .agent-status-secondary .agent-tldr {
   visibility: hidden;
 }
 
+.agent-card .terminal-host {
+  padding-bottom: 13px;
+}
+
+.agent-recent-footer {
+  position: relative;
+}
+
 body.focus-mode .files-panel,
 body.focus-mode #fileResizeHandle,
 body.focus-mode #artifactResizeHandle,
