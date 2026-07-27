@@ -114,6 +114,7 @@ const cpuUsageText = document.getElementById("cpuUsageText");
 const memoryUsageText = document.getElementById("memoryUsageText");
 const gpuMetrics = document.getElementById("gpuMetrics");
 const spotifyNowPlaying = document.getElementById("spotifyNowPlaying");
+const spotifyArtwork = document.getElementById("spotifyArtwork");
 const spotifyPreviousButton = document.getElementById("spotifyPreviousButton");
 const spotifyPlayPauseButton = document.getElementById("spotifyPlayPauseButton");
 const spotifyNextButton = document.getElementById("spotifyNextButton");
@@ -307,6 +308,14 @@ function remainingEtaSeconds(session, now = Date.now()) {
   return Math.max(0, Math.ceil((session.etaDeadline - now) / 1000));
 }
 
+function etaDeadlineFromMetadata(metadata, now = Date.now()) {
+  const etaMinutes = Number(metadata?.etaMinutes);
+  if (!Number.isFinite(etaMinutes) || etaMinutes <= 0) return null;
+  const reportedAt = Date.parse(metadata?.updatedAt || "");
+  const base = Number.isFinite(reportedAt) ? reportedAt : now;
+  return Math.max(now + 1000, base + etaMinutes * 60 * 1000);
+}
+
 function formatEtaClock(seconds) {
   const value = Math.max(0, Math.ceil(Number(seconds) || 0));
   const minutes = Math.floor(value / 60);
@@ -372,6 +381,7 @@ function renderNotificationBell() {
 function notifyAgentFinished(session) {
   unreadAgentNotifications += 1;
   renderNotificationBell();
+  showToast(`Agent ${session.slotIndex + 1} finished`);
   const workspace = workspaces.find((item) => item.id === session.workspaceId);
   api.notifyAgentFinished({
     agentNumber: String(session.slotIndex + 1),
@@ -2418,14 +2428,16 @@ async function openReportedAgentPreview(session, relativePath) {
 
 function updateAgentMetadata(session, metadata) {
   const previousStatus = session.metadata?.status || "";
+  const nextMetadata = { ...session.metadata, ...metadata };
+  const nextStatus = nextMetadata.status || "";
   if (Object.prototype.hasOwnProperty.call(metadata, "etaMinutes")) {
-    const etaMinutes = Number(metadata.etaMinutes);
-    session.etaDeadline = Number.isFinite(etaMinutes) && etaMinutes > 0
-      ? Date.now() + etaMinutes * 60 * 1000
-      : null;
+    session.etaDeadline = etaDeadlineFromMetadata(nextMetadata);
+  } else if (nextStatus === "working" && !Number.isFinite(session.etaDeadline)) {
+    session.etaDeadline = Date.now() + 5 * 60 * 1000;
+  } else if (nextStatus !== "working") {
+    session.etaDeadline = null;
   }
-  session.metadata = { ...session.metadata, ...metadata };
-  const nextStatus = session.metadata.status || "";
+  session.metadata = nextMetadata;
   if (nextStatus !== "done") session.finishNotified = false;
   if (nextStatus === "done" && previousStatus !== "done" && !session.finishNotified) {
     session.finishNotified = true;
@@ -2549,7 +2561,7 @@ async function refreshSystemMetrics() {
       const item = document.createElement("span");
       item.className = "gpu-metric";
       item.title = [
-        gpu.name || `Graphics ${gpu.index}`,
+        gpu.name || `GPU ${gpu.index}`,
         metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : ""
       ].filter(Boolean).join("\n");
       const utilization = Number.isFinite(gpu.utilizationPercent)
@@ -2561,13 +2573,13 @@ async function refreshSystemMetrics() {
           ? `—/${formatMiB(gpu.memoryTotalMiB)}`
           : "—";
       item.classList.toggle("muted", !gpu.metricsAvailable && !Number.isFinite(gpu.utilizationPercent));
-      item.textContent = `Graphics ${gpu.index} · memory ${memory} · usage ${utilization}`;
+      item.textContent = `GPU ${gpu.index} · memory ${memory} · usage ${utilization}`;
       gpuMetrics.appendChild(item);
     }
     if (metrics.source === "ssh" && !(metrics.gpus || []).length) {
       const empty = document.createElement("span");
       empty.className = "gpu-metric muted";
-      empty.textContent = "Graphics —";
+      empty.textContent = "GPU —";
       gpuMetrics.appendChild(empty);
     }
   } catch (error) {
@@ -2588,6 +2600,9 @@ async function refreshSpotifyStatus() {
     spotifyTrackName.title = status.name;
     spotifyTrackDetail.textContent = [status.artist, status.album].filter(Boolean).join(" · ");
     spotifyTrackDetail.title = spotifyTrackDetail.textContent;
+    const artworkUrl = String(status.artworkUrl || "").trim();
+    spotifyArtwork.hidden = !artworkUrl;
+    if (artworkUrl && spotifyArtwork.src !== artworkUrl) spotifyArtwork.src = artworkUrl;
     const playing = status.state === "playing";
     spotifyNowPlaying.classList.toggle("playing", playing);
     const actionLabel = playing ? "Pause" : "Play";
@@ -2595,6 +2610,7 @@ async function refreshSpotifyStatus() {
     spotifyPlayPauseButton.setAttribute("aria-label", actionLabel);
   } catch (error) {
     spotifyNowPlaying.hidden = true;
+    spotifyArtwork.hidden = true;
   } finally {
     spotifyRefreshBusy = false;
   }
@@ -2839,6 +2855,9 @@ pixelModeButton.addEventListener("click", () => setPixelMode(!pixelModeEnabled))
 spotifyPreviousButton.addEventListener("click", () => controlSpotify("previous"));
 spotifyPlayPauseButton.addEventListener("click", () => controlSpotify("playpause"));
 spotifyNextButton.addEventListener("click", () => controlSpotify("next"));
+spotifyArtwork.addEventListener("error", () => {
+  spotifyArtwork.hidden = true;
+});
 notificationButton.addEventListener("click", () => {
   unreadAgentNotifications = 0;
   renderNotificationBell();
@@ -2991,6 +3010,7 @@ api.onAgentExit(({ id, code, signal }) => {
   const finalStatus = code === 0 && !signal ? "done" : "error";
   session.metadata.status = finalStatus;
   session.metadata.etaMinutes = 0;
+  session.etaDeadline = null;
   session.term.writeln("");
   session.term.writeln(`\x1b[38;5;244m[process exited: ${signal || code || 0}]\x1b[0m`);
   updateAgentEta();
@@ -3023,6 +3043,10 @@ api.onSshAuthenticationExit((payload) => {
     return;
   }
   pendingSshAuthExits.set(payload.id, payload);
+});
+
+api.onWindowFullScreen((active) => {
+  document.body.classList.toggle("window-full-screen", active);
 });
 api.onWorkspaceChanged(scheduleWorkspaceRefresh);
 
@@ -3095,6 +3119,7 @@ async function initialize() {
   refreshTitlebarTime();
   await refreshPowerStatus();
   await refreshSpotifyStatus();
+  document.body.classList.toggle("window-full-screen", await api.getWindowFullScreen());
   setInterval(refreshUsage, 60000);
   titlebarClockTimer = setInterval(refreshTitlebarTime, 15000);
   powerStatusTimer = setInterval(refreshPowerStatus, 60000);

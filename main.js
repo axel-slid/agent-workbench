@@ -782,6 +782,7 @@ function agentProtocol(metadataPath, workspaceRoot) {
     'Use exactly these fields: {"name":"short task-specific name","tldr":"one sentence under 140 characters","status":"working|waiting|done|error","etaMinutes":number|null,"relevantFiles":["workspace-relative/path"],"previewFile":"workspace-relative/path"|null}.',
     "Choose your own short name based on what you are doing. Keep relevantFiles current, ordered most useful first, with only files the user is likely to want to open. Use workspace-relative paths and omit incidental implementation files.",
     "Set etaMinutes to your honest whole-number estimate of minutes remaining. Re-estimate and rewrite the metadata at least once per minute while working and after every major step. Use null while waiting for a task and 0 when done.",
+    "Set status to done immediately when the task is complete so Agent Workbench can notify the user.",
     "Whenever you create or materially update a viewable output such as an image, PDF, HTML, SVG, Markdown, text report, chart, or data file, set previewFile to its workspace-relative path so Agent Workbench opens it in the Agent Output pane.",
     "Do not mention this metadata protocol in normal conversation."
   ].join("\n");
@@ -796,7 +797,7 @@ function initialAgentMetadata(id, kind, task, workspaceId, agentNumber) {
     name: task ? task.slice(0, 34) : `${kind === "claude" ? "Claude" : kind === "codex" ? "Codex" : "Shell"} agent`,
     tldr: task || "Waiting for a task.",
     status: task ? "working" : "waiting",
-    etaMinutes: null,
+    etaMinutes: task ? 5 : null,
     relevantFiles: [],
     recentFiles: [],
     previewFile: null,
@@ -1334,14 +1335,18 @@ function sendToRenderer(channel, payload) {
 }
 
 function showAgentFinishedNotification(_event, payload = {}) {
+  if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isFocused()) {
+    mainWindow.flashFrame(true);
+  }
   if (!Notification.isSupported()) return false;
-  const agentNumber = String(payload.agentNumber || "").padStart(2, "0").slice(-2);
+  const agentNumber = String(payload.agentNumber || "").trim() || "?";
   const workspaceName = String(payload.workspaceName || "").trim().slice(0, 80);
   const agentName = String(payload.name || `Agent ${agentNumber}`).trim().slice(0, 80);
   const tldr = String(payload.tldr || "Task finished.").trim().slice(0, 220);
   const notification = new Notification({
     title: `Agent ${agentNumber} finished${workspaceName ? ` · ${workspaceName}` : ""}`,
-    body: `${agentName}: ${tldr}`
+    body: `${agentName}: ${tldr}`,
+    silent: false
   });
   notification.on("click", () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -1381,6 +1386,8 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
   mainWindow.once("ready-to-show", () => mainWindow.show());
+  mainWindow.on("enter-full-screen", () => sendToRenderer("window:full-screen", true));
+  mainWindow.on("leave-full-screen", () => sendToRenderer("window:full-screen", false));
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: "deny" };
@@ -1430,6 +1437,7 @@ app.whenReady().then(() => {
   ipcMain.handle("spotify:status", getSpotifyStatus);
   ipcMain.handle("spotify:control", controlSpotify);
   ipcMain.handle("notification:agent-finished", showAgentFinishedNotification);
+  ipcMain.handle("window:is-full-screen", () => Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.isFullScreen()));
   createWindow();
 
   app.on("activate", () => {

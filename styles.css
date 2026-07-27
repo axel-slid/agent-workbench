@@ -1030,12 +1030,19 @@ body.is-resizing .resize-handle::after {
   padding: 0;
 }
 
+.output-viewer-content:has(> img) {
+  overflow: hidden;
+  padding: 12px;
+  place-items: center;
+}
+
 .output-viewer-content > img {
-  align-self: center;
-  justify-self: center;
-  max-height: 100%;
-  max-width: 100%;
+  display: block;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
   object-fit: contain;
+  width: 100%;
 }
 
 .output-viewer-content > iframe {
@@ -1827,10 +1834,12 @@ button:focus-visible,
   background: #181818;
   border-bottom: 1px solid #2b2b2b;
   grid-template-columns: minmax(100px, 0.7fr) minmax(420px, 720px) minmax(260px, 1fr);
-  padding: 0 8px 0 78px;
+  padding: 0 8px 0 110px;
+  position: relative;
 }
 
 .command-center {
+  -webkit-app-region: no-drag;
   align-items: center;
   background: #202020;
   border: 1px solid #343434;
@@ -1843,6 +1852,11 @@ button:focus-visible,
   justify-content: center;
   min-width: 0;
   padding: 0 12px;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  width: clamp(360px, 46vw, 720px);
+  z-index: 2;
 }
 
 .command-center span:last-child {
@@ -1853,6 +1867,7 @@ button:focus-visible,
 
 .titlebar-actions {
   gap: 2px;
+  grid-column: 3;
 }
 
 .top-action,
@@ -4124,13 +4139,11 @@ body.output-collapsed #artifactResizeHandle:hover {
 }
 
 .workspace-editor-tab {
-  border-left: 1px solid transparent;
+  border-left: 1px solid color-mix(in srgb, var(--theme-border) 88%, transparent);
 }
 
 .workspace-editor-tab.active {
-  border-left-color: var(--theme-accent);
-  border-right-color: var(--theme-accent);
-  border-top-color: var(--theme-accent);
+  border-color: var(--theme-accent);
   box-shadow:
     inset 1px 0 7px -4px var(--theme-accent),
     inset -1px 0 7px -4px var(--theme-accent),
@@ -4411,19 +4424,48 @@ body.reduce-motion .workspace-editor-tab.active {
 }
 
 .editor-tab {
-  background: transparent;
-  border: 1px solid transparent;
-  border-bottom: 0;
-  border-radius: 10px 10px 0 0;
-  height: 31px;
+  background: color-mix(in srgb, var(--theme-panel) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-border) 88%, transparent);
+  border-radius: 10px 10px 6px 6px;
+  height: 29px;
+  margin-bottom: 2px;
   overflow: visible;
   position: relative;
 }
 
 .workspace-editor-tab.active {
   background: var(--theme-bg);
-  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+  border-color: var(--theme-accent);
+  height: 31px;
+  margin: 0 12px;
   z-index: 2;
+}
+
+.workspace-editor-tab.active::before,
+.workspace-editor-tab.active::after {
+  bottom: -1px;
+  content: "";
+  height: 13px;
+  pointer-events: none;
+  position: absolute;
+  width: 13px;
+}
+
+.workspace-editor-tab.active::before {
+  border-bottom-right-radius: 13px;
+  box-shadow:
+    6px 6px 0 6px var(--theme-bg),
+    6px 6px 0 7px var(--theme-accent);
+  left: -13px;
+}
+
+.workspace-editor-tab.active::after {
+  border-bottom-left-radius: 13px;
+  box-shadow:
+    -6px 6px 0 6px var(--theme-bg),
+    -6px 6px 0 7px var(--theme-accent);
+  right: -13px;
 }
 
 /* The center tab strip owns workspace switching; the Files pane only shows files. */
@@ -4624,15 +4666,23 @@ body.reduce-motion .workspace-editor-tab.active {
   align-items: center;
   display: grid;
   gap: 3px;
-  grid-template-columns: 19px 19px 19px minmax(70px, 150px);
-  max-width: 220px;
+  grid-template-columns: 24px 19px 19px 19px minmax(70px, 150px);
+  max-width: 250px;
   min-width: 0;
 }
 
 .titlebar-spotify {
+  grid-column: 1;
   justify-self: start;
   overflow: hidden;
-  width: min(220px, 100%);
+  width: min(250px, 100%);
+}
+
+.spotify-artwork {
+  border-radius: 4px;
+  height: 24px;
+  object-fit: cover;
+  width: 24px;
 }
 
 .spotify-control {
@@ -4702,6 +4752,25 @@ body.reduce-motion .workspace-editor-tab.active {
 .spotify-track-copy span {
   color: var(--theme-muted);
   font-size: 7px;
+}
+
+body.window-full-screen .titlebar {
+  grid-template-columns: 250px minmax(300px, 720px) minmax(260px, 1fr);
+  padding-left: 8px;
+}
+
+body.window-full-screen .titlebar-spotify {
+  grid-column: 1;
+  justify-self: start;
+  width: 250px;
+}
+
+body.window-full-screen .command-center {
+  left: 50%;
+}
+
+body.window-full-screen .titlebar-actions {
+  grid-column: 3;
 }
 
 .footer-status {

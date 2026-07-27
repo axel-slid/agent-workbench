@@ -42,11 +42,13 @@ contextBridge.exposeInMainWorld("agentWorkbench", {
   getSpotifyStatus: () => ipcRenderer.invoke("spotify:status"),
   controlSpotify: (action) => ipcRenderer.invoke("spotify:control", action),
   notifyAgentFinished: (payload) => ipcRenderer.invoke("notification:agent-finished", payload),
+  getWindowFullScreen: () => ipcRenderer.invoke("window:is-full-screen"),
 
   onAgentData: (callback) => ipcRenderer.on("agent:data", (_event, payload) => callback(payload)),
   onAgentExit: (callback) => ipcRenderer.on("agent:exit", (_event, payload) => callback(payload)),
   onAgentMetadata: (callback) => ipcRenderer.on("agent:metadata", (_event, payload) => callback(payload)),
   onSshAuthenticationData: (callback) => ipcRenderer.on("ssh-auth:data", (_event, payload) => callback(payload)),
   onSshAuthenticationExit: (callback) => ipcRenderer.on("ssh-auth:exit", (_event, payload) => callback(payload)),
-  onWorkspaceChanged: (callback) => ipcRenderer.on("workspace:changed", (_event, payload) => callback(payload))
+  onWorkspaceChanged: (callback) => ipcRenderer.on("workspace:changed", (_event, payload) => callback(payload)),
+  onWindowFullScreen: (callback) => ipcRenderer.on("window:full-screen", (_event, active) => callback(Boolean(active)))
 });
