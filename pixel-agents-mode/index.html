@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>webview-ui</title>
+    <script type="module" crossorigin src="./assets/index-CDwRPJIS.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DX7upZNH.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      window.__AGENT_WORKBENCH_PIXEL_MODE = true;
+      window.acquireVsCodeApi = function () {
+        return {
+          postMessage: function (message) {
+            window.parent.postMessage({ source: "agent-workbench-pixel-mode", message: message }, "*");
+          },
+          getState: function () { return undefined; },
+          setState: function () {}
+        };
+      };
+      function useSymbolButtons() {
+        const symbols = {
+          "+ Agent": ["+", "New agent"],
+          "Layout": ["▦", "Edit office layout"],
+          "Settings": ["⚙", "Settings"]
+        };
+        document.querySelectorAll("button").forEach(function (button) {
+          const match = symbols[button.textContent.trim()];
+          if (!match) return;
+          button.textContent = match[0];
+          button.title = match[1];
+          button.setAttribute("aria-label", match[1]);
+        });
+      }
+      new MutationObserver(useSymbolButtons).observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+      window.addEventListener("DOMContentLoaded", useSymbolButtons);
+    </script>
+  </body>
+</html>

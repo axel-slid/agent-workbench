@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.codex/
+outputs/
+cs170-algorithms-quiz.html
+result-*.png
+smiley-face.png
+turtle.png
+assets/cat-picture.png

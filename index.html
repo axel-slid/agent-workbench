@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Workbench</title>
+  <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar-spacer"></div>
+      <div id="commandCenter" class="command-center" role="button" tabindex="0" title="Command Palette (⌘P)" aria-label="Open Command Palette">
+        <span class="workspace-status-dot" id="workspaceStatusDot" aria-hidden="true"></span>
+        <span id="activeWorkspaceName">No workspace selected</span>
+      </div>
+      <div class="titlebar-actions">
+        <button id="newCodexButton" class="top-action accent-action" type="button" title="New Codex agent" aria-label="New Codex agent"><img class="brand-symbol" src="assets/openai-blossom.svg" alt=""></button>
+        <button id="newClaudeButton" class="top-action claude-action" type="button" title="New Claude agent" aria-label="New Claude agent"><img class="brand-symbol" src="assets/claude-symbol.svg" alt=""></button>
+        <button id="openCodeButton" class="top-action" type="button" title="Open workspace in VS Code" aria-label="Open workspace in VS Code"><img class="vscode-symbol" src="assets/vscode.svg" alt=""></button>
+        <button id="pixelModeButton" class="top-action pixel-mode-button" type="button" title="Pixel mode" aria-label="Pixel mode" aria-pressed="false">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M2.2 10s2.8-5 7.8-5 7.8 5 7.8 5-2.8 5-7.8 5-7.8-5-7.8-5Z"/>
+            <circle cx="10" cy="10" r="2.4"/>
+          </svg>
+        </button>
+        <button id="notificationButton" class="top-action notification-button" type="button" title="No unread agent notifications" aria-label="Agent notifications">
+          <svg class="notification-symbol" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 6.8-3 7.2-3 9h18c0-1.8-3-2.2-3-9Z"/>
+            <path d="M14.2 20a2.4 2.4 0 0 1-4.4 0"/>
+          </svg>
+          <span id="notificationBadge" class="notification-badge" hidden>0</span>
+        </button>
+        <button id="openSettingsButton" class="top-action" type="button" title="Settings" aria-label="Settings">
+          <svg class="settings-symbol" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98l-.38-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.05.32-.08.65-.08.98s.03.66.08.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .6.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65A.5.5 0 0 0 10 22h4a.5.5 0 0 0 .49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 0 0 .6-.22l2-3.46a.5.5 0 0 0-.12-.64zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/>
+          </svg>
+        </button>
+        <div class="titlebar-system-status" aria-label="Time and battery">
+          <time id="titlebarTime">--:--</time>
+          <span id="titlebarBattery" class="titlebar-battery" title="Battery unavailable">
+            <svg viewBox="0 0 20 12" aria-hidden="true">
+              <path class="battery-outline" d="M1.5 1.5h14v9h-14zM17.5 4v4"/>
+              <rect id="titlebarBatteryFill" class="battery-fill" x="3" y="3" width="0" height="6" rx="0.8"/>
+            </svg>
+            <strong id="titlebarBatteryText">—</strong>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div id="commandPaletteBackdrop" class="command-palette-backdrop" hidden>
+      <section class="command-palette" role="dialog" aria-modal="true" aria-label="Command Palette">
+        <div class="command-palette-input-row">
+          <span aria-hidden="true">›</span>
+          <input id="commandPaletteInput" type="text" autocomplete="off" spellcheck="false" placeholder="Type a command…">
+        </div>
+        <div id="commandPaletteResults" class="command-palette-results" role="listbox" aria-label="Commands"></div>
+      </section>
+    </div>
+
+    <div class="main-layout" id="mainLayout">
+      <aside class="files-panel">
+        <section class="workspace-explorer">
+          <div class="sidebar-title">
+            <span>Files</span>
+            <div class="file-header-actions">
+              <button id="toggleFilesButton" class="icon-button pane-toggle-button" type="button" title="Close files pane" aria-label="Close files pane">
+                <svg class="pane-toggle-icon" viewBox="0 0 20 20" aria-hidden="true">
+                  <rect x="2.5" y="2.5" width="15" height="15" rx="1.7"/>
+                  <path d="M12.5 3v14M8.8 7 5.8 10l3 3"/>
+                  <path class="pane-toggle-dots" d="M15 6.5h.01M15 10h.01M15 13.5h.01"/>
+                </svg>
+              </button>
+              <button id="collapseFolderTreeButton" class="icon-button file-create-button" type="button" title="Collapse all folders" aria-label="Collapse all folders">
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M2.5 4h11M4.5 7.5h7M6.5 11h3"/>
+                </svg>
+              </button>
+              <button id="newFileButton" class="icon-button file-create-button" type="button" title="New file" aria-label="New file">
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M3.5 1.5h5l4 4v9h-9zM8.5 1.5v4h4M8 8v4M6 10h4"/>
+                </svg>
+              </button>
+              <button id="newFolderButton" class="icon-button file-create-button" type="button" title="New folder" aria-label="New folder">
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M1.5 3.5h5l1.5 2h6.5v8h-13zM8 8v4M6 10h4"/>
+                </svg>
+              </button>
+              <button id="addWorkspaceButton" class="icon-button" type="button" title="Add workspace" aria-label="Add workspace">＋</button>
+            </div>
+          </div>
+          <div id="workspaceAddMenu" class="workspace-add-menu" hidden>
+            <section class="workspace-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="workspacePickerTitle">
+              <header class="workspace-picker-header">
+                <strong id="workspacePickerTitle">New workspace</strong>
+                <button id="closeWorkspacePickerButton" class="icon-button" type="button" title="Close" aria-label="Close">×</button>
+              </header>
+              <div class="workspace-setup-stepper" aria-label="Workspace setup progress">
+                <div class="workspace-setup-step active" data-workspace-step-indicator="source">
+                  <span>1</span><strong>Start</strong>
+                </div>
+                <i></i>
+                <div class="workspace-setup-step" data-workspace-step-indicator="layout">
+                  <span>2</span><strong>Layout</strong>
+                </div>
+                <i></i>
+                <div class="workspace-setup-step" data-workspace-step-indicator="agents">
+                  <span>3</span><strong>Agents</strong>
+                </div>
+              </div>
+
+              <div id="workspaceSourceStep" class="workspace-setup-page">
+                <h2>Start a workspace</h2>
+                <p>Choose where your agents will work.</p>
+                <div class="workspace-picker-options" role="group" aria-label="Workspace source">
+                  <div id="addLocalWorkspaceOption" class="workspace-add-option" role="button" tabindex="0">
+                    <span class="option-icon" aria-hidden="true">▱</span>
+                    <span><strong>Local</strong><small>Choose a folder on this Mac</small></span>
+                    <span class="option-arrow" aria-hidden="true">→</span>
+                  </div>
+                  <div id="addSshWorkspaceOption" class="workspace-add-option" role="button" tabindex="0">
+                    <span class="option-icon" aria-hidden="true">⌘</span>
+                    <span><strong>SSH</strong><small>Connect to a remote server</small></span>
+                    <span class="option-arrow" aria-hidden="true">→</span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="workspaceLayoutStep" class="workspace-setup-page" hidden>
+                <h2>Set up your workspace</h2>
+                <p>Confirm the working folder and choose the agent layout.</p>
+                <div class="workspace-path-label"><strong>Working folder</strong><span>Where every agent will start</span></div>
+                <div class="workspace-setup-path">
+                  <span aria-hidden="true">▱</span>
+                  <strong id="workspaceSetupFolderName">Workspace</strong>
+                  <small id="workspaceSetupFolderPath"></small>
+                </div>
+                <div class="workspace-layout-heading">
+                  <span><strong>How many agents?</strong><small>Pick a layout</small></span>
+                  <em id="workspaceLayoutSummary">4 agents · 2×2 grid</em>
+                </div>
+                <div class="workspace-layout-options" role="radiogroup" aria-label="Agent layout">
+                  <div class="workspace-layout-option" data-layout-count="1" role="radio" aria-checked="false" tabindex="0">
+                    <span class="layout-glyph one"><i></i></span><strong>1</strong>
+                  </div>
+                  <div class="workspace-layout-option" data-layout-count="2" role="radio" aria-checked="false" tabindex="0">
+                    <span class="layout-glyph two"><i></i><i></i></span><strong>2</strong>
+                  </div>
+                  <div class="workspace-layout-option active" data-layout-count="4" role="radio" aria-checked="true" tabindex="0">
+                    <span class="layout-glyph four"><i></i><i></i><i></i><i></i></span><strong>4</strong>
+                  </div>
+                </div>
+                <div class="workspace-setup-navigation">
+                  <button id="workspaceSetupBackButton" class="workspace-wizard-button" type="button" title="Back" aria-label="Back">←</button>
+                  <button id="workspaceSetupNextButton" class="workspace-wizard-button primary" type="button" title="Next" aria-label="Next">→</button>
+                </div>
+              </div>
+
+              <div id="workspaceAgentsStep" class="workspace-setup-page" hidden>
+                <h2>Your agents are ready</h2>
+                <p>Each workspace tab keeps its own agent layout, terminals, files, and outputs.</p>
+                <div id="workspaceAgentPreview" class="workspace-agent-preview" aria-label="Agent slot preview"></div>
+                <div class="workspace-setup-navigation">
+                  <button id="workspaceAgentsBackButton" class="workspace-wizard-button" type="button" title="Back" aria-label="Back">←</button>
+                  <button id="workspaceSetupFinishButton" class="workspace-wizard-button primary" type="button" title="Finish" aria-label="Finish">✓</button>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div id="workspaceList" class="workspace-list" role="tablist" aria-label="Workspace tabs" hidden></div>
+          <div id="fileTree" class="file-tree" role="tree"></div>
+          <div class="panel-empty" id="fileEmpty">
+            Add a workspace to browse its files.
+          </div>
+        </section>
+      </aside>
+
+      <div id="fileResizeHandle" class="resize-handle" role="separator" aria-label="Resize file panel"></div>
+
+      <main class="agent-stage">
+        <div class="stage-heading">
+          <div id="workspaceEditorTabs" class="workspace-editor-tabs" role="tablist" aria-label="Open workspace editors"></div>
+        </div>
+        <section id="agentGrid" class="agent-grid" aria-label="Agent terminals"></section>
+        <section id="pixelModeView" class="pixel-mode-view" aria-label="Pixel Agents office" hidden>
+          <iframe id="pixelModeFrame" title="Pixel Agents office" src="pixel-agents-mode/index.html"></iframe>
+          <aside class="pixel-agent-roster" aria-label="Active agents">
+            <header>
+              <span>Agents</span>
+              <strong id="pixelAgentRosterCount">0/4</strong>
+            </header>
+            <div id="pixelAgentRosterList" class="pixel-agent-roster-list"></div>
+          </aside>
+        </section>
+        <section id="outputViewer" class="output-viewer" aria-label="Expanded output" hidden>
+          <header class="output-viewer-header">
+            <strong id="outputViewerTitle">Output</strong>
+            <button id="closeOutputViewerButton" class="icon-button output-viewer-toggle" type="button" title="Return to agents" aria-label="Return to agents">
+              <svg class="output-expand-icon" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M1.5 1.5 6 6M6 2.5V6H2.5M14.5 14.5 10 10M10 13.5V10h3.5"/>
+              </svg>
+            </button>
+          </header>
+          <div id="outputViewerContent" class="output-viewer-content"></div>
+        </section>
+      </main>
+
+      <div id="artifactResizeHandle" class="resize-handle" role="separator" aria-label="Resize output panel"></div>
+
+      <aside class="output-panel">
+        <div class="sidebar-title">
+          <span>Outputs</span>
+          <div class="output-actions">
+            <button id="toggleOutputButton" class="icon-button pane-toggle-button" type="button" title="Close output pane" aria-label="Close output pane">
+              <svg class="pane-toggle-icon" viewBox="0 0 20 20" aria-hidden="true">
+                <rect x="2.5" y="2.5" width="15" height="15" rx="1.7"/>
+                <path d="M7.5 3v14M11.2 7l3 3-3 3"/>
+                <path class="pane-toggle-dots" d="M5 6.5h.01M5 10h.01M5 13.5h.01"/>
+              </svg>
+            </button>
+            <button id="refreshArtifactsButton" class="icon-button" type="button" title="Refresh outputs" aria-label="Refresh outputs">↻</button>
+            <button id="closeOutputPanelButton" class="icon-button output-close-button" type="button" title="Close outputs" aria-label="Close outputs">×</button>
+          </div>
+        </div>
+        <section class="artifact-browser" aria-label="Output files">
+          <button id="toggleArtifactListButton" class="artifact-list-title" type="button" aria-expanded="true">
+            <span class="artifact-list-arrow" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4"/></svg>
+            </span>
+            <span>Output files</span>
+          </button>
+          <div id="artifactList" class="artifact-list"></div>
+        </section>
+        <div id="artifactPreview" class="artifact-preview">
+          <div class="preview-empty">
+            <strong>Outputs</strong>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="usage-bar">
+      <div class="usage-brand">
+        <span class="usage-logo codex-logo"><img class="brand-symbol" src="assets/openai-blossom.svg" alt=""></span>
+        <div>
+          <span class="usage-label">Codex</span>
+          <strong id="codexUsageText">Checking usage…</strong>
+        </div>
+        <div class="usage-meter"><span id="codexUsageMeter"></span></div>
+      </div>
+      <div class="usage-divider"></div>
+      <div id="systemMetrics" class="system-metrics">
+        <span id="metricSource" class="metric-source">● Local</span>
+        <span>CPU <strong id="cpuUsageText">—</strong></span>
+        <span>RAM <strong id="memoryUsageText">—</strong></span>
+        <span id="gpuMetrics" class="gpu-metrics"></span>
+      </div>
+      <div id="spotifyNowPlaying" class="spotify-now-playing" hidden>
+        <button id="spotifyPreviousButton" class="spotify-control" type="button" title="Previous track" aria-label="Previous track">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3v10M12.5 3.5 5.5 8l7 4.5z"/></svg>
+        </button>
+        <button id="spotifyPlayPauseButton" class="spotify-control" type="button" title="Play" aria-label="Play">
+          <svg class="spotify-play-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m5 3 7 5-7 5z"/></svg>
+          <svg class="spotify-pause-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9M11 3.5v9"/></svg>
+        </button>
+        <button id="spotifyNextButton" class="spotify-control" type="button" title="Next track" aria-label="Next track">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 3.5 7 4.5-7 4.5zM12.5 3v10"/></svg>
+        </button>
+        <div class="spotify-track-copy">
+          <strong id="spotifyTrackName">Spotify</strong>
+          <span id="spotifyTrackDetail"></span>
+        </div>
+      </div>
+      <div class="footer-spacer"></div>
+      <span id="footerStatus" class="footer-status">No workspace</span>
+    </footer>
+  </div>
+
+  <div id="settingsOverlay" class="settings-overlay" hidden>
+    <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <aside class="settings-navigation">
+      <button id="closeSettingsButton" class="settings-close" type="button" title="Close settings" aria-label="Close settings">×</button>
+      <span class="settings-group-label">General</span>
+      <div class="settings-nav-item" data-settings-target="workspace" role="button" tabindex="0">Workspace</div>
+      <div class="settings-nav-item active" data-settings-target="appearance" role="button" tabindex="0">Appearance</div>
+      <div class="settings-nav-item" data-settings-target="agents" role="button" tabindex="0">Agents</div>
+      <div class="settings-nav-item" data-settings-target="terminal" role="button" tabindex="0">Terminal</div>
+      <div class="settings-nav-item" data-settings-target="outputs" role="button" tabindex="0">Outputs</div>
+      <div class="settings-nav-item" data-settings-target="performance" role="button" tabindex="0">Performance</div>
+      <div class="settings-profile-link settings-nav-item" data-settings-target="profile" role="button" tabindex="0">Profile</div>
+      </aside>
+
+      <main class="settings-main">
+      <header class="settings-header">
+        <h1 id="settingsTitle">Appearance</h1>
+        <label class="settings-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="settingsSearchInput" type="search" placeholder="Search settings">
+        </label>
+      </header>
+
+      <section class="settings-page appearance-settings" data-settings-page="appearance">
+        <div class="appearance-categories" role="tablist">
+          <div class="appearance-category" role="tab" tabindex="0">Light</div>
+          <div class="appearance-category" role="tab" tabindex="0">Light Contrast</div>
+          <div class="appearance-category" role="tab" tabindex="0">Transparent</div>
+          <div class="appearance-category" role="tab" tabindex="0">Gradient</div>
+          <div class="appearance-category active" role="tab" tabindex="0">Dark</div>
+          <div class="appearance-category" role="tab" tabindex="0">Dark Contrast</div>
+        </div>
+
+        <div id="themeGrid" class="theme-grid">
+          <div class="theme-option" data-theme="dark-plus" role="button" tabindex="0"><i style="--theme-a:#172e55;--theme-b:#3b8cff"></i><span>Dark+</span><b>✓</b></div>
+          <div class="theme-option" data-theme="monokai" role="button" tabindex="0"><i style="--theme-a:#5d1435;--theme-b:#e44773"></i><span>Monokai</span><b>✓</b></div>
+          <div class="theme-option" data-theme="solarized-dark" role="button" tabindex="0"><i style="--theme-a:#07506a;--theme-b:#3cb8e7"></i><span>Solarized Dark</span><b>✓</b></div>
+          <div class="theme-option" data-theme="dracula" role="button" tabindex="0"><i style="--theme-a:#623b68;--theme-b:#ef86d8"></i><span>Dracula</span><b>✓</b></div>
+          <div class="theme-option active" data-theme="nord" role="button" tabindex="0"><i style="--theme-a:#445966;--theme-b:#9cc9d7"></i><span>Nord</span><b>✓</b></div>
+          <div class="theme-option" data-theme="gruvbox-dark" role="button" tabindex="0"><i style="--theme-a:#5d4722;--theme-b:#e7b947"></i><span>Gruvbox Dark</span><b>✓</b></div>
+          <div class="theme-option" data-theme="one-dark-pro" role="button" tabindex="0"><i style="--theme-a:#32445b;--theme-b:#72a9e5"></i><span>One Dark Pro</span><b>✓</b></div>
+          <div class="theme-option" data-theme="kimbie-dark" role="button" tabindex="0"><i style="--theme-a:#5a2925;--theme-b:#dc4950"></i><span>Kimbie Dark</span><b>✓</b></div>
+          <div class="theme-option" data-theme="github-dark" role="button" tabindex="0"><i style="--theme-a:#18345c;--theme-b:#56a0ff"></i><span>GitHub Dark</span><b>✓</b></div>
+          <div class="theme-option" data-theme="catppuccin-mocha" role="button" tabindex="0"><i style="--theme-a:#414968;--theme-b:#9baee9"></i><span>Catppuccin Mocha</span><b>✓</b></div>
+          <div class="theme-option" data-theme="tokyo-night" role="button" tabindex="0"><i style="--theme-a:#253a67;--theme-b:#7898ee"></i><span>Tokyo Night</span><b>✓</b></div>
+          <div class="theme-option" data-theme="ayu-dark" role="button" tabindex="0"><i style="--theme-a:#584b2c;--theme-b:#eccb68"></i><span>Ayu Dark</span><b>✓</b></div>
+          <div class="theme-option" data-theme="palenight" role="button" tabindex="0"><i style="--theme-a:#384872;--theme-b:#8aa7f3"></i><span>Palenight</span><b>✓</b></div>
+          <div class="theme-option" data-theme="honey-dark" role="button" tabindex="0"><i style="--theme-a:#654a12;--theme-b:#f2ba31"></i><span>Honey Dark</span><b>✓</b></div>
+          <div class="theme-option" data-theme="molten-amber" role="button" tabindex="0"><i style="--theme-a:#5b2f1e;--theme-b:#ef8c3b"></i><span>Molten Amber</span><b>✓</b></div>
+          <div class="theme-option" data-theme="saffron-night" role="button" tabindex="0"><i style="--theme-a:#624d08;--theme-b:#efba17"></i><span>Saffron Night</span><b>✓</b></div>
+          <div class="theme-option" data-theme="amber-slate" role="button" tabindex="0"><i style="--theme-a:#56401d;--theme-b:#e69b25"></i><span>Amber Slate</span><b>✓</b></div>
+          <div class="theme-option" data-category="Light" data-theme="light-plus" role="button" tabindex="0"><i style="--theme-a:#e9f2ff;--theme-b:#4b9cff"></i><span>Light+</span><b>✓</b></div>
+          <div class="theme-option" data-category="Light" data-theme="quiet-light" role="button" tabindex="0"><i style="--theme-a:#edf1f6;--theme-b:#7890af"></i><span>Quiet Light</span><b>✓</b></div>
+          <div class="theme-option" data-category="Light" data-theme="solarized-light" role="button" tabindex="0"><i style="--theme-a:#eee8d5;--theme-b:#2aa198"></i><span>Solarized Light</span><b>✓</b></div>
+          <div class="theme-option" data-category="Light" data-theme="catppuccin-latte" role="button" tabindex="0"><i style="--theme-a:#e6e9ef;--theme-b:#8839ef"></i><span>Catppuccin Latte</span><b>✓</b></div>
+          <div class="theme-option" data-category="Light Contrast" data-theme="github-light-hc" role="button" tabindex="0"><i style="--theme-a:#ffffff;--theme-b:#0969da"></i><span>GitHub Light</span><b>✓</b></div>
+          <div class="theme-option" data-category="Light Contrast" data-theme="cyan-contrast" role="button" tabindex="0"><i style="--theme-a:#ffffff;--theme-b:#007f8b"></i><span>Cyan Contrast</span><b>✓</b></div>
+          <div class="theme-option" data-category="Light Contrast" data-theme="amber-contrast" role="button" tabindex="0"><i style="--theme-a:#fffdf4;--theme-b:#9a5b00"></i><span>Amber Contrast</span><b>✓</b></div>
+          <div class="theme-option" data-category="Transparent" data-theme="glass-dark" role="button" tabindex="0"><i style="--theme-a:#20262d;--theme-b:#62c4bd"></i><span>Glass Dark</span><b>✓</b></div>
+          <div class="theme-option" data-category="Transparent" data-theme="glass-ocean" role="button" tabindex="0"><i style="--theme-a:#102a3a;--theme-b:#41b8d5"></i><span>Glass Ocean</span><b>✓</b></div>
+          <div class="theme-option" data-category="Transparent" data-theme="glass-violet" role="button" tabindex="0"><i style="--theme-a:#29213c;--theme-b:#bd93f9"></i><span>Glass Violet</span><b>✓</b></div>
+          <div class="theme-option" data-category="Gradient" data-theme="prism-light" role="button" tabindex="0"><i style="--theme-a:#d7ecff;--theme-b:#bd8cff"></i><span>Prism Light</span><b>✓</b></div>
+          <div class="theme-option" data-category="Gradient" data-theme="sunset-gradient" role="button" tabindex="0"><i style="--theme-a:#7b315d;--theme-b:#ff8a55"></i><span>Sunset Gradient</span><b>✓</b></div>
+          <div class="theme-option" data-category="Gradient" data-theme="lagoon-gradient" role="button" tabindex="0"><i style="--theme-a:#11475a;--theme-b:#38c5b3"></i><span>Lagoon Gradient</span><b>✓</b></div>
+          <div class="theme-option" data-category="Dark Contrast" data-theme="abyss" role="button" tabindex="0"><i style="--theme-a:#000c18;--theme-b:#00b7ff"></i><span>Abyss</span><b>✓</b></div>
+          <div class="theme-option" data-category="Dark Contrast" data-theme="tomorrow-night-blue" role="button" tabindex="0"><i style="--theme-a:#001c3d;--theme-b:#73c7ff"></i><span>Tomorrow Night Blue</span><b>✓</b></div>
+          <div class="theme-option" data-category="Dark Contrast" data-theme="graphite-contrast" role="button" tabindex="0"><i style="--theme-a:#050505;--theme-b:#d0d0d0"></i><span>Graphite Contrast</span><b>✓</b></div>
+        </div>
+
+        <div class="pdf-setting">
+          <h2>Dark PDF rendering</h2>
+          <div class="pdf-options">
+            <div class="pdf-option" data-pdf-mode="adaptive" role="button" tabindex="0"><span>☼</span><strong>Adaptive<small>Dark, keep figures</small></strong></div>
+            <div class="pdf-option" data-pdf-mode="original" role="button" tabindex="0"><span>▯</span><strong>Original<small>Unchanged pages</small></strong></div>
+            <div class="pdf-option active" data-pdf-mode="invert" role="button" tabindex="0"><span>◐</span><strong>Invert<small>Everything</small></strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-page" data-settings-page="workspace" hidden>
+        <div class="settings-controls">
+          <div><span>Current workspace</span><strong id="settingsWorkspacePath">No workspace selected</strong></div>
+          <label><span>Default layout<small>Used for newly added workspaces</small></span><select id="settingsDefaultLayout"><option value="1">1×1</option><option value="2">1×2</option><option value="4">2×2</option></select></label>
+          <label><span>Remember sidebar widths<small>Restore both resize positions on launch</small></span><input id="settingsRememberWidths" type="checkbox"></label>
+          <div><span>Connections</span><strong>Local + SSH</strong></div>
+        </div>
+      </section>
+
+      <section class="settings-page" data-settings-page="agents" hidden>
+        <div class="settings-controls">
+          <label><span>Default agent<small>Used when Enter starts an empty cell</small></span><select id="settingsDefaultAgent"><option value="codex">Codex</option><option value="claude">Claude</option><option value="shell">Shell</option></select></label>
+          <label><span>Auto-open generated files<small>Show viewable agent output as soon as it is reported</small></span><input id="settingsAutoPreview" type="checkbox"></label>
+          <label><span>Show TLDR strip<small>Keep the agent summary above its terminal</small></span><input id="settingsShowTldr" type="checkbox"></label>
+          <label><span>Recent file history<small>Scrollable files retained in each agent footer</small></span><select id="settingsRecentFilesLimit"><option value="8">8 files</option><option value="20">20 files</option><option value="40">40 files</option></select></label>
+        </div>
+      </section>
+
+      <section class="settings-page" data-settings-page="terminal" hidden>
+        <div class="settings-controls">
+          <label><span>Font size<small>Applied immediately to every open terminal</small></span><span class="range-control"><input id="settingsTerminalFontSize" type="range" min="8" max="16" step="1"><output id="settingsTerminalFontSizeValue">9 px</output></span></label>
+          <label><span>Scrollback<small>Maximum lines retained per terminal</small></span><select id="settingsTerminalScrollback"><option value="1000">1,000 lines</option><option value="3000">3,000 lines</option><option value="6000">6,000 lines</option><option value="10000">10,000 lines</option></select></label>
+          <label><span>Blinking cursor<small>Animate the active terminal cursor</small></span><input id="settingsTerminalCursorBlink" type="checkbox"></label>
+          <div><span>Shell</span><strong>Login shell</strong></div>
+        </div>
+      </section>
+
+      <section class="settings-page" data-settings-page="outputs" hidden>
+        <div class="settings-controls">
+          <label><span>Open pane for previews<small>Expand Outputs when an agent reports a preview file</small></span><input id="settingsAutoOpenOutput" type="checkbox"></label>
+          <label><span>Compact file rows<small>Use dense VS Code-style generated-file rows</small></span><input id="settingsCompactOutputs" type="checkbox"></label>
+          <div><span>File attribution</span><strong>Agent icon + number + name</strong></div>
+          <div><span>Preview support</span><strong>Images, PDF, HTML, text, data</strong></div>
+        </div>
+      </section>
+
+      <section class="settings-page" data-settings-page="performance" hidden>
+        <div class="settings-controls">
+          <label><span>System metrics refresh<small>CPU, memory, and remote GPU polling</small></span><select id="settingsMetricsInterval"><option value="2000">2 seconds</option><option value="5000">5 seconds</option><option value="10000">10 seconds</option></select></label>
+          <label><span>Reduce motion<small>Disable glow and transition animation</small></span><input id="settingsReduceMotion" type="checkbox"></label>
+          <div><span>Remote workspace sync</span><strong>Every 4 seconds while agents run</strong></div>
+          <div><span>Terminal renderer</span><strong>xterm.js</strong></div>
+        </div>
+      </section>
+
+      <section class="settings-page" data-settings-page="profile" hidden>
+        <div class="settings-details">
+          <div><span>Codex</span><strong id="settingsCodexUsage">Checking usage…</strong></div>
+          <div><span>System metrics</span><strong>Visible in the bottom bar</strong></div>
+        </div>
+      </section>
+      </main>
+    </section>
+  </div>
+
+  <div id="workspaceRemoveBackdrop" class="modal-backdrop workspace-remove-backdrop" hidden>
+    <section class="workspace-remove-dialog" role="dialog" aria-modal="true" aria-labelledby="workspaceRemoveTitle">
+      <header class="workspace-remove-header">
+        <div>
+          <span class="eyebrow">Workspace</span>
+          <h2 id="workspaceRemoveTitle">Remove workspace?</h2>
+        </div>
+        <button id="closeWorkspaceRemoveButton" class="icon-button" type="button" title="Cancel" aria-label="Cancel">×</button>
+      </header>
+      <div class="workspace-remove-body">
+        <strong id="workspaceRemoveName"></strong>
+        <p id="workspaceRemoveDetail"></p>
+        <small>The folder and its files will stay on disk.</small>
+      </div>
+      <footer class="workspace-remove-footer">
+        <button id="cancelWorkspaceRemoveButton" class="dialog-icon-button" type="button" title="Cancel" aria-label="Cancel">×</button>
+        <button id="confirmWorkspaceRemoveButton" class="dialog-icon-button danger" type="button" title="Remove workspace" aria-label="Remove workspace">✓</button>
+      </footer>
+    </section>
+  </div>
+
+  <div id="sshModalBackdrop" class="modal-backdrop" hidden>
+    <section class="ssh-dialog" role="dialog" aria-modal="true" aria-labelledby="sshDialogTitle">
+      <header class="ssh-dialog-header">
+        <div>
+          <span class="eyebrow">Remote workspace</span>
+          <h2 id="sshDialogTitle">Connect with SSH</h2>
+        </div>
+        <button id="closeSshDialogButton" class="icon-button" type="button" title="Close" aria-label="Close">×</button>
+      </header>
+      <div class="ssh-dialog-body">
+        <label>
+          <span>Known hosts</span>
+          <select id="sshKnownHostSelect">
+            <option value="">Choose a known host…</option>
+          </select>
+        </label>
+        <div class="ssh-field-row">
+          <label>
+            <span>User</span>
+            <input id="sshUserInput" type="text" placeholder="alex">
+          </label>
+          <label>
+            <span>Server</span>
+            <input id="sshHostInput" type="text" placeholder="server.edu">
+          </label>
+        </div>
+        <label>
+          <span>Server path</span>
+          <input id="sshPathInput" type="text" value="~" placeholder="~/project">
+        </label>
+        <p class="ssh-help">Uses your existing SSH config and keys. The remote folder is mirrored for fast Explorer previews; agents run on the server.</p>
+        <div id="sshAuthTerminalShell" class="ssh-auth-terminal-shell" hidden>
+          <div class="ssh-auth-terminal-title"><span>SSH authentication</span><small>Complete any password, passphrase, or host prompt below.</small></div>
+          <div id="sshAuthTerminal" class="ssh-auth-terminal"></div>
+        </div>
+        <p id="sshStatus" class="ssh-status"></p>
+      </div>
+      <footer class="ssh-dialog-footer">
+        <button id="cancelSshButton" class="dialog-icon-button" type="button" title="Cancel" aria-label="Cancel">×</button>
+        <button id="connectSshButton" class="dialog-icon-button primary" type="button" title="Connect" aria-label="Connect">✓</button>
+      </footer>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/openleaf-themes.js"></script>
+  <script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

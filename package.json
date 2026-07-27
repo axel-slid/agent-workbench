@@ -1,0 +1,27 @@
+{
+  "name": "agent-workbench",
+  "version": "0.1.0",
+  "productName": "Agent Workbench",
+  "description": "Electron workspace for running and organizing Codex and Claude agents.",
+  "homepage": "https://github.com/axel-slid/agent-workbench",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/axel-slid/agent-workbench.git"
+  },
+  "main": "main.js",
+  "scripts": {
+    "start": "node scripts/start.mjs",
+    "dev": "electron .",
+    "check": "node --check main.js && node --check preload.js && node --check renderer.js",
+    "package:mac": "node scripts/package-mac.mjs"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "material-icon-theme": "^5.36.1",
+    "node-pty": "^1.1.0"
+  },
+  "devDependencies": {
+    "electron": "^42.5.0"
+  }
+}
