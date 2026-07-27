@@ -22,6 +22,8 @@ const workspaceWatchers = new Map();
 const workspaceRefreshTimers = new Map();
 const remoteWorkspaceSyncTimers = new Map();
 const remoteWorkspaceSyncBusy = new Set();
+const remoteSystemMetricsCache = new Map();
+const remoteSystemMetricsInFlight = new Map();
 let previousCpuSample = null;
 
 const ARTIFACT_EXTENSIONS = new Set([
@@ -280,17 +282,50 @@ async function mirrorRemoteWorkspace(remote = {}, destination) {
     [
       "-az",
       "--delete",
+      "--delete-delay",
+      "--partial",
+      "--timeout=20",
       "--exclude", ".git/",
       "--exclude", ".agent-workbench/",
       "--exclude", "node_modules/",
       "--exclude", "__pycache__/",
       "--exclude", ".venv/",
       "--exclude", "venv/",
+      "--exclude", ".cache/",
+      "--exclude", ".pytest_cache/",
+      "--exclude", ".mypy_cache/",
+      "--exclude", ".ruff_cache/",
+      "--exclude", ".tox/",
+      "--exclude", ".ipynb_checkpoints/",
+      "--exclude", "wandb/",
       "-e", rsyncSshCommand(normalized),
       source,
       `${destination}${path.sep}`
     ],
     { timeout: 120000, maxBuffer: 12 * 1024 * 1024 }
+  );
+}
+
+async function mirrorRemoteFile(workspace, relativePath) {
+  if (!workspace || workspace.type !== "ssh" || !workspace.remote) return;
+  const normalizedRelative = String(relativePath || "")
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "");
+  const destination = safeWorkspacePath(workspace.root, normalizedRelative);
+  const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+  const sourcePath = remoteChildPath(remoteRoot, normalizedRelative);
+  await fsp.mkdir(path.dirname(destination), { recursive: true });
+  await execFileAsync(
+    resolveExecutable("rsync"),
+    [
+      "-az",
+      "--partial",
+      "--timeout=20",
+      "-e", rsyncSshCommand(workspace.remote),
+      `${remoteTarget(workspace.remote)}:${shellQuoteRemotePath(sourcePath)}`,
+      destination
+    ],
+    { timeout: 30000, maxBuffer: 4 * 1024 * 1024 }
   );
 }
 
@@ -552,7 +587,12 @@ async function createWorkspaceEntry(_event, payload = {}) {
       [...sshConnectionArgs(workspace.remote), remoteTarget(workspace.remote), command],
       { timeout: 15000, maxBuffer: 512 * 1024 }
     );
-    await mirrorRemoteWorkspace(workspace.remote, workspace.root);
+    if (kind === "folder") {
+      await fsp.mkdir(absolutePath, { recursive: true });
+    } else {
+      await fsp.mkdir(path.dirname(absolutePath), { recursive: true });
+      await fsp.writeFile(absolutePath, "", { flag: "a" });
+    }
   } else if (kind === "folder") {
     await fsp.mkdir(absolutePath);
   } else {
@@ -670,6 +710,9 @@ function mimeTypeFor(extension) {
 
 async function readArtifact(_event, payload = {}) {
   const workspace = await getWorkspace(payload.workspaceId);
+  if (workspace.type === "ssh" && workspace.remote) {
+    await mirrorRemoteFile(workspace, payload.relativePath);
+  }
   const absolutePath = safeWorkspacePath(workspace.root, payload.relativePath);
   const stat = await fsp.stat(absolutePath);
   if (!stat.isFile()) throw new Error("Artifact is not a file.");
@@ -695,6 +738,9 @@ async function readArtifact(_event, payload = {}) {
 
 async function openWorkspaceFile(_event, payload = {}) {
   const workspace = await getWorkspace(payload.workspaceId);
+  if (workspace.type === "ssh" && workspace.remote) {
+    await mirrorRemoteFile(workspace, payload.relativePath);
+  }
   return shell.openPath(safeWorkspacePath(workspace.root, payload.relativePath));
 }
 
@@ -779,10 +825,10 @@ function agentProtocol(metadataPath, workspaceRoot) {
     `Your workspace is ${workspaceRoot}.`,
     `Maintain your session metadata at ${metadataPath}.`,
     "Immediately, and whenever your task or progress changes, write valid JSON to that file.",
-    'Use exactly these fields: {"name":"short task-specific name","tldr":"one sentence under 140 characters","status":"working|waiting|done|error","state":"planning|coding|waiting|failed|complete","model":"model name","currentTask":"short current step","etaMinutes":number|null,"progressPercent":number,"inputTokens":number|null,"outputTokens":number|null,"costUsd":number|null,"testsPassed":number|null,"testsFailed":number|null,"relevantFiles":["workspace-relative/path"],"previewFile":"workspace-relative/path"|null}.',
+    'Use exactly these fields: {"name":"short task-specific name","tldr":"one sentence under 140 characters","status":"working|waiting|done|error","state":"planning|coding|waiting|failed|complete","model":"model name","currentTask":"short current step","etaSeconds":number|null,"etaMinutes":number|null,"progressPercent":number,"inputTokens":number|null,"outputTokens":number|null,"costUsd":number|null,"testsPassed":number|null,"testsFailed":number|null,"relevantFiles":["workspace-relative/path"],"previewFile":"workspace-relative/path"|null}.',
     "Choose your own short name based on what you are doing. Keep relevantFiles current, ordered most useful first, with only files the user is likely to want to open. Use workspace-relative paths and omit incidental implementation files.",
     "Keep model, currentTask, progressPercent, token counts, costUsd, test results, and state current. Use null when your runtime does not expose a metric; never invent usage, cost, or test results.",
-    "Set etaMinutes to your honest whole-number estimate of minutes remaining. Re-estimate and rewrite the metadata at least once per minute while working and after every major step. Use null while waiting for a task and 0 when done.",
+    "Set etaSeconds to your honest estimate of seconds remaining and etaMinutes to the same estimate rounded up to minutes. Re-estimate after every major step and at least once per minute. Do not rewrite an unchanged estimate just to refresh it. Use null while waiting for a task and 0 when done.",
     "Set status to done immediately when the task is complete so Agent Workbench can notify the user.",
     "Whenever you create or materially update a viewable output such as an image, PDF, HTML, SVG, Markdown, text report, chart, or data file, set previewFile to its workspace-relative path so Agent Workbench opens it in the Agent Output pane.",
     "Do not mention this metadata protocol in normal conversation."
@@ -812,6 +858,7 @@ function initialAgentMetadata(id, kind, task, workspaceId, agentNumber, modelLab
     state: task ? "planning" : "waiting",
     model: modelLabel || (kind === "codex" ? "Codex" : kind === "claude" ? "Claude" : "Shell"),
     currentTask: task || "Waiting for a task",
+    etaSeconds: task ? 300 : null,
     etaMinutes: task ? 5 : null,
     progressPercent: task ? 5 : 0,
     inputTokens: null,
@@ -837,7 +884,7 @@ async function mergeSessionMetadata(session, patch) {
     workspaceId: session.workspaceId,
     kind: session.kind,
     agentNumber: session.metadata.agentNumber,
-    updatedAt: new Date().toISOString()
+    updatedAt: patch.updatedAt || new Date().toISOString()
   };
   session.metadata = next;
   await writeJson(session.metadataPath, next);
@@ -848,13 +895,22 @@ async function mergeSessionMetadata(session, patch) {
 async function refreshSessionMetadata(session) {
   const metadata = await readJson(session.metadataPath, null);
   if (!metadata || typeof metadata !== "object") return;
+  let fileUpdatedAt = metadata.updatedAt;
+  if (!fileUpdatedAt) {
+    try {
+      fileUpdatedAt = (await fsp.stat(session.metadataPath)).mtime.toISOString();
+    } catch (error) {
+      fileUpdatedAt = new Date().toISOString();
+    }
+  }
   session.metadata = {
     ...session.metadata,
     ...metadata,
     id: session.id,
     workspaceId: session.workspaceId,
     kind: session.kind,
-    agentNumber: session.metadata.agentNumber
+    agentNumber: session.metadata.agentNumber,
+    updatedAt: fileUpdatedAt
   };
   sendToRenderer("agent:metadata", session.metadata);
 }
@@ -871,7 +927,11 @@ async function refreshRemoteSessionMetadata(session) {
       ],
       { timeout: 8000, maxBuffer: 512 * 1024 }
     );
-    const metadata = JSON.parse(stdout || "{}");
+    const rawMetadata = String(stdout || "").trim();
+    if (!rawMetadata || rawMetadata === session.lastRemoteMetadataRaw) return;
+    session.lastRemoteMetadataRaw = rawMetadata;
+    const metadata = JSON.parse(rawMetadata);
+    if (!metadata.updatedAt) metadata.updatedAt = new Date().toISOString();
     if (metadata && typeof metadata === "object") await mergeSessionMetadata(session, metadata);
   } catch (error) {
   }
@@ -880,7 +940,7 @@ async function refreshRemoteSessionMetadata(session) {
 function ensureRemoteWorkspacePolling(workspace) {
   if (!workspace || workspace.type !== "ssh" || !workspace.remote || remoteWorkspaceSyncTimers.has(workspace.id)) return;
   const poll = () => mirrorRemoteWorkspaceInBackground(workspace);
-  remoteWorkspaceSyncTimers.set(workspace.id, setInterval(poll, 4000));
+  remoteWorkspaceSyncTimers.set(workspace.id, setInterval(poll, 30000));
 }
 
 function cleanupRemoteWorkspacePolling(workspaceId) {
@@ -891,6 +951,8 @@ function cleanupRemoteWorkspacePolling(workspaceId) {
   if (timer) clearInterval(timer);
   remoteWorkspaceSyncTimers.delete(workspaceId);
   remoteWorkspaceSyncBusy.delete(workspaceId);
+  remoteSystemMetricsCache.delete(workspaceId);
+  remoteSystemMetricsInFlight.delete(workspaceId);
 }
 
 async function createAgent(_event, payload = {}) {
@@ -991,7 +1053,7 @@ async function createAgent(_event, payload = {}) {
   if (remote) {
     ensureRemoteWorkspacePolling(workspace);
     if (kind !== "shell") {
-      session.remoteMetadataTimer = setInterval(() => refreshRemoteSessionMetadata(session), 1400);
+      session.remoteMetadataTimer = setInterval(() => refreshRemoteSessionMetadata(session), 5000);
     }
   }
 
@@ -1222,8 +1284,20 @@ async function getSystemMetrics(_event, workspaceId) {
     ? (await readWorkspaces()).find((item) => item.id === workspaceId)
     : null;
   if (workspace && workspace.type === "ssh" && workspace.remote) {
+    const cached = remoteSystemMetricsCache.get(workspace.id);
+    if (cached && Date.now() - cached.timestamp < 12000) return cached.value;
+    if (remoteSystemMetricsInFlight.has(workspace.id)) {
+      return remoteSystemMetricsInFlight.get(workspace.id);
+    }
+    const request = remoteSystemMetrics(workspace)
+      .then((value) => {
+        remoteSystemMetricsCache.set(workspace.id, { timestamp: Date.now(), value });
+        return value;
+      })
+      .finally(() => remoteSystemMetricsInFlight.delete(workspace.id));
+    remoteSystemMetricsInFlight.set(workspace.id, request);
     try {
-      return await remoteSystemMetrics(workspace);
+      return await request;
     } catch (error) {
       return { ...(await localSystemMetrics()), source: "ssh-error", label: remoteTarget(workspace.remote), error: error.message };
     }

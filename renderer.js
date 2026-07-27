@@ -86,7 +86,6 @@ const settingsDefaultLayout = document.getElementById("settingsDefaultLayout");
 const settingsRememberWidths = document.getElementById("settingsRememberWidths");
 const settingsDefaultAgent = document.getElementById("settingsDefaultAgent");
 const settingsAutoPreview = document.getElementById("settingsAutoPreview");
-const settingsShowTldr = document.getElementById("settingsShowTldr");
 const settingsRecentFilesLimit = document.getElementById("settingsRecentFilesLimit");
 const settingsTerminalFontSize = document.getElementById("settingsTerminalFontSize");
 const settingsTerminalFontSizeValue = document.getElementById("settingsTerminalFontSizeValue");
@@ -160,6 +159,7 @@ let pixelBaseLayout = null;
 let selectedAgentId = null;
 let agentsPaused = false;
 let unreadAgentNotifications = 0;
+let lastTerminalInputAt = 0;
 const pixelKnownAgentIds = new Set();
 const pendingSshAuthExits = new Map();
 const pendingSshAuthData = new Map();
@@ -321,12 +321,26 @@ function remainingEtaSeconds(session, now = Date.now()) {
   return Math.max(0, Math.ceil((session.etaDeadline - now) / 1000));
 }
 
+function reportedEtaSeconds(metadata) {
+  const exact = metadata?.etaSeconds;
+  if (exact !== null && exact !== undefined && exact !== "") {
+    const seconds = Number(exact);
+    if (Number.isFinite(seconds)) return Math.max(0, Math.round(seconds));
+  }
+  const minutes = metadata?.etaMinutes;
+  if (minutes !== null && minutes !== undefined && minutes !== "") {
+    const value = Number(minutes);
+    if (Number.isFinite(value)) return Math.max(0, Math.round(value * 60));
+  }
+  return null;
+}
+
 function etaDeadlineFromMetadata(metadata, now = Date.now()) {
-  const etaMinutes = Number(metadata?.etaMinutes);
-  if (!Number.isFinite(etaMinutes) || etaMinutes <= 0) return null;
+  const etaSeconds = reportedEtaSeconds(metadata);
+  if (!Number.isFinite(etaSeconds) || etaSeconds <= 0) return null;
   const reportedAt = Date.parse(metadata?.updatedAt || "");
   const base = Number.isFinite(reportedAt) ? reportedAt : now;
-  return Math.max(now + 1000, base + etaMinutes * 60 * 1000);
+  return Math.max(now + 1000, base + etaSeconds * 1000);
 }
 
 function formatEtaClock(seconds) {
@@ -754,6 +768,23 @@ function runtimeModelFromTerminal(data) {
   return match ? `${match[1]} [${match[2].toLowerCase()}]` : "";
 }
 
+function flushTerminalOutput(session) {
+  if (!session || session.terminalWriteScheduled) return;
+  session.terminalWriteScheduled = true;
+  requestAnimationFrame(() => {
+    session.terminalWriteScheduled = false;
+    const chunk = String(session.pendingTerminalOutput || "").slice(0, 65536);
+    session.pendingTerminalOutput = String(session.pendingTerminalOutput || "").slice(chunk.length);
+    if (chunk) session.term.write(chunk);
+    if (session.pendingTerminalOutput) flushTerminalOutput(session);
+  });
+}
+
+function queueTerminalOutput(session, data) {
+  session.pendingTerminalOutput = `${session.pendingTerminalOutput || ""}${data}`;
+  flushTerminalOutput(session);
+}
+
 function updateAgentStatusCard(session, now = Date.now()) {
   if (!session?.statusCard) return;
   const metadata = session.metadata || {};
@@ -1067,12 +1098,6 @@ function workspaceLayoutFor(workspaceId) {
   return [1, 2, 4].includes(saved) ? saved : 4;
 }
 
-function workspaceLayoutGridLabel(count) {
-  if (count === 1) return "1×1";
-  if (count === 2) return "1×2";
-  return "2×2";
-}
-
 function renderWorkspaceEditorTabs() {
   workspaceEditorTabs.innerHTML = "";
   workspaceEtaNodes.clear();
@@ -1087,20 +1112,11 @@ function renderWorkspaceEditorTabs() {
     tab.setAttribute("aria-selected", String(isActive));
     tab.title = `${remoteWorkspaceLabel(workspace)}\nRight-click to rename`;
 
-    const icon = document.createElement("span");
-    icon.className = "workspace-editor-icon";
-    icon.textContent = workspace.type === "ssh" ? "⌘" : "▱";
     const label = document.createElement("span");
     label.className = "workspace-editor-label";
-    label.textContent = `${workspace.name} · ${workspaceLayoutGridLabel(count)}`;
-    tab.append(icon, label);
+    label.textContent = workspace.name;
+    tab.append(label);
 
-    const divider = document.createElement("span");
-    divider.className = "agent-eta-divider";
-    divider.textContent = "·";
-    const etaLabel = document.createElement("span");
-    etaLabel.className = "agent-eta-label";
-    etaLabel.textContent = "Eta";
     const etaGroup = document.createElement("span");
     etaGroup.className = "agent-eta";
     etaGroup.setAttribute("aria-label", `${workspace.name} agent estimates`);
@@ -1122,7 +1138,7 @@ function renderWorkspaceEditorTabs() {
       event.stopPropagation();
       openWorkspaceRemoveDialog(workspace);
     });
-    tab.append(divider, etaLabel, etaGroup, closeButton);
+    tab.append(etaGroup, closeButton);
 
     makeInteractive(tab, () => selectWorkspace(workspace.id));
     tab.addEventListener("contextmenu", (event) => beginEditorTabRename(event, tab, workspace));
@@ -1303,7 +1319,7 @@ function applyPalette(palette, mode) {
   for (const [key, value] of Object.entries(palette)) {
     root.style.setProperty(`--theme-${key}`, value);
   }
-  root.style.setProperty("--theme-background", palette.background || palette.bg);
+  root.style.setProperty("--theme-background", palette.bg);
   root.style.setProperty("--theme-terminal", palette.bg);
   root.dataset.appearanceMode = mode.toLowerCase().replace(/\s+/g, "-");
   const terminalTheme = terminalThemeFromPalette(palette);
@@ -1405,7 +1421,6 @@ function applyTerminalPreferences() {
 }
 
 function applyWorkbenchPreferences() {
-  document.body.classList.toggle("hide-agent-tldr", !booleanPreference("agentWorkbenchShowTldr", true));
   document.body.classList.toggle("compact-output-rows", booleanPreference("agentWorkbenchCompactOutputs", true));
   document.body.classList.toggle("reduce-motion", booleanPreference("agentWorkbenchReduceMotion", false));
   for (const session of sessions.values()) updateAgentMetadata(session, {});
@@ -1423,7 +1438,6 @@ function initializeWorkbenchSettings() {
   settingsRememberWidths.checked = booleanPreference("agentWorkbenchRememberWidths", true);
   settingsDefaultAgent.value = localStorage.getItem("agentWorkbenchDefaultAgent") || "codex";
   settingsAutoPreview.checked = booleanPreference("agentWorkbenchAutoPreview", true);
-  settingsShowTldr.checked = booleanPreference("agentWorkbenchShowTldr", true);
   settingsRecentFilesLimit.value = String(numericPreference("agentWorkbenchRecentFilesLimit", 40, 8, 40));
   settingsTerminalFontSize.value = String(numericPreference("agentWorkbenchTerminalFontSize", 9, 8, 16));
   settingsTerminalScrollback.value = String(numericPreference("agentWorkbenchTerminalScrollback", 6000, 1000, 10000));
@@ -1515,29 +1529,56 @@ function terminalThemeFromPalette(palette = null) {
   const foreground = normalizeTerminalColor(colors.text, "#c7ced7");
   const accent = normalizeTerminalColor(colors.accent, "#79d7a7");
   const muted = normalizeTerminalColor(colors.muted, "#7e8794");
-  const selection = normalizeTerminalColor(colors.active, "#29463a");
+  const backgroundChannels = terminalColorChannels(background) || [9, 11, 14];
+  const lightBackground = (
+    backgroundChannels[0] * 0.2126
+    + backgroundChannels[1] * 0.7152
+    + backgroundChannels[2] * 0.0722
+  ) > 150;
+  const ansi = lightBackground
+    ? {
+        black: "#1f2328",
+        red: "#a31515",
+        green: "#008000",
+        yellow: "#795e26",
+        blue: "#0451a5",
+        magenta: "#af00db",
+        cyan: "#007f7f",
+        white: "#5b6169",
+        brightBlack: "#6e7781",
+        brightRed: "#cd3131",
+        brightGreen: "#00a000",
+        brightYellow: "#9a6700",
+        brightBlue: "#0067c0",
+        brightMagenta: "#bc05bc",
+        brightCyan: "#008c95",
+        brightWhite: "#24292f"
+      }
+    : {
+        black: "#181818",
+        red: "#f14c4c",
+        green: "#23d18b",
+        yellow: "#f5d76e",
+        blue: "#3b8eea",
+        magenta: "#d670d6",
+        cyan: "#29b8db",
+        white: "#d8dee9",
+        brightBlack: "#7f8791",
+        brightRed: "#ff6b6b",
+        brightGreen: "#5af2b0",
+        brightYellow: "#ffe58a",
+        brightBlue: "#6caeff",
+        brightMagenta: "#e69be6",
+        brightCyan: "#61d9ef",
+        brightWhite: "#ffffff"
+      };
   return {
     background,
     foreground,
     cursor: accent,
     cursorAccent: background,
-    selectionBackground: selection,
-    black: blendTerminalColor(background, "#000000", 0.3),
-    red: blendTerminalColor(accent, "#ff5f6d", 0.68),
-    green: blendTerminalColor(accent, "#62d98b", 0.58),
-    yellow: blendTerminalColor(accent, "#f2c55c", 0.68),
-    blue: blendTerminalColor(accent, "#66a8ff", 0.62),
-    magenta: blendTerminalColor(accent, "#c58cff", 0.58),
-    cyan: blendTerminalColor(accent, "#58d4dc", 0.58),
-    white: foreground,
-    brightBlack: muted,
-    brightRed: blendTerminalColor(accent, "#ff8892", 0.78),
-    brightGreen: blendTerminalColor(accent, "#8ce6a8", 0.72),
-    brightYellow: blendTerminalColor(accent, "#ffe08a", 0.76),
-    brightBlue: blendTerminalColor(accent, "#91c3ff", 0.72),
-    brightMagenta: blendTerminalColor(accent, "#d7adff", 0.7),
-    brightCyan: blendTerminalColor(accent, "#8fe8ed", 0.68),
-    brightWhite: "#ffffff"
+    selectionBackground: blendTerminalColor(background, accent, 0.28),
+    ...ansi
   };
 }
 
@@ -2533,23 +2574,6 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         <div class="agent-menu-item clear-terminal" role="menuitem" tabindex="0"><span>⌫</span><span>Clear terminal</span></div>
         <div class="agent-menu-item stop-terminal" role="menuitem" tabindex="0"><span>×</span><span>Stop agent</span></div>
       </div>
-      <section class="agent-status-card" aria-label="Agent status">
-        <div class="agent-status-primary">
-          <span class="agent-state"></span>
-          <strong class="agent-model"></strong>
-          <span class="agent-current-task"></span>
-          <b class="agent-progress-label"></b>
-        </div>
-        <div class="agent-status-secondary">
-          <span class="agent-tldr"></span>
-          <div class="agent-status-metrics">
-            <span title="Elapsed time"><b class="agent-elapsed"></b></span>
-            <span title="Token usage"><b class="agent-tokens"></b> tok</span>
-            <span title="Estimated cost">$<b class="agent-cost"></b></span>
-          </div>
-        </div>
-        <div class="agent-progress-track"><i></i></div>
-      </section>
       <div class="terminal-host"></div>
       <footer class="agent-recent-footer" hidden>
         <div class="recent-files" aria-label="Relevant files reported by this agent"></div>
@@ -2570,7 +2594,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   }
   kindBadge.title = descriptor.kind;
   const nameInput = slot.querySelector(".agent-name-input");
-  const tldrNode = slot.querySelector(".agent-tldr");
+  const tldrNode = null;
   const statusCard = slot.querySelector(".agent-status-card");
   const recentFooter = slot.querySelector(".agent-recent-footer");
   const recentFilesNode = slot.querySelector(".recent-files");
@@ -2590,7 +2614,10 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   const fitAddon = new FitAddon.FitAddon();
   term.loadAddon(fitAddon);
   term.open(terminalHost);
-  term.onData((data) => api.writeAgent(descriptor.id, data));
+  term.onData((data) => {
+    lastTerminalInputAt = Date.now();
+    api.writeAgent(descriptor.id, data);
+  });
   term.onResize(({ cols, rows }) => api.resizeAgent(descriptor.id, cols, rows));
 
   const observer = new ResizeObserver(() => {
@@ -2623,7 +2650,9 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     notifiedFailure: false,
     notifiedApproval: false,
     finishNotified: descriptor.metadata.status === "done",
-    modelDetectionBuffer: ""
+    modelDetectionBuffer: "",
+    pendingTerminalOutput: "",
+    terminalWriteScheduled: false
   };
   session.runtimeModel = descriptor.metadata.model && !/^(codex|claude|shell)$/i.test(descriptor.metadata.model)
     ? descriptor.metadata.model
@@ -2633,7 +2662,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   term.writeln(`\x1b[38;5;114m${descriptor.commandLabel}\x1b[0m`);
   term.writeln(`\x1b[38;5;244m${descriptor.cwd}\x1b[0m`);
   const pending = pendingTerminalData.get(descriptor.id) || [];
-  pending.forEach((data) => term.write(data));
+  pending.forEach((data) => queueTerminalOutput(session, data));
   pendingTerminalData.delete(descriptor.id);
 
   nameInput.addEventListener("change", () => api.renameAgent(descriptor.id, nameInput.value));
@@ -2858,9 +2887,6 @@ async function openReportedAgentPreview(session, relativePath) {
   const workspace = workspaces.find((item) => item.id === session.workspaceId);
   try {
     if (booleanPreference("agentWorkbenchAutoOpenOutput", true)) setOutputCollapsed(false);
-    if (workspace && workspace.type === "ssh") {
-      await api.syncWorkspace(session.workspaceId);
-    }
     await previewWorkspaceFile(session.workspaceId, relativePath);
   } catch (error) {
     showToast(error.message || String(error));
@@ -2872,12 +2898,22 @@ function updateAgentMetadata(session, metadata) {
   const recentFooterWasHidden = session.recentFooter.hidden;
   const nextMetadata = { ...session.metadata, ...metadata };
   const nextStatus = nextMetadata.status || "";
-  if (Object.prototype.hasOwnProperty.call(metadata, "etaMinutes")) {
-    session.etaDeadline = etaDeadlineFromMetadata(nextMetadata);
-  } else if (nextStatus === "working" && !Number.isFinite(session.etaDeadline)) {
-    session.etaDeadline = Date.now() + 5 * 60 * 1000;
-  } else if (nextStatus !== "working") {
+  const etaWasReported = Object.prototype.hasOwnProperty.call(metadata, "etaSeconds")
+    || Object.prototype.hasOwnProperty.call(metadata, "etaMinutes");
+  const nextReportedEta = reportedEtaSeconds(nextMetadata);
+  if (nextStatus !== "working") {
     session.etaDeadline = null;
+    session.lastReportedEtaSeconds = null;
+  } else if (etaWasReported && Number.isFinite(nextReportedEta)) {
+    if (
+      nextReportedEta !== session.lastReportedEtaSeconds
+      || !Number.isFinite(session.etaDeadline)
+    ) {
+      session.etaDeadline = etaDeadlineFromMetadata(nextMetadata);
+    }
+    session.lastReportedEtaSeconds = nextReportedEta;
+  } else if (!Number.isFinite(session.etaDeadline)) {
+    session.etaDeadline = Date.now() + 5 * 60 * 1000;
   }
   session.metadata = nextMetadata;
   updateAgentStatusCard(session);
@@ -2909,7 +2945,9 @@ function updateAgentMetadata(session, metadata) {
   if (document.activeElement !== session.nameInput) {
     session.nameInput.value = session.metadata.name || `${session.kind} agent`;
   }
-  session.tldrNode.textContent = session.metadata.tldr || "Waiting for an update.";
+  if (session.tldrNode) {
+    session.tldrNode.textContent = session.metadata.tldr || "Waiting for an update.";
+  }
   session.recentFilesNode.innerHTML = "";
 
   const recentLimit = numericPreference("agentWorkbenchRecentFilesLimit", 40, 8, 40);
@@ -2945,15 +2983,15 @@ function updateAgentMetadata(session, metadata) {
   renderAgentSidebar();
   syncPixelSession(session);
   renderPixelAgentRoster();
-  requestAnimationFrame(() => {
-    try {
-      session.fitAddon.fit();
-      if (recentFooterWasHidden && !session.recentFooter.hidden) {
-        session.term.scrollToBottom();
+  if (recentFooterWasHidden !== session.recentFooter.hidden) {
+    requestAnimationFrame(() => {
+      try {
+        session.fitAddon.fit();
+        if (!session.recentFooter.hidden) session.term.scrollToBottom();
+      } catch (error) {
       }
-    } catch (error) {
-    }
-  });
+    });
+  }
 }
 
 async function stopAgent(id) {
@@ -3275,7 +3313,15 @@ function scheduleWorkspaceRefresh(payload) {
     showToast(`Remote connection succeeded, but file sync failed: ${payload.remoteSyncError}`);
   }
   clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(() => refreshWorkspacePanels().catch(() => {}), 350);
+  const refreshWhenIdle = () => {
+    const timeSinceInput = Date.now() - lastTerminalInputAt;
+    if (timeSinceInput < 700) {
+      refreshTimer = setTimeout(refreshWhenIdle, 700 - timeSinceInput);
+      return;
+    }
+    refreshWorkspacePanels().catch(() => {});
+  };
+  refreshTimer = setTimeout(refreshWhenIdle, 900);
 }
 
 activityButtons.forEach((button) => {
@@ -3400,10 +3446,6 @@ settingsDefaultAgent.addEventListener("change", () => {
 settingsAutoPreview.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchAutoPreview", settingsAutoPreview.checked ? "1" : "0");
 });
-settingsShowTldr.addEventListener("change", () => {
-  localStorage.setItem("agentWorkbenchShowTldr", settingsShowTldr.checked ? "1" : "0");
-  applyWorkbenchPreferences();
-});
 settingsRecentFilesLimit.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchRecentFilesLimit", settingsRecentFilesLimit.value);
   applyWorkbenchPreferences();
@@ -3516,7 +3558,7 @@ api.onAgentData(({ id, data }) => {
       session.runtimeModel = runtimeModel;
       updateAgentStatusCard(session);
     }
-    session.term.write(data);
+    queueTerminalOutput(session, data);
   } else {
     const pending = pendingTerminalData.get(id) || [];
     pending.push(data);
