@@ -840,13 +840,15 @@ function setSidebarView(view) {
 }
 
 const FILES_CLOSE_ICON = '<svg class="pane-toggle-icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="1.7"/><path d="M12.5 3v14M8.8 7 5.8 10l3 3"/><path class="pane-toggle-dots" d="M15 6.5h.01M15 10h.01M15 13.5h.01"/></svg>';
-const FILES_OPEN_ICON = '<svg class="pane-toggle-icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="1.7"/><path d="M12.5 3v14M5.8 7l3 3-3 3"/><path class="pane-toggle-dots" d="M15 6.5h.01M15 10h.01M15 13.5h.01"/></svg>';
 const OUTPUT_CLOSE_ICON = '<svg class="pane-toggle-icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="1.7"/><path d="M7.5 3v14M11.2 7l3 3-3 3"/><path class="pane-toggle-dots" d="M5 6.5h.01M5 10h.01M5 13.5h.01"/></svg>';
-const OUTPUT_OPEN_ICON = '<svg class="pane-toggle-icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="1.7"/><path d="M7.5 3v14M14.2 7l-3 3 3 3"/><path class="pane-toggle-dots" d="M5 6.5h.01M5 10h.01M5 13.5h.01"/></svg>';
+const FILES_COLLAPSED_LABEL = '<span class="pane-collapsed-label">Files</span>';
+const OUTPUTS_COLLAPSED_LABEL = '<span class="pane-collapsed-label">Outputs</span>';
+const AGENT_MAXIMIZE_ICON = '<svg class="agent-resize-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M7 7 2.5 2.5M2.5 6V2.5H6M11 11l4.5 4.5M12 15.5h3.5V12"/></svg>';
+const AGENT_RESTORE_ICON = '<svg class="agent-resize-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M2.5 2.5 7 7M7 3.5V7H3.5M15.5 15.5 11 11M11 14.5V11h3.5"/></svg>';
 
 function setOutputCollapsed(collapsed) {
   document.body.classList.toggle("output-collapsed", collapsed);
-  toggleOutputButton.innerHTML = collapsed ? OUTPUT_OPEN_ICON : OUTPUT_CLOSE_ICON;
+  toggleOutputButton.innerHTML = collapsed ? OUTPUTS_COLLAPSED_LABEL : OUTPUT_CLOSE_ICON;
   toggleOutputButton.title = collapsed ? "Open output pane" : "Close output pane";
   toggleOutputButton.setAttribute("aria-label", toggleOutputButton.title);
   localStorage.setItem("agentWorkbenchOutputCollapsed", collapsed ? "1" : "0");
@@ -869,7 +871,7 @@ function setArtifactListCollapsed(collapsed) {
 
 function setFilesCollapsed(collapsed) {
   document.body.classList.toggle("files-collapsed", collapsed);
-  toggleFilesButton.innerHTML = collapsed ? FILES_OPEN_ICON : FILES_CLOSE_ICON;
+  toggleFilesButton.innerHTML = collapsed ? FILES_COLLAPSED_LABEL : FILES_CLOSE_ICON;
   toggleFilesButton.title = collapsed ? "Open files pane" : "Close files pane";
   toggleFilesButton.setAttribute("aria-label", toggleFilesButton.title);
   localStorage.setItem("agentWorkbenchFilesCollapsed", collapsed ? "1" : "0");
@@ -2111,7 +2113,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         <input class="agent-name-input" maxlength="48" aria-label="Agent name">
         <div class="agent-actions">
           <button class="agent-action agent-more" type="button" title="More actions" aria-label="More actions">⋯</button>
-          <button class="agent-action agent-maximize" type="button" title="Maximize agent" aria-label="Maximize agent">↗</button>
+          <button class="agent-action agent-maximize" type="button" title="Maximize agent" aria-label="Maximize agent">${AGENT_MAXIMIZE_ICON}</button>
           <button class="agent-action agent-wide" type="button" title="Swap left or right" aria-label="Swap left or right">
             <svg class="agent-swap-icon" viewBox="0 0 18 18" aria-hidden="true">
               <path d="M2.5 5.5h11M11 3l2.5 2.5L11 8M15.5 12.5h-11M7 10l-2.5 2.5L7 15"/>
@@ -2248,6 +2250,7 @@ function toggleAgentLayout(session, mode) {
     session.slot.classList.add(mode);
     if (mode === "maximized") agentGrid.classList.add("has-maximized");
   }
+  updateAgentMaximizeControls();
   requestAnimationFrame(() => {
     for (const activeSession of sessions.values()) {
       try {
@@ -2267,6 +2270,7 @@ function focusAgentWindow(slotIndex) {
   if (session) {
     session.slot.classList.add("maximized");
     agentGrid.classList.add("has-maximized");
+    updateAgentMaximizeControls();
     requestAnimationFrame(() => {
       try {
         session.fitAddon.fit();
@@ -2276,7 +2280,19 @@ function focusAgentWindow(slotIndex) {
     });
     return;
   }
+  updateAgentMaximizeControls();
   agentGrid.querySelector(`[data-slot="${slotIndex}"] .agent-task-input`)?.focus();
+}
+
+function updateAgentMaximizeControls() {
+  for (const session of sessions.values()) {
+    const button = session.slot.querySelector(".agent-maximize");
+    if (!button) continue;
+    const maximized = session.slot.classList.contains("maximized");
+    button.innerHTML = maximized ? AGENT_RESTORE_ICON : AGENT_MAXIMIZE_ICON;
+    button.title = maximized ? "Restore agent grid" : "Maximize agent";
+    button.setAttribute("aria-label", button.title);
+  }
 }
 
 function swapAgentSlot(session, axis) {
@@ -2646,13 +2662,14 @@ function setupPanelResizing() {
       if (document.body.classList.contains(collapsedClass)) setCollapsed(false);
       const startX = event.clientX;
       const current = Number.parseFloat(getComputedStyle(root).getPropertyValue(property));
+      const collapseThreshold = min - 30;
       let rawNext = current;
       document.body.classList.add("is-resizing");
 
       const move = (moveEvent) => {
         rawNext = current + (moveEvent.clientX - startX) * direction;
-        handle.classList.toggle("collapse-ready", rawNext < 90);
-        if (rawNext < 90) return;
+        handle.classList.toggle("collapse-ready", rawNext <= collapseThreshold);
+        if (rawNext <= collapseThreshold) return;
         const next = Math.max(min, Math.min(max, rawNext));
         root.style.setProperty(property, `${next}px`);
       };
@@ -2661,7 +2678,7 @@ function setupPanelResizing() {
         window.removeEventListener("pointerup", up);
         document.body.classList.remove("is-resizing");
         handle.classList.remove("collapse-ready");
-        if (rawNext < 90) {
+        if (rawNext <= collapseThreshold) {
           setCollapsed(true);
           return;
         }

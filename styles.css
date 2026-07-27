@@ -3392,13 +3392,43 @@ body.output-collapsed .output-panel {
 
 body.files-collapsed .files-panel .sidebar-title,
 body.output-collapsed .output-panel .sidebar-title {
+  border-bottom: 0;
+  height: 100%;
   justify-content: center;
   padding: 0;
 }
 
 body.files-collapsed .files-panel .file-header-actions {
+  height: 100%;
   justify-content: center;
   width: 100%;
+}
+
+body.files-collapsed .files-panel .workspace-explorer,
+body.output-collapsed .output-panel {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+body.files-collapsed #toggleFilesButton,
+body.output-collapsed #toggleOutputButton {
+  border-radius: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.pane-collapsed-label {
+  color: var(--theme-muted);
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 560;
+  letter-spacing: 0.04em;
+  transform: rotate(180deg);
+  writing-mode: vertical-rl;
+}
+
+body.files-collapsed #toggleFilesButton:hover .pane-collapsed-label,
+body.output-collapsed #toggleOutputButton:hover .pane-collapsed-label {
+  color: var(--theme-text);
 }
 
 body.files-collapsed .files-panel .sidebar-title > span,
@@ -3410,6 +3440,7 @@ body.output-collapsed .output-panel .sidebar-title > span,
 body.output-collapsed .output-panel #refreshArtifactsButton,
 body.output-collapsed .output-panel #toggleArtifactListButton,
 body.output-collapsed .output-panel #closeOutputPanelButton,
+body.output-collapsed .output-panel .artifact-browser,
 body.output-collapsed .output-panel .artifact-list,
 body.output-collapsed .output-panel .artifact-preview {
   display: none !important;
@@ -3423,6 +3454,11 @@ body.output-collapsed #artifactResizeHandle {
 body.files-collapsed #fileResizeHandle:hover,
 body.output-collapsed #artifactResizeHandle:hover {
   opacity: 1;
+}
+
+.resize-handle.collapse-ready::after {
+  background: var(--theme-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--theme-accent) 60%, transparent);
 }
 
 /* Agent identity */
@@ -4239,13 +4275,27 @@ body.output-collapsed #artifactResizeHandle:hover {
 
 #openSettingsButton {
   height: 28px;
-  width: 30px;
+  width: 32px;
 }
 
 .settings-symbol {
-  fill: currentColor;
-  height: 19px;
-  width: 19px;
+  fill: none;
+  height: 21px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.65;
+  width: 21px;
+}
+
+.agent-resize-icon {
+  fill: none;
+  height: 16px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
+  width: 16px;
 }
 
 .notification-button {
