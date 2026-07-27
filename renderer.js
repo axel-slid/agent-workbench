@@ -129,12 +129,6 @@ const spotifyPlayPauseButton = document.getElementById("spotifyPlayPauseButton")
 const spotifyNextButton = document.getElementById("spotifyNextButton");
 const spotifyTrackName = document.getElementById("spotifyTrackName");
 const spotifyTrackDetail = document.getElementById("spotifyTrackDetail");
-const gitStatusText = document.getElementById("gitStatusText");
-const testStatusText = document.getElementById("testStatusText");
-const queueStatusText = document.getElementById("queueStatusText");
-const apiStatusText = document.getElementById("apiStatusText");
-const tokenCostText = document.getElementById("tokenCostText");
-const selectedAgentStatusText = document.getElementById("selectedAgentStatusText");
 
 let workspaces = [];
 let activeWorkspaceId = null;
@@ -792,36 +786,6 @@ function updateRuntimeStatus(now = Date.now()) {
   const workspaceSessions = activeWorkspaceSessions();
   const capacity = activeWorkspaceLayout();
   stageAgentCount.textContent = `${workspaceSessions.length}/${capacity}`;
-  const running = workspaceSessions.filter((session) => ["planning", "coding"].includes(normalizedAgentState(session.metadata))).length;
-  const waiting = workspaceSessions.filter((session) => normalizedAgentState(session.metadata) === "waiting").length;
-  const blocked = workspaceSessions.filter((session) => (
-    /blocked|approval|permission/i.test(`${session.metadata.currentTask || ""} ${session.metadata.tldr || ""}`)
-  )).length;
-  queueStatusText.textContent = `Queue ${waiting} waiting · ${running} running · ${blocked} blocked`;
-
-  const totalTokens = workspaceSessions.reduce((total, session) => {
-    const input = Number(session.metadata.inputTokens);
-    const output = Number(session.metadata.outputTokens);
-    return total + (Number.isFinite(input) ? input : 0) + (Number.isFinite(output) ? output : 0);
-  }, 0);
-  const knownCost = workspaceSessions
-    .map((session) => session.metadata.costUsd)
-    .filter((value) => value !== null && value !== undefined && value !== "")
-    .map(Number)
-    .filter(Number.isFinite);
-  tokenCostText.textContent = `${formatCompactNumber(totalTokens)} tokens · ${
-    knownCost.length ? `$${knownCost.reduce((total, value) => total + value, 0).toFixed(2)}` : "$—"
-  }`;
-
-  const passed = workspaceSessions.reduce((total, session) => total + (Number(session.metadata.testsPassed) || 0), 0);
-  const failed = workspaceSessions.reduce((total, session) => total + (Number(session.metadata.testsFailed) || 0), 0);
-  testStatusText.textContent = failed ? `✕ ${failed}` : `✓ ${passed || "—"}`;
-  testStatusText.classList.toggle("failed", failed > 0);
-
-  const selected = selectedAgentId ? sessions.get(selectedAgentId) : null;
-  selectedAgentStatusText.textContent = selected && selected.workspaceId === activeWorkspaceId
-    ? `Agent ${selected.slotIndex + 1} · ${normalizedAgentState(selected.metadata)} · ${formatElapsedClock(selected.metadata.createdAt, now)}`
-    : "No agent selected";
   const allPaused = workspaceSessions.length > 0 && workspaceSessions.every((session) => session.pausedByUser);
   agentsPaused = allPaused;
   runPauseAllButton.textContent = allPaused ? "▶" : "Ⅱ";
@@ -3030,10 +2994,7 @@ async function refreshUsage() {
 
 async function refreshSystemMetrics() {
   try {
-    const [metrics, diagnostics] = await Promise.all([
-      api.getSystemMetrics(activeWorkspaceId),
-      api.getWorkspaceDiagnostics(activeWorkspaceId)
-    ]);
+    const metrics = await api.getSystemMetrics(activeWorkspaceId);
     const sourceLabel = metrics.source === "ssh"
       ? `Remote ${metrics.label}`
       : metrics.source === "ssh-error"
@@ -3045,12 +3006,6 @@ async function refreshSystemMetrics() {
     memoryUsageText.textContent = metrics.memoryTotalBytes
       ? `${formatCompactBytes(metrics.memoryUsedBytes)} / ${formatCompactBytes(metrics.memoryTotalBytes)}`
       : "—";
-    gitStatusText.textContent = diagnostics.gitAvailable
-      ? `${diagnostics.branch} · ${diagnostics.changes} ${diagnostics.changes === 1 ? "change" : "changes"}`
-      : "—";
-    const connected = metrics.source !== "ssh-error" && diagnostics.connected !== false;
-    apiStatusText.classList.toggle("unavailable", !connected);
-    apiStatusText.lastChild.textContent = connected ? " Connected" : " Unavailable";
     gpuMetrics.innerHTML = "";
     gpuMetrics.title = metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : "";
     for (const gpu of metrics.gpus || []) {
@@ -3081,9 +3036,6 @@ async function refreshSystemMetrics() {
   } catch (error) {
     cpuUsageText.textContent = "—";
     memoryUsageText.textContent = "—";
-    gitStatusText.textContent = "—";
-    apiStatusText.classList.add("unavailable");
-    apiStatusText.lastChild.textContent = " Unavailable";
   }
 }
 
