@@ -35,6 +35,113 @@
       });
       window.addEventListener("DOMContentLoaded", useSymbolButtons);
 
+      function floorPreviewBounds(context, source) {
+        const pixels = context.getImageData(0, 0, source.width, source.height).data;
+        const step = Math.max(2, Math.floor(Math.min(source.width, source.height) / 280));
+        const rowScores = new Uint16Array(Math.ceil(source.height / step));
+        const columnScores = new Uint16Array(Math.ceil(source.width / step));
+        const sample = function (x, y) {
+          const offset = (y * source.width + x) * 4;
+          const red = pixels[offset];
+          const green = pixels[offset + 1];
+          const blue = pixels[offset + 2];
+          const alpha = pixels[offset + 3];
+          const light = red + green + blue;
+          const chroma = Math.max(red, green, blue) - Math.min(red, green, blue);
+          return alpha > 32 && (light > 150 || chroma > 34);
+        };
+        for (let y = 0, row = 0; y < source.height; y += step, row += 1) {
+          for (let x = 0, column = 0; x < source.width; x += step, column += 1) {
+            if (!sample(x, y)) continue;
+            rowScores[row] += 1;
+            columnScores[column] += 1;
+          }
+        }
+        const rowThreshold = Math.max(4, Math.floor(columnScores.length * 0.08));
+        const columnThreshold = Math.max(4, Math.floor(rowScores.length * 0.08));
+        const qualifyingRows = Array.from(rowScores, function (score, index) {
+          return score >= rowThreshold ? index : -1;
+        }).filter(function (index) { return index >= 0; });
+        const qualifyingColumns = Array.from(columnScores, function (score, index) {
+          return score >= columnThreshold ? index : -1;
+        }).filter(function (index) { return index >= 0; });
+        if (!qualifyingRows.length || !qualifyingColumns.length) {
+          return { x: 0, y: 0, width: source.width, height: source.height };
+        }
+        const padding = 12;
+        const left = Math.max(0, qualifyingColumns[0] * step - padding);
+        const right = Math.min(
+          source.width,
+          (qualifyingColumns[qualifyingColumns.length - 1] + 1) * step + padding
+        );
+        const top = Math.max(0, qualifyingRows[0] * step - padding);
+        const bottom = Math.min(
+          source.height,
+          (qualifyingRows[qualifyingRows.length - 1] + 1) * step + padding
+        );
+        const width = right - left;
+        const height = bottom - top;
+        if (width < source.width * 0.2 || height < source.height * 0.2) {
+          return { x: 0, y: 0, width: source.width, height: source.height };
+        }
+        return { x: left, y: top, width: width, height: height };
+      }
+
+      function captureFloorPreview(floor) {
+        window.setTimeout(function () {
+          try {
+            const canvases = Array.from(document.querySelectorAll("canvas"))
+              .filter(function (canvas) { return canvas.width > 0 && canvas.height > 0; })
+              .sort(function (left, right) {
+                return right.width * right.height - left.width * left.height;
+              });
+            const source = canvases[0];
+            if (!source) return;
+            const preview = document.createElement("canvas");
+            preview.width = 192;
+            preview.height = 112;
+            const context = preview.getContext("2d");
+            if (!context) return;
+            context.imageSmoothingEnabled = false;
+            context.fillStyle = "#111820";
+            context.fillRect(0, 0, preview.width, preview.height);
+            const sourceContext = source.getContext("2d", { willReadFrequently: true });
+            const bounds = sourceContext
+              ? floorPreviewBounds(sourceContext, source)
+              : { x: 0, y: 0, width: source.width, height: source.height };
+            const scale = Math.max(preview.width / bounds.width, preview.height / bounds.height);
+            const width = Math.max(1, Math.round(bounds.width * scale));
+            const height = Math.max(1, Math.round(bounds.height * scale));
+            context.drawImage(
+              source,
+              bounds.x,
+              bounds.y,
+              bounds.width,
+              bounds.height,
+              Math.round((preview.width - width) / 2),
+              Math.round((preview.height - height) / 2),
+              width,
+              height
+            );
+            window.parent.postMessage({
+              source: "agent-workbench-pixel-mode",
+              message: {
+                type: "floorPreview",
+                floor: Number(floor) || 1,
+                image: preview.toDataURL("image/webp", 0.82)
+              }
+            }, "*");
+          } catch (error) {
+          }
+        }, 40);
+      }
+
+      window.addEventListener("message", function (event) {
+        if (event.data && event.data.type === "captureFloorPreview") {
+          captureFloorPreview(event.data.floor);
+        }
+      });
+
       // Pixel Agents natively uses middle-drag for panning and modifier+wheel
       // for zooming. Agent Workbench exposes the more direct controls requested
       // by the desktop app: left-drag to pan and a plain wheel to zoom.

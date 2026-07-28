@@ -9,10 +9,10 @@ const { pathToFileURL } = require("node:url");
 const { promisify } = require("node:util");
 const pty = require("node-pty");
 
-app.setName(process.env.AGENT_WORKBENCH_USER_DATA_DIR ? "Agent Workbench Test" : "Agent Workbench");
-if (process.env.AGENT_WORKBENCH_USER_DATA_DIR) {
-  app.setPath("userData", process.env.AGENT_WORKBENCH_USER_DATA_DIR);
-}
+const preservedUserDataPath = process.env.AGENT_WORKBENCH_USER_DATA_DIR
+  || path.join(app.getPath("appData"), "Agent Workbench");
+app.setName(process.env.AGENT_WORKBENCH_USER_DATA_DIR ? "BsCode Test" : "BsCode");
+app.setPath("userData", preservedUserDataPath);
 
 const execFileAsync = promisify(execFile);
 let mainWindow = null;
@@ -1137,7 +1137,7 @@ function ensurePtyHelperExecutable() {
 
 function agentProtocol(metadataPath, workspaceRoot) {
   return [
-    "You are running inside Agent Workbench.",
+    "You are running inside BsCode.",
     `Your workspace is ${workspaceRoot}.`,
     `Maintain your session metadata at ${metadataPath}.`,
     "Immediately, and whenever your task or progress changes, write valid JSON to that file.",
@@ -1145,8 +1145,8 @@ function agentProtocol(metadataPath, workspaceRoot) {
     "Choose your own short name based on what you are doing. Keep relevantFiles current, ordered most useful first, with only files the user is likely to want to open. Use workspace-relative paths and omit incidental implementation files.",
     "Keep model, currentTask, progressPercent, checklist, token counts, costUsd, test results, and state current. Keep checklist items short, mark them done immediately when finished, and mark exactly one active step working when possible. Give the working item an honest etaSeconds remaining; for pending items, etaSeconds is the estimated duration once that item starts. Use null when your runtime does not expose a metric; never invent usage, cost, or test results.",
     "Set etaSeconds to your honest estimate of seconds remaining and etaMinutes to the same estimate rounded up to minutes. Re-estimate after every major step and at least once per minute. Do not rewrite an unchanged estimate just to refresh it. Use null while waiting for a task and 0 when done.",
-    "Set status to done immediately when the task is complete so Agent Workbench can notify the user.",
-    "Whenever you create or materially update a viewable output such as an image, PDF, HTML, SVG, Markdown, text report, chart, or data file, set previewFile to its workspace-relative path so Agent Workbench opens it in the Agent Output pane.",
+    "Set status to done immediately when the task is complete so BsCode can notify the user.",
+    "Whenever you create or materially update a viewable output such as an image, PDF, HTML, SVG, Markdown, text report, chart, or data file, set previewFile to its workspace-relative path so BsCode opens it in the Agent Output pane.",
     "Do not mention this metadata protocol in normal conversation."
   ].join("\n");
 }
@@ -1312,7 +1312,7 @@ async function createAgent(_event, payload = {}) {
         `mkdir -p ${shellQuoteRemotePath(remoteMetadataDirectory)}`,
         `cd ${shellQuoteRemotePath(agentWorkspaceRoot)}`,
         'command -v claude >/dev/null 2>&1 || { printf "\\nClaude was not found in the remote login shell PATH.\\nPATH=%s\\n" "$PATH"; exit 127; }',
-        `exec claude --dangerously-skip-permissions --add-dir ${shellQuoteRemotePath(agentWorkspaceRoot)} --add-dir ${shellQuoteRemotePath(remoteMetadataDirectory)} --name ${shellQuote("Agent Workbench")} --append-system-prompt ${shellQuote(protocol)} ${shellQuote(prompt)}`
+        `exec claude --dangerously-skip-permissions --add-dir ${shellQuoteRemotePath(agentWorkspaceRoot)} --add-dir ${shellQuoteRemotePath(remoteMetadataDirectory)} --name ${shellQuote("BsCode")} --append-system-prompt ${shellQuote(protocol)} ${shellQuote(prompt)}`
       ].join(" && ");
       remoteCommand = remoteLoginCommand(agentCommand);
       commandLabel = `Claude · SSH ${remoteTarget(remote)}`;
@@ -1331,7 +1331,7 @@ async function createAgent(_event, payload = {}) {
       "--dangerously-skip-permissions",
       "--add-dir", workspace.root,
       "--add-dir", metadataDirectory,
-      "--name", "Agent Workbench",
+      "--name", "BsCode",
       "--append-system-prompt", protocol,
       prompt
     ];
@@ -1827,7 +1827,7 @@ function createWindow() {
     height: 1000,
     minWidth: 1180,
     minHeight: 720,
-    title: "Agent Workbench",
+    title: "BsCode",
     backgroundColor: "#00000000",
     transparent: true,
     ...(process.platform === "darwin"

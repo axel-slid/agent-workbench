@@ -7,7 +7,7 @@ import { buildOpenleafThemeCatalog } from "./import-openleaf-themes.mjs";
 
 const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageJson = JSON.parse(fs.readFileSync(path.join(appRoot, "package.json"), "utf8"));
-const productName = packageJson.productName || "Agent Workbench";
+const productName = packageJson.productName || "BsCode";
 const sourceApp = path.join(appRoot, "node_modules", "electron", "dist", "Electron.app");
 const outputDir = path.join(appRoot, "dist", "mac");
 const appBundle = path.join(outputDir, `${productName}.app`);
@@ -63,7 +63,7 @@ async function main() {
   plist(`Set :CFBundleShortVersionString ${packageJson.version}`);
   plist(`Set :CFBundleVersion ${packageJson.version}`);
   plist("Set :LSApplicationCategoryType public.app-category.developer-tools");
-  plist("Add :NSAppleEventsUsageDescription string Agent Workbench uses Spotify automation to show and control your current track.");
+  plist("Add :NSAppleEventsUsageDescription string BsCode uses Spotify automation to show and control your current track.");
   if (fs.existsSync(appIconSource)) plist("Set :CFBundleIconFile AppIcon.icns");
   run("xattr", ["-cr", appBundle]);
   run("codesign", ["--force", "--deep", "--sign", "-", appBundle]);

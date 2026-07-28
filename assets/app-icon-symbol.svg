@@ -1,16 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="bg" x1="128" y1="96" x2="896" y2="928" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#18243a"/>
-      <stop offset="1" stop-color="#090d17"/>
+    <linearGradient id="bg" x1="142" y1="116" x2="874" y2="908" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17263d"/>
+      <stop offset="1" stop-color="#080d18"/>
     </linearGradient>
-    <linearGradient id="rim" x1="176" y1="128" x2="836" y2="888" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#9fd2ff"/>
-      <stop offset=".45" stop-color="#5d87ff"/>
-      <stop offset="1" stop-color="#ae7cff"/>
+    <linearGradient id="rim" x1="168" y1="118" x2="856" y2="904" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7ccaff"/>
+      <stop offset=".52" stop-color="#248cff"/>
+      <stop offset="1" stop-color="#596cff"/>
     </linearGradient>
-    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="9" result="blur"/>
+    <linearGradient id="blue" x1="300" y1="192" x2="764" y2="836" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#36b8ff"/>
+      <stop offset=".52" stop-color="#087fd4"/>
+      <stop offset="1" stop-color="#3267e6"/>
+    </linearGradient>
+    <path id="b-shape" fill-rule="evenodd" d="M270 170h238c183 0 286 69 286 194 0 69-39 119-113 148 87 28 133 82 133 162 0 128-110 204-306 204H270V170Zm166 139v138h76c77 0 115-22 115-70 0-46-38-68-115-68h-76Zm0 274v145h93c79 0 119-24 119-74 0-48-41-71-124-71h-88Z"/>
+    <clipPath id="b-clip">
+      <use href="#b-shape"/>
+    </clipPath>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="11" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -19,19 +28,15 @@
   </defs>
   <rect x="70" y="70" width="884" height="884" rx="220" fill="#05070d"/>
   <rect x="84" y="84" width="856" height="856" rx="206" fill="url(#bg)" stroke="url(#rim)" stroke-width="16"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <g stroke-width="22">
-      <rect x="218" y="218" width="258" height="258" rx="52" fill="#69b7ff" fill-opacity=".055" stroke="#69b7ff"/>
-      <rect x="548" y="218" width="258" height="258" rx="52" fill="#ff8b72" fill-opacity=".055" stroke="#ff8b72"/>
-      <rect x="218" y="548" width="258" height="258" rx="52" fill="#b188ff" fill-opacity=".055" stroke="#b188ff"/>
-      <rect x="548" y="548" width="258" height="258" rx="52" fill="#62d8b4" fill-opacity=".055" stroke="#62d8b4"/>
+  <g filter="url(#glow)" transform="translate(92 92) scale(.82)">
+    <use href="#b-shape" fill="url(#blue)"/>
+    <g clip-path="url(#b-clip)">
+      <path d="m270 170 166 139v419L270 878Z" fill="#40bdff" opacity=".88"/>
+      <path d="m436 309 302-80 76 130-187 88-191-68Z" fill="#1598e9" opacity=".72"/>
+      <path d="m436 447 245 65-245 71Z" fill="#056eae" opacity=".72"/>
+      <path d="m436 583 252-56 126 145-202 95-176-39Z" fill="#2c70e8" opacity=".76"/>
+      <path d="M270 170 436 309v419L270 878" fill="none" stroke="#8bddff" stroke-opacity=".42" stroke-width="12"/>
+      <path d="m436 447 245 65-245 71" fill="none" stroke="#073d72" stroke-opacity=".45" stroke-width="10"/>
     </g>
-    <g filter="url(#glow)" stroke-width="22">
-      <path d="m282 290 49 43-49 43M358 376h42" stroke="#69b7ff"/>
-      <path d="m612 290 49 43-49 43M688 376h42" stroke="#ff8b72"/>
-      <path d="m282 620 49 43-49 43M358 706h42" stroke="#b188ff"/>
-      <path d="m612 620 49 43-49 43M688 706h42" stroke="#62d8b4"/>
-    </g>
-    <path d="m512 487 25 25-25 25-25-25z" fill="#dce8ff" fill-opacity=".88" stroke="url(#rim)" stroke-width="8"/>
   </g>
 </svg>

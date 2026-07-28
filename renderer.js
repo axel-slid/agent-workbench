@@ -49,6 +49,7 @@ const pixelAgentClipboardCount = document.getElementById("pixelAgentClipboardCou
 const closePixelAgentClipboardButton = document.getElementById("closePixelAgentClipboardButton");
 const pixelFloorList = document.getElementById("pixelFloorList");
 const pixelAddFloorButton = document.getElementById("pixelAddFloorButton");
+const pixelDeleteFloorButton = document.getElementById("pixelDeleteFloorButton");
 let pixelFloorButtons = [];
 const runPauseAllButton = document.getElementById("runPauseAllButton");
 const quickAddAgentButton = document.getElementById("quickAddAgentButton");
@@ -170,10 +171,12 @@ let pixelModeEnabled = false;
 let pixelFrameReady = false;
 let activePixelFloor = Number(localStorage.getItem("agentWorkbenchPixelFloor")) || 1;
 let pixelFloorCount = Math.max(
-  3,
+  1,
   Math.min(12, Number(localStorage.getItem("agentWorkbenchPixelFloorCount")) || 3)
 );
 let pixelBaseLayout = null;
+let pixelPreviewGenerationBusy = false;
+let pixelPreviewRefreshNeeded = true;
 let globalCleanMode = localStorage.getItem("agentWorkbenchGlobalCleanMode") === "1";
 let selectedAgentId = null;
 let agentsPaused = false;
@@ -687,6 +690,11 @@ function updatePixelFloorButtons() {
     if (active) button.setAttribute("aria-current", "true");
     else button.removeAttribute("aria-current");
   });
+  pixelDeleteFloorButton.disabled = pixelFloorCount <= 1;
+  pixelDeleteFloorButton.title = pixelFloorCount <= 1
+    ? "The tower needs one floor"
+    : `Delete floor ${activePixelFloor}`;
+  pixelDeleteFloorButton.setAttribute("aria-label", pixelDeleteFloorButton.title);
 }
 
 function pixelFloorTexture(floor) {
@@ -694,12 +702,78 @@ function pixelFloorTexture(floor) {
   return `url("pixel-agents-mode/assets/floors/floor_${texture}.png")`;
 }
 
+function pixelFloorPreviewKey(floor) {
+  return `agentWorkbenchPixelPreview:${Math.max(1, Number(floor) || 1)}`;
+}
+
+function pixelFloorPreview(floor) {
+  return localStorage.getItem(pixelFloorPreviewKey(floor)) || "";
+}
+
+function setPixelFloorPreview(floor, image) {
+  const normalizedFloor = Math.max(1, Number(floor) || 1);
+  if (!String(image || "").startsWith("data:image/")) return;
+  try {
+    localStorage.setItem(pixelFloorPreviewKey(normalizedFloor), image);
+  } catch (error) {
+  }
+  const button = pixelFloorButtons.find(
+    (candidate) => Number(candidate.dataset.pixelFloor) === normalizedFloor
+  );
+  const preview = button?.querySelector(".pixel-floor-room img");
+  if (preview) preview.src = image;
+}
+
+function requestPixelFloorPreview(floor = activePixelFloor) {
+  if (!pixelFrameReady) return;
+  postPixelMessage({ type: "captureFloorPreview", floor });
+}
+
+function waitForPixelPreview(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function refreshPixelFloorPreviews() {
+  if (!pixelModeEnabled || !pixelFrameReady || pixelPreviewGenerationBusy) return;
+  pixelPreviewGenerationBusy = true;
+  pixelPreviewRefreshNeeded = false;
+  pixelModeView.classList.add("refreshing-floor-previews");
+  const originalFloor = activePixelFloor;
+  const previewSessions = activePixelSessions();
+  try {
+    for (const session of previewSessions) {
+      const pixelAgentId = session.slotIndex + 1;
+      postPixelMessage({ type: "agentClosed", id: pixelAgentId });
+      pixelKnownAgentIds.delete(pixelAgentId);
+    }
+    for (let floor = pixelFloorCount; floor >= 1; floor -= 1) {
+      const layout = await pixelLayoutForFloor(floor);
+      postPixelMessage({ type: "layoutLoaded", layout });
+      await waitForPixelPreview(280);
+      requestPixelFloorPreview(floor);
+      await waitForPixelPreview(90);
+    }
+    const originalLayout = await pixelLayoutForFloor(originalFloor);
+    postPixelMessage({ type: "layoutLoaded", layout: originalLayout });
+    await waitForPixelPreview(280);
+    requestPixelFloorPreview(originalFloor);
+    await waitForPixelPreview(90);
+  } catch (error) {
+  } finally {
+    for (const session of previewSessions) syncPixelSession(session);
+    pixelModeView.classList.remove("refreshing-floor-previews");
+    pixelPreviewGenerationBusy = false;
+  }
+}
+
 function decoratePixelFloorButton(button) {
   const floor = Number(button.dataset.pixelFloor);
   const room = button.querySelector(".pixel-floor-room");
+  const preview = room?.querySelector("img");
   button.title = `Open floor ${floor}`;
   button.setAttribute("aria-label", `Open floor ${floor}`);
   if (room) room.style.setProperty("--pixel-floor-texture", pixelFloorTexture(floor));
+  if (preview) preview.src = pixelFloorPreview(floor) || "pixel-agents-mode/office.png";
 }
 
 function createPixelFloorButton(floor) {
@@ -722,8 +796,9 @@ function bindPixelFloorButton(button) {
 }
 
 function initializePixelFloors() {
-  for (let floor = 4; floor <= pixelFloorCount; floor += 1) {
-    pixelFloorList.prepend(createPixelFloorButton(floor));
+  pixelFloorList.replaceChildren();
+  for (let floor = pixelFloorCount; floor >= 1; floor -= 1) {
+    pixelFloorList.appendChild(createPixelFloorButton(floor));
   }
   pixelFloorButtons = Array.from(pixelFloorList.querySelectorAll("[data-pixel-floor]"));
   pixelFloorButtons.forEach(bindPixelFloorButton);
@@ -747,9 +822,44 @@ function addPixelFloor() {
     floors: pixelFloorCount,
     slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4
   });
+  pixelPreviewRefreshNeeded = true;
   applyPixelFloor(pixelFloorCount);
   button.scrollIntoView({ block: "nearest" });
   showToast(`Floor ${pixelFloorCount} added.`);
+}
+
+function deletePixelFloor() {
+  if (pixelFloorCount <= 1) {
+    showToast("The tower needs at least one floor.");
+    return;
+  }
+  const floor = activePixelFloor;
+  if (!window.confirm(`Delete floor ${floor}?`)) return;
+  localStorage.removeItem(`agentWorkbenchPixelLayout:${floor}`);
+  localStorage.removeItem(pixelFloorPreviewKey(floor));
+  for (let nextFloor = floor + 1; nextFloor <= pixelFloorCount; nextFloor += 1) {
+    const layout = localStorage.getItem(`agentWorkbenchPixelLayout:${nextFloor}`);
+    const destination = `agentWorkbenchPixelLayout:${nextFloor - 1}`;
+    if (layout) localStorage.setItem(destination, layout);
+    else localStorage.removeItem(destination);
+    const preview = localStorage.getItem(pixelFloorPreviewKey(nextFloor));
+    if (preview) localStorage.setItem(pixelFloorPreviewKey(nextFloor - 1), preview);
+    else localStorage.removeItem(pixelFloorPreviewKey(nextFloor - 1));
+  }
+  localStorage.removeItem(`agentWorkbenchPixelLayout:${pixelFloorCount}`);
+  localStorage.removeItem(pixelFloorPreviewKey(pixelFloorCount));
+  pixelFloorCount -= 1;
+  localStorage.setItem("agentWorkbenchPixelFloorCount", String(pixelFloorCount));
+  activePixelFloor = Math.min(floor, pixelFloorCount);
+  initializePixelFloors();
+  postPixelMessage({
+    type: "houseConfig",
+    floors: pixelFloorCount,
+    slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4
+  });
+  pixelPreviewRefreshNeeded = true;
+  applyPixelFloor(activePixelFloor);
+  showToast(`Floor ${floor} deleted.`);
 }
 
 async function pixelLayoutForFloor(floor) {
@@ -1017,6 +1127,9 @@ function setPixelMode(enabled, { persist = true } = {}) {
         }
       }
     });
+  }
+  if (pixelModeEnabled && pixelPreviewRefreshNeeded) {
+    setTimeout(refreshPixelFloorPreviews, 220);
   }
 }
 
@@ -1340,7 +1453,7 @@ function askAgentsForStatus(targetSession = null) {
   for (const session of targets) {
     api.writeAgent(
       session.id,
-      "Please report a concise status update and refresh all Agent Workbench metadata fields now.\\r"
+      "Please report a concise status update and refresh all BsCode metadata fields now.\\r"
     );
   }
   if (targets.length) showToast(`Asked ${targets.length} ${targets.length === 1 ? "agent" : "agents"} for status.`);
@@ -2460,7 +2573,7 @@ function openWorkspaceRemoveDialog(workspace) {
   workspaceRemoveName.textContent = workspace.name;
   workspaceRemoveDetail.textContent = agentCount
     ? `This removes the tab and stops ${agentCount} open ${agentCount === 1 ? "agent" : "agents"}.`
-    : "This removes the workspace tab from Agent Workbench.";
+    : "This removes the workspace tab from BsCode.";
   workspaceRemoveBackdrop.hidden = false;
   requestAnimationFrame(() => confirmWorkspaceRemoveButton.focus());
 }
@@ -2992,7 +3105,7 @@ function renderOutputContent(container, artifact, { expanded = false } = {}) {
   icon.textContent = artifact.extension.replace(".", "").toLowerCase() || "file";
   const label = document.createElement("strong");
   label.textContent = expanded
-    ? "This file type cannot be displayed inside Agent Workbench."
+    ? "This file type cannot be displayed inside BsCode."
     : "No in-app preview available";
   empty.append(icon, label);
   container.appendChild(empty);
@@ -4167,6 +4280,7 @@ pixelAgentClipboardButton.addEventListener("click", () => {
 });
 closePixelAgentClipboardButton.addEventListener("click", () => setPixelAgentClipboard(false));
 pixelAddFloorButton.addEventListener("click", addPixelFloor);
+pixelDeleteFloorButton.addEventListener("click", deletePixelFloor);
 runPauseAllButton.addEventListener("click", toggleRunPauseAll);
 quickAddAgentButton.addEventListener("click", () => {
   const kind = localStorage.getItem("agentWorkbenchDefaultAgent") || "codex";
@@ -4305,6 +4419,11 @@ window.addEventListener("message", (event) => {
   if (message.type === "webviewReady") {
     pixelFrameReady = true;
     syncPixelMode(true);
+    if (pixelModeEnabled) setTimeout(refreshPixelFloorPreviews, 220);
+    return;
+  }
+  if (message.type === "floorPreview") {
+    setPixelFloorPreview(message.floor, message.image);
     return;
   }
   if (message.type === "launchAgent") {
@@ -4324,6 +4443,8 @@ window.addEventListener("message", (event) => {
   }
   if (message.type === "saveLayout" && message.layout) {
     localStorage.setItem(`agentWorkbenchPixelLayout:${activePixelFloor}`, JSON.stringify(message.layout));
+    pixelPreviewRefreshNeeded = true;
+    setTimeout(refreshPixelFloorPreviews, 180);
     return;
   }
   if (message.type === "saveAgentSeats" && message.seats) {

@@ -1,9 +1,9 @@
-# Agent Workbench
+# BsCode
 
 A macOS Electron workspace for running and organizing Codex, Claude, and shell
 agents in a VS Code-inspired 2×2 interface.
 
-![Agent Workbench agent grid](docs/screenshots/agent-grid.jpg)
+![BsCode agent grid](docs/screenshots/agent-grid.jpg)
 
 ## Highlights
 
@@ -19,7 +19,7 @@ agents in a VS Code-inspired 2×2 interface.
 - Native notifications and an unread bell when an agent finishes
 - Pixel Mode with a growable textured tower, idle/working characters, mouse pan/zoom, and a clipboard agent roster
 
-![Agent Workbench Pixel Mode](docs/screenshots/pixel-mode.jpg)
+![BsCode Pixel Mode](docs/screenshots/pixel-mode.jpg)
 
 ## Run locally
 
@@ -35,10 +35,10 @@ Build the macOS application:
 
 ```bash
 npm run package:mac
-open "dist/mac/Agent Workbench.app"
+open "dist/mac/BsCode.app"
 ```
 
-Agent Workbench launches Codex with its approvals and sandbox bypass flag.
+BsCode launches Codex with its approvals and sandbox bypass flag.
 Review the launch configuration in `main.js` before using untrusted
 workspaces.
 
