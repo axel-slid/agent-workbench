@@ -557,6 +557,19 @@ function validWorkspaceEntryName(value) {
   return name;
 }
 
+async function uniqueWorkspaceDestination(parentDirectory, requestedName) {
+  const parsed = path.parse(validWorkspaceEntryName(requestedName));
+  let attempt = 1;
+  let candidateName = requestedName;
+  let candidatePath = path.join(parentDirectory, candidateName);
+  while (fs.existsSync(candidatePath)) {
+    attempt += 1;
+    candidateName = `${parsed.name} ${attempt}${parsed.ext}`;
+    candidatePath = path.join(parentDirectory, candidateName);
+  }
+  return { name: candidateName, path: candidatePath };
+}
+
 function remoteChildPath(root, relativePath) {
   const base = String(root || "~").replace(/\/+$/, "") || "/";
   const child = String(relativePath || "").replace(/^\/+/, "");
@@ -601,6 +614,136 @@ async function createWorkspaceEntry(_event, payload = {}) {
 
   sendToRenderer("workspace:changed", { workspaceId: workspace.id, relativePath });
   return { kind, name, relativePath };
+}
+
+async function importWorkspacePaths(_event, payload = {}) {
+  const workspace = await getWorkspace(payload.workspaceId);
+  const parentPath = String(payload.parentPath || "").replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  const parentDirectory = safeWorkspacePath(workspace.root, parentPath);
+  await fsp.mkdir(parentDirectory, { recursive: true });
+  const sourcePaths = Array.from(new Set(
+    (Array.isArray(payload.paths) ? payload.paths : [])
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+  )).slice(0, 64);
+  if (!sourcePaths.length) throw new Error("Drop a file or folder to import it.");
+
+  const imported = [];
+  for (const sourcePath of sourcePaths) {
+    const source = path.resolve(sourcePath);
+    const stat = await fsp.stat(source);
+    if (!stat.isFile() && !stat.isDirectory()) continue;
+    const destination = await uniqueWorkspaceDestination(parentDirectory, path.basename(source));
+    if (destination.path === source || destination.path.startsWith(`${source}${path.sep}`)) {
+      throw new Error("That folder cannot be copied into itself.");
+    }
+    await fsp.cp(source, destination.path, {
+      recursive: stat.isDirectory(),
+      errorOnExist: true,
+      force: false,
+      preserveTimestamps: true
+    });
+
+    const relativePath = normalizedRelativePath(workspace.root, destination.path);
+    if (workspace.type === "ssh" && workspace.remote) {
+      const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+      const remoteParent = remoteChildPath(remoteRoot, parentPath);
+      await execFileAsync(
+        resolveExecutable("ssh"),
+        [
+          ...sshConnectionArgs(workspace.remote),
+          remoteTarget(workspace.remote),
+          `mkdir -p ${shellQuoteRemotePath(remoteParent)}`
+        ],
+        { timeout: 15000, maxBuffer: 512 * 1024 }
+      );
+      await execFileAsync(
+        resolveExecutable("rsync"),
+        [
+          "-az",
+          "--partial",
+          "--timeout=20",
+          "-e", rsyncSshCommand(workspace.remote),
+          destination.path,
+          `${remoteTarget(workspace.remote)}:${shellQuoteRemotePath(remoteParent)}/`
+        ],
+        { timeout: 120000, maxBuffer: 12 * 1024 * 1024 }
+      );
+    }
+    imported.push({
+      name: destination.name,
+      relativePath,
+      type: stat.isDirectory() ? "directory" : "file"
+    });
+  }
+
+  sendToRenderer("workspace:changed", {
+    workspaceId: workspace.id,
+    relativePath: parentPath,
+    imported: imported.map((item) => item.relativePath)
+  });
+  return imported;
+}
+
+async function renameWorkspaceEntry(_event, payload = {}) {
+  const workspace = await getWorkspace(payload.workspaceId);
+  const relativePath = String(payload.relativePath || "").replace(/\\/g, "/").replace(/^\/+/, "");
+  const sourcePath = safeWorkspacePath(workspace.root, relativePath);
+  const nextName = validWorkspaceEntryName(payload.name);
+  const parentRelative = path.posix.dirname(relativePath);
+  const nextRelative = path.posix.join(parentRelative === "." ? "" : parentRelative, nextName);
+  const destinationPath = safeWorkspacePath(workspace.root, nextRelative);
+  if (fs.existsSync(destinationPath)) throw new Error("A file or folder with that name already exists.");
+
+  if (workspace.type === "ssh" && workspace.remote) {
+    const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+    const remoteSource = remoteChildPath(remoteRoot, relativePath);
+    const remoteDestination = remoteChildPath(remoteRoot, nextRelative);
+    await execFileAsync(
+      resolveExecutable("ssh"),
+      [
+        ...sshConnectionArgs(workspace.remote),
+        remoteTarget(workspace.remote),
+        `test ! -e ${shellQuoteRemotePath(remoteDestination)} && mv ${shellQuoteRemotePath(remoteSource)} ${shellQuoteRemotePath(remoteDestination)}`
+      ],
+      { timeout: 20000, maxBuffer: 512 * 1024 }
+    );
+  }
+  await fsp.rename(sourcePath, destinationPath);
+  sendToRenderer("workspace:changed", { workspaceId: workspace.id, relativePath: nextRelative });
+  return { relativePath: nextRelative, name: nextName };
+}
+
+async function duplicateWorkspaceEntry(workspace, relativePath) {
+  const sourcePath = safeWorkspacePath(workspace.root, relativePath);
+  const stat = await fsp.stat(sourcePath);
+  const parentDirectory = path.dirname(sourcePath);
+  const parsed = path.parse(path.basename(sourcePath));
+  const destination = await uniqueWorkspaceDestination(parentDirectory, `${parsed.name} copy${parsed.ext}`);
+  const nextRelative = normalizedRelativePath(workspace.root, destination.path);
+
+  if (workspace.type === "ssh" && workspace.remote) {
+    const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+    const remoteSource = remoteChildPath(remoteRoot, relativePath);
+    const remoteDestination = remoteChildPath(remoteRoot, nextRelative);
+    await execFileAsync(
+      resolveExecutable("ssh"),
+      [
+        ...sshConnectionArgs(workspace.remote),
+        remoteTarget(workspace.remote),
+        `test ! -e ${shellQuoteRemotePath(remoteDestination)} && cp -R ${shellQuoteRemotePath(remoteSource)} ${shellQuoteRemotePath(remoteDestination)}`
+      ],
+      { timeout: 120000, maxBuffer: 1024 * 1024 }
+    );
+  }
+  await fsp.cp(sourcePath, destination.path, {
+    recursive: stat.isDirectory(),
+    errorOnExist: true,
+    force: false,
+    preserveTimestamps: true
+  });
+  sendToRenderer("workspace:changed", { workspaceId: workspace.id, relativePath: nextRelative });
+  return { relativePath: nextRelative, name: destination.name };
 }
 
 async function collectArtifacts(root, current = root, depth = 0, results = []) {
@@ -747,13 +890,83 @@ async function openWorkspaceFile(_event, payload = {}) {
 async function showWorkspaceFileMenu(event, payload = {}) {
   const workspace = await getWorkspace(payload.workspaceId);
   const relativePath = String(payload.relativePath || "").replace(/\\/g, "/").replace(/^\/+/, "");
+  const absolutePath = safeWorkspacePath(workspace.root, relativePath);
+  const stat = await fsp.stat(absolutePath);
+  const isDirectory = stat.isDirectory();
   const copyPath = workspace.type === "ssh" && workspace.remote
     ? remoteChildPath(workspace.remote.root || workspace.remote.path || "~", relativePath)
-    : safeWorkspacePath(workspace.root, relativePath);
+    : absolutePath;
+  const sender = event.sender;
+  const sendMenuAction = (action, extra = {}) => {
+    if (!sender.isDestroyed()) {
+      sender.send("workspace:menu-action", {
+        action,
+        workspaceId: workspace.id,
+        relativePath,
+        isDirectory,
+        ...extra
+      });
+    }
+  };
+  const openInCode = () => {
+    const { spawn } = require("node:child_process");
+    const child = spawn("/usr/bin/open", ["-a", "Visual Studio Code", absolutePath], {
+      detached: true,
+      stdio: "ignore"
+    });
+    child.unref();
+  };
+  const parentPath = isDirectory
+    ? relativePath
+    : path.posix.dirname(relativePath) === "."
+      ? ""
+      : path.posix.dirname(relativePath);
   const menu = Menu.buildFromTemplate([
+    {
+      label: isDirectory ? "Open Folder" : "Open",
+      click: () => shell.openPath(absolutePath)
+    },
+    {
+      label: "Open in Visual Studio Code",
+      click: openInCode
+    },
+    {
+      label: "Reveal in Finder",
+      click: () => shell.showItemInFolder(absolutePath)
+    },
+    { type: "separator" },
+    {
+      label: "New File Here",
+      click: () => sendMenuAction("new-file", { parentPath })
+    },
+    {
+      label: "New Folder Here",
+      click: () => sendMenuAction("new-folder", { parentPath })
+    },
+    { type: "separator" },
+    {
+      label: "Rename…",
+      click: () => sendMenuAction("rename")
+    },
+    {
+      label: "Duplicate",
+      click: async () => {
+        try {
+          const duplicate = await duplicateWorkspaceEntry(workspace, relativePath);
+          sendMenuAction("duplicated", duplicate);
+        } catch (error) {
+          sendMenuAction("error", { message: error.message || String(error) });
+        }
+      }
+    },
+    { type: "separator" },
     {
       label: "Copy Path",
       click: () => clipboard.writeText(copyPath)
+    },
+    {
+      label: "Copy Relative Path",
+      click: () => clipboard.writeText(relativePath)
     }
   ]);
   menu.popup({ window: BrowserWindow.fromWebContents(event.sender) || mainWindow });
@@ -858,8 +1071,8 @@ function initialAgentMetadata(id, kind, task, workspaceId, agentNumber, modelLab
     state: task ? "planning" : "waiting",
     model: modelLabel || (kind === "codex" ? "Codex" : kind === "claude" ? "Claude" : "Shell"),
     currentTask: task || "Waiting for a task",
-    etaSeconds: task ? 300 : null,
-    etaMinutes: task ? 5 : null,
+    etaSeconds: null,
+    etaMinutes: null,
     progressPercent: task ? 5 : 0,
     inputTokens: null,
     outputTokens: null,
@@ -1566,6 +1779,8 @@ app.whenReady().then(() => {
   ipcMain.handle("workspace:remove", removeWorkspace);
   ipcMain.handle("workspace:rename", renameWorkspace);
   ipcMain.handle("workspace:create-entry", createWorkspaceEntry);
+  ipcMain.handle("workspace:import-paths", importWorkspacePaths);
+  ipcMain.handle("workspace:rename-entry", renameWorkspaceEntry);
   ipcMain.handle("workspace:files", listWorkspaceFiles);
   ipcMain.handle("workspace:artifacts", listArtifacts);
   ipcMain.handle("workspace:read-artifact", readArtifact);

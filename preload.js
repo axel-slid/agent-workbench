@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("agentWorkbench", {
   listWorkspaces: () => ipcRenderer.invoke("workspace:list"),
@@ -18,6 +18,17 @@ contextBridge.exposeInMainWorld("agentWorkbench", {
     kind,
     name
   }),
+  importWorkspacePaths: (workspaceId, parentPath, paths) => ipcRenderer.invoke("workspace:import-paths", {
+    workspaceId,
+    parentPath,
+    paths
+  }),
+  renameWorkspaceEntry: (workspaceId, relativePath, name) => ipcRenderer.invoke("workspace:rename-entry", {
+    workspaceId,
+    relativePath,
+    name
+  }),
+  pathForDroppedFile: (file) => webUtils.getPathForFile(file),
   listFiles: (workspaceId) => ipcRenderer.invoke("workspace:files", workspaceId),
   listArtifacts: (workspaceId) => ipcRenderer.invoke("workspace:artifacts", workspaceId),
   readArtifact: (workspaceId, relativePath) => ipcRenderer.invoke("workspace:read-artifact", { workspaceId, relativePath }),
@@ -51,5 +62,6 @@ contextBridge.exposeInMainWorld("agentWorkbench", {
   onSshAuthenticationData: (callback) => ipcRenderer.on("ssh-auth:data", (_event, payload) => callback(payload)),
   onSshAuthenticationExit: (callback) => ipcRenderer.on("ssh-auth:exit", (_event, payload) => callback(payload)),
   onWorkspaceChanged: (callback) => ipcRenderer.on("workspace:changed", (_event, payload) => callback(payload)),
+  onWorkspaceMenuAction: (callback) => ipcRenderer.on("workspace:menu-action", (_event, payload) => callback(payload)),
   onWindowFullScreen: (callback) => ipcRenderer.on("window:full-screen", (_event, active) => callback(Boolean(active)))
 });

@@ -2037,6 +2037,48 @@ function selectedFileParentPath() {
   return parts.join("/");
 }
 
+function parentPathForFileNode(node) {
+  if (node.type === "directory") return node.relativePath;
+  const parts = String(node.relativePath || "").split("/");
+  parts.pop();
+  return parts.join("/");
+}
+
+function droppedFilePaths(event) {
+  return Array.from(event.dataTransfer?.files || [])
+    .map((file) => {
+      try {
+        return api.pathForDroppedFile(file);
+      } catch (error) {
+        return "";
+      }
+    })
+    .filter(Boolean);
+}
+
+async function importDroppedFiles(event, parentPath = "") {
+  event.preventDefault();
+  event.stopPropagation();
+  document.querySelectorAll(".file-tree-row.drop-target").forEach((row) => row.classList.remove("drop-target"));
+  fileTree.classList.remove("drop-active");
+  const paths = droppedFilePaths(event);
+  if (!paths.length || !activeWorkspaceId) return;
+  setFooter(`${activeWorkspace()?.type === "ssh" ? "Uploading" : "Importing"} ${paths.length} item${paths.length === 1 ? "" : "s"}…`);
+  try {
+    const imported = await api.importWorkspacePaths(activeWorkspaceId, parentPath, paths);
+    if (parentPath) expandedFilePaths.add(parentPath);
+    if (imported[0]) {
+      selectedFilePath = imported[0].relativePath;
+      selectedFileKind = imported[0].type;
+    }
+    await refreshWorkspacePanels();
+    showToast(`Imported ${imported.length} item${imported.length === 1 ? "" : "s"}`);
+  } catch (error) {
+    showToast(error.message || String(error));
+    setFooter("Import failed");
+  }
+}
+
 function beginCreateWorkspaceEntry(kind) {
   if (!activeWorkspace()) {
     showToast("Open a workspace first.");
@@ -2128,6 +2170,21 @@ function createFileTreeNode(node, depth) {
     selectFileTreeRow(row, node);
     api.showFileMenu(activeWorkspaceId, node.relativePath);
   });
+  const dropParentPath = parentPathForFileNode(node);
+  row.addEventListener("dragover", (event) => {
+    if (!Array.from(event.dataTransfer?.types || []).includes("Files")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "copy";
+    document.querySelectorAll(".file-tree-row.drop-target").forEach((candidate) => {
+      if (candidate !== row) candidate.classList.remove("drop-target");
+    });
+    row.classList.add("drop-target");
+  });
+  row.addEventListener("dragleave", (event) => {
+    if (!row.contains(event.relatedTarget)) row.classList.remove("drop-target");
+  });
+  row.addEventListener("drop", (event) => importDroppedFiles(event, dropParentPath));
 
   if (node.type === "directory") {
     const children = document.createElement("div");
@@ -2853,7 +2910,7 @@ function updateAgentEta() {
       } else {
         const etaSeconds = remainingEtaSeconds(session, now);
         if (!Number.isFinite(etaSeconds)) {
-          item.textContent = `${prefix} …`;
+          item.textContent = `${prefix} —`;
         } else {
           item.textContent = `${prefix} ${formatEtaClock(etaSeconds)}`;
         }
@@ -2912,8 +2969,6 @@ function updateAgentMetadata(session, metadata) {
       session.etaDeadline = etaDeadlineFromMetadata(nextMetadata);
     }
     session.lastReportedEtaSeconds = nextReportedEta;
-  } else if (!Number.isFinite(session.etaDeadline)) {
-    session.etaDeadline = Date.now() + 5 * 60 * 1000;
   }
   session.metadata = nextMetadata;
   updateAgentStatusCard(session);
@@ -3385,6 +3440,16 @@ collapseFolderTreeButton.addEventListener("click", () => {
   expandedFilePaths.clear();
   renderFileTree();
 });
+fileTree.addEventListener("dragover", (event) => {
+  if (!Array.from(event.dataTransfer?.types || []).includes("Files")) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "copy";
+  fileTree.classList.add("drop-active");
+});
+fileTree.addEventListener("dragleave", (event) => {
+  if (!fileTree.contains(event.relatedTarget)) fileTree.classList.remove("drop-active");
+});
+fileTree.addEventListener("drop", (event) => importDroppedFiles(event, ""));
 closeWorkspaceRemoveButton.addEventListener("click", closeWorkspaceRemoveDialog);
 cancelWorkspaceRemoveButton.addEventListener("click", closeWorkspaceRemoveDialog);
 confirmWorkspaceRemoveButton.addEventListener("click", confirmWorkspaceRemoval);
@@ -3621,6 +3686,44 @@ api.onWindowFullScreen((active) => {
   document.body.classList.toggle("window-full-screen", active);
 });
 api.onWorkspaceChanged(scheduleWorkspaceRefresh);
+api.onWorkspaceMenuAction(async (payload) => {
+  if (!payload || payload.workspaceId !== activeWorkspaceId) return;
+  if (payload.action === "error") {
+    showToast(payload.message || "File action failed");
+    return;
+  }
+  if (payload.action === "duplicated") {
+    selectedFilePath = payload.relativePath || "";
+    selectedFileKind = payload.isDirectory ? "directory" : "file";
+    await refreshWorkspacePanels();
+    showToast(`Duplicated ${payload.name || "item"}`);
+    return;
+  }
+  if (payload.action === "new-file" || payload.action === "new-folder") {
+    selectedFilePath = payload.parentPath || "";
+    selectedFileKind = "directory";
+    beginCreateWorkspaceEntry(payload.action === "new-folder" ? "folder" : "file");
+    return;
+  }
+  if (payload.action === "rename") {
+    const currentName = String(payload.relativePath || "").split("/").pop();
+    const nextName = window.prompt("Rename", currentName);
+    if (!nextName || nextName.trim() === currentName) return;
+    try {
+      const renamed = await api.renameWorkspaceEntry(
+        activeWorkspaceId,
+        payload.relativePath,
+        nextName.trim()
+      );
+      selectedFilePath = renamed.relativePath;
+      selectedFileKind = payload.isDirectory ? "directory" : "file";
+      await refreshWorkspacePanels();
+      showToast(`Renamed to ${renamed.name}`);
+    } catch (error) {
+      showToast(error.message || String(error));
+    }
+  }
+});
 
 window.addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.code === "Space") {
