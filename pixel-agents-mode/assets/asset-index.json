@@ -22,7 +22,9 @@
   ],
   "pets": [
     { "id": "claudio", "name": "Claudio" },
-    { "id": "gitcat", "name": "Gitcat" }
+    { "id": "gitcat", "name": "Gitcat" },
+    { "id": "dog", "name": "Scout" },
+    { "id": "lizard", "name": "Pixel" }
   ],
   "defaultLayout": "default-layout-1.json"
 }

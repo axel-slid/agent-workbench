@@ -8,6 +8,7 @@ const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const { promisify } = require("node:util");
 const pty = require("node-pty");
+const AGENT_NAMES = require("./assets/agent-names.json").names;
 
 const preservedUserDataPath = process.env.AGENT_WORKBENCH_USER_DATA_DIR
   || path.join(app.getPath("appData"), "Agent Workbench");
@@ -26,6 +27,7 @@ const remoteSystemMetricsCache = new Map();
 const remoteSystemMetricsInFlight = new Map();
 const workspaceOutputSessionStarts = new Map();
 const workspaceOutputSessionBaselines = new Map();
+const jsonWriteQueues = new Map();
 let previousCpuSample = null;
 
 const ARTIFACT_EXTENSIONS = new Set([
@@ -53,24 +55,9 @@ const IGNORED_DIRECTORIES = new Set([
   ".git", ".agent-workbench", "node_modules", ".next", ".cache",
   "__pycache__", ".venv", "venv", "dist", "build"
 ]);
-const AGENT_NAME_ADJECTIVES = [
-  "Amber", "Arcane", "Arctic", "Astral", "Azure", "Binary", "Brisk", "Bronze",
-  "Cinder", "Cobalt", "Cosmic", "Crimson", "Crystal", "Daring", "Electric", "Ember",
-  "Fabled", "Golden", "Hidden", "Indigo", "Iron", "Jade", "Lunar", "Neon",
-  "Nimble", "Nova", "Obsidian", "Quantum", "Silver", "Solar", "Velvet", "Vivid"
-];
-const AGENT_NAME_NOUNS = [
-  "Atlas", "Badger", "Beacon", "Comet", "Crane", "Drift", "Falcon", "Finch",
-  "Forge", "Fox", "Harbor", "Hawk", "Juniper", "Kestrel", "Lantern", "Lynx",
-  "Mantis", "Maple", "Marten", "Meteor", "Moth", "Orchid", "Otter", "Phoenix",
-  "Pioneer", "Raven", "Relay", "Sparrow", "Tundra", "Voyager", "Willow", "Wren"
-];
-
 function coolAgentName(id, agentNumber) {
   const digest = crypto.createHash("sha256").update(`${id}:${agentNumber}`).digest();
-  const adjective = AGENT_NAME_ADJECTIVES[digest[0] % AGENT_NAME_ADJECTIVES.length];
-  const noun = AGENT_NAME_NOUNS[digest[1] % AGENT_NAME_NOUNS.length];
-  return `${adjective} ${noun}`;
+  return AGENT_NAMES[digest.readUInt32BE(0) % AGENT_NAMES.length];
 }
 
 function workspacesPath() {
@@ -93,11 +80,19 @@ async function readJson(filePath, fallback) {
   }
 }
 
-async function writeJson(filePath, value) {
-  await fsp.mkdir(path.dirname(filePath), { recursive: true });
-  const temporaryPath = `${filePath}.${process.pid}.tmp`;
-  await fsp.writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-  await fsp.rename(temporaryPath, filePath);
+function writeJson(filePath, value) {
+  const queued = (jsonWriteQueues.get(filePath) || Promise.resolve())
+    .catch(() => {})
+    .then(async () => {
+      await fsp.mkdir(path.dirname(filePath), { recursive: true });
+      const temporaryPath = `${filePath}.${process.pid}.${crypto.randomUUID()}.tmp`;
+      await fsp.writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+      await fsp.rename(temporaryPath, filePath);
+    });
+  jsonWriteQueues.set(filePath, queued);
+  return queued.finally(() => {
+    if (jsonWriteQueues.get(filePath) === queued) jsonWriteQueues.delete(filePath);
+  });
 }
 
 async function readWorkspaces() {

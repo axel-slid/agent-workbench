@@ -12,6 +12,11 @@
   let petPreferenceReceived = false;
   let petsEnabled = true;
   let selectedPet = "gitcat";
+  const petBaseNames = ["Claudio", "Gitcat", "Scout", "Pixel"];
+  const petVariantNames = ["", " Mint", " Amber", " Violet", " Sky", " Rose"];
+  const petNames = petVariantNames.flatMap(
+    (suffix) => petBaseNames.map((name) => `${name}${suffix}`),
+  );
   const bridgeState = {
     currentFloor: 1,
     enhancedLayouts: 0,
@@ -45,6 +50,20 @@
     const index = row * layout.cols + column;
     const tile = layout.tiles[index];
     return tile !== 0 && tile !== 255 && tile !== undefined;
+  }
+
+  function petTypeForFloor(floor) {
+    const preferredOffset = {
+      claudio: 0,
+      gitcat: 1,
+      dog: 2,
+      lizard: 3,
+    }[selectedPet] ?? 1;
+    return (Math.max(1, Number(floor) || 1) - 1 + preferredOffset) % petNames.length;
+  }
+
+  function petNameForFloor(floor) {
+    return petNames[petTypeForFloor(floor)];
   }
 
   function addRoomCarpet(layout, floor, fromColumn, toColumn, fromRow, toRow, variant, order) {
@@ -111,7 +130,7 @@
         ? [
             {
               id: `workbench-floor-${floor}-pet`,
-              petType: selectedPet === "claudio" ? 0 : 1,
+              petType: petTypeForFloor(floor),
             },
           ]
         : [];
@@ -119,7 +138,7 @@
       layout.pets = [
         {
           id: `workbench-floor-${floor}-pet`,
-          petType: 1,
+          petType: petTypeForFloor(floor),
         },
       ];
     }
@@ -141,10 +160,6 @@
     if (!wrapped) {
       wrapped = function workbenchMessageReceiver(event) {
         const message = event.data;
-        // BsCode temporarily emits agentClosed while it cycles through floors
-        // for thumbnail capture. Keep those sprites alive; a genuine close is
-        // still forwarded whenever the parent is not in that refresh cycle.
-        if (message?.type === "agentClosed" && parentIsRefreshingPreviews()) return;
         if (
           message?.type === "layoutLoaded" &&
           message.layout &&
@@ -249,7 +264,7 @@
       pets = [
         {
           id: `workbench-floor-${floor}-pet`,
-          name: selectedPet === "claudio" ? "Claudio" : "Gitcat",
+          name: petNameForFloor(floor),
           state: "live",
         },
       ];
@@ -286,7 +301,9 @@
       if (message.type === "houseConfig") {
         petPreferenceReceived = true;
         petsEnabled = message.petsEnabled !== false;
-        selectedPet = message.pet === "claudio" ? "claudio" : "gitcat";
+        selectedPet = ["claudio", "gitcat", "dog", "lizard"].includes(message.pet)
+          ? message.pet
+          : "gitcat";
         bridgeState.petsEnabled = petsEnabled;
         bridgeState.selectedPet = selectedPet;
       }
@@ -307,7 +324,7 @@
       ) {
         rememberAgentMessage(message);
       } else if (message.type === "agentClosed") {
-        if (!parentIsRefreshingPreviews()) retainedAgents.delete(Number(message.id));
+        retainedAgents.delete(Number(message.id));
       }
 
       if (message.type !== "layoutLoaded" || !message.layout) return;

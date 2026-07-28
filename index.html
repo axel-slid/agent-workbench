@@ -352,6 +352,11 @@
     </div>
 
     <footer class="usage-bar">
+      <button id="remoteStatusButton" class="remote-status-button" type="button" title="Open remote workspace" aria-label="Open remote workspace">
+        <svg viewBox="0 0 18 18" aria-hidden="true">
+          <path d="m7 4-4 5 4 5M11 4l4 5-4 5"/>
+        </svg>
+      </button>
       <div class="usage-brand">
         <span class="usage-logo codex-logo"><img class="brand-symbol" src="assets/openai-blossom.svg" alt=""></span>
         <div>
@@ -469,8 +474,8 @@
           <label><span>Auto-open generated files<small>Show viewable agent output as soon as it is reported</small></span><input id="settingsAutoPreview" type="checkbox"></label>
           <label><span>System completion banners<small>Send a desktop notification when an agent finishes</small></span><input id="settingsAgentNotifications" type="checkbox"></label>
           <label><span>Recent file history<small>Scrollable files retained in each agent footer</small></span><select id="settingsRecentFilesLimit"><option value="8">8 files</option><option value="20">20 files</option><option value="40">40 files</option></select></label>
-          <label><span>Pixel pets<small>Let a walking companion live with agents in Pixel mode</small></span><input id="settingsPixelPets" type="checkbox"></label>
-          <label><span>Pet sprite<small>Choose the companion used when Pixel pets are enabled</small></span><select id="settingsPixelPetChoice"><option value="gitcat">Gitcat</option><option value="claudio">Claudio</option></select></label>
+          <label><span>Pixel pets<small>Give every tower floor its own walking companion</small></span><input id="settingsPixelPets" type="checkbox"></label>
+          <label><span>First-floor pet<small>Choose the first companion; higher floors rotate through distinct walking sprites and color variants</small></span><select id="settingsPixelPetChoice"><option value="gitcat">Gitcat</option><option value="claudio">Claudio</option><option value="dog">Scout</option><option value="lizard">Pixel</option></select></label>
         </div>
       </section>
 

@@ -485,8 +485,18 @@ test("Pixelized appearance maps catalog, category, dataset, and CSS consistently
   const selectThemeSource = extractFunction(rendererSource, "selectTheme");
   assert.match(
     selectThemeSource,
-    /applyPalette\(palette,\s*category\)/,
-    "Theme selection must pass the Pixelized category through to appearance mapping"
+    /applyPalette\(palette,\s*category,\s*theme\)/,
+    "Theme selection must pass the Pixelized category and selected theme through to appearance mapping"
+  );
+  assert.match(
+    applyPaletteSource,
+    /theme\s*===\s*"pixel-studio"/,
+    "Pixel Studio must opt into light icon and native control treatment"
+  );
+  assert.match(
+    applyPaletteSource,
+    /root\.dataset\.appearanceTone\s*=\s*lightAppearance\s*\?\s*"light"\s*:\s*"dark"/,
+    "Palette application must expose a light/dark appearance tone"
   );
   assert.match(
     styles,
@@ -498,10 +508,140 @@ test("Pixelized appearance maps catalog, category, dataset, and CSS consistently
     /font-family:\s*"BsCode Pixel"/,
     "Pixelized must use the bundled pixel typeface"
   );
+  assert.match(
+    styles,
+    /html\[data-appearance-tone="light"\]\s+\.brand-symbol\[src\*="openai"\]/,
+    "Light themes must adapt the OpenAI toolbar symbol"
+  );
+  assert.match(
+    styles,
+    /url\("pixel-agents-mode\/assets\/floors\/floor_4\.png"\)/,
+    "Pixelized editor chrome should use an authentic bundled Pixel Agents texture"
+  );
   assert.ok(
     fs.existsSync(path.join(projectRoot, "pixel-agents-mode/fonts/FSPixelSansUnicode-Regular.ttf")),
     "The Pixelized font asset is missing"
   );
+});
+
+test("Pixel floors keep one live agent, a distinct pet, and a sprite portrait", () => {
+  const html = read("index.html");
+  const rendererSource = read("renderer.js");
+  const styles = read("styles.css");
+  const bridgeSource = read("pixel-agents-mode/assets/workbench-bridge.js");
+  const browserMockSource = read("pixel-agents-mode/assets/browserMock-DHJcqYbF.js");
+  const assetIndex = JSON.parse(read("pixel-agents-mode/assets/asset-index.json"));
+
+  for (const functionName of [
+    "ensurePixelFloorCapacity",
+    "reconcilePixelAgentFloorAssignments",
+    "pixelSessionsForFloor",
+    "setPixelVisibleSessionsForFloor",
+    "notePixelSessionPreviewChange"
+  ]) {
+    assert.match(
+      rendererSource,
+      new RegExp(`function\\s+${functionName}\\s*\\(`),
+      `Pixel mode is missing ${functionName}()`
+    );
+  }
+  const reconcileSource = extractFunction(rendererSource, "reconcilePixelAgentFloorAssignments");
+  assert.match(reconcileSource, /const usedFloors\s*=\s*new Set\(\)/);
+  assert.match(reconcileSource, /!usedFloors\.has\(candidate\)/);
+  assert.match(reconcileSource, /savePixelAgentFloorAssignments\(workspaceId,\s*assignments\)/);
+  const assignmentState = { savedAssignments: { 1: 1, 2: 1, 3: 99 } };
+  const assignmentFixture = {
+    sessions: new Map(
+      [0, 1, 2, 3].map((slotIndex) => [
+        `agent-${slotIndex}`,
+        { workspaceId: "workspace-fixture", slotIndex }
+      ])
+    ),
+    activeWorkspaceId: "workspace-fixture",
+    pixelFloorCount: 4,
+    ensurePixelFloorCapacity() {},
+    pixelAgentFloorAssignments() {
+      return { ...assignmentState.savedAssignments };
+    },
+    savePixelAgentFloorAssignments(workspaceId, assignments) {
+      assignmentState.savedWorkspaceId = workspaceId;
+      assignmentState.savedAssignments = { ...assignments };
+    }
+  };
+  vm.runInNewContext(
+    `${reconcileSource}
+     this.assignments = reconcilePixelAgentFloorAssignments("workspace-fixture");`,
+    assignmentFixture
+  );
+  assert.equal(new Set(Object.values(assignmentFixture.assignments)).size, 4);
+  assert.deepEqual(
+    Array.from(Object.values(assignmentFixture.assignments)).sort(),
+    [1, 2, 3, 4],
+    "Four live agents must occupy four different floors"
+  );
+  const visibleSessionsSource = extractFunction(rendererSource, "setPixelVisibleSessionsForFloor");
+  assert.match(visibleSessionsSource, /pixelSessionsForFloor\(floor\)/);
+  assert.match(visibleSessionsSource, /type:\s*"agentClosed"/);
+  assert.match(visibleSessionsSource, /postPixelSessionDetails\(session\)/);
+  const refreshSource = extractFunction(rendererSource, "refreshPixelFloorPreviews");
+  assert.match(refreshSource, /pixelDirtyPreviewFloors/);
+  assert.match(refreshSource, /setPixelVisibleSessionsForFloor\(floor\)/);
+  assert.match(refreshSource, /requestPixelFloorPreview\(floor\)/);
+  const setPreviewSource = extractFunction(rendererSource, "setPixelFloorPreview");
+  assert.match(setPreviewSource, /localStorage\.setItem\(pixelFloorPreviewKey\(normalizedFloor\),\s*image\)/);
+  assert.match(setPreviewSource, /preview\.src\s*=\s*image/);
+
+  assert.match(rendererSource, /className\s*=\s*"pixel-roster-agent"/);
+  assert.match(rendererSource, /class="pixel-roster-avatar"/);
+  assert.match(rendererSource, /characters\/char_\$\{session\.slotIndex\s*%\s*6\}\.png/);
+  assert.doesNotMatch(rendererSource, /class="pixel-roster-number"/);
+  assert.match(styles, /\.pixel-roster-avatar\s*\{[\s\S]*?image-rendering:\s*pixelated;/);
+  assert.match(styles, /\.pixel-roster-avatar\s*\{[\s\S]*?background-position:\s*0 -10px;/);
+  assert.match(styles, /\.pixel-roster-avatar\s*\{[\s\S]*?background-size:\s*224px 192px;/);
+  assert.match(styles, /\.pixel-roster-avatar\s*\{[\s\S]*?height:\s*32px;[\s\S]*?width:\s*32px;/);
+  assert.match(styles, /\.pixel-floor-list\s*\{[\s\S]*?gap:\s*0;/);
+  assert.doesNotMatch(styles, /\.pixel-floor-list\s*>\s*button:nth-child\(3n/);
+  assert.match(styles, /\.pixel-floor-list\s*>\s*button,[\s\S]*?border-bottom:\s*5px solid #3f4a56;/);
+  assert.match(styles, /\.pixel-floor-list\s*>\s*button\.active\s*\{[\s\S]*?0 0 16px rgba\(242,\s*207,\s*99,\s*0\.3\)/);
+  assert.match(styles, /\.pixel-floor-summary/);
+
+  const pets = assetIndex.pets || [];
+  for (const [id, name] of [
+    ["claudio", "Claudio"],
+    ["gitcat", "Gitcat"],
+    ["dog", "Scout"],
+    ["lizard", "Pixel"]
+  ]) {
+    assert.ok(pets.some((pet) => pet.id === id && pet.name === name), `Missing ${name} pet`);
+    const petPath = path.join(projectRoot, `pixel-agents-mode/assets/pets/${id}/pet.png`);
+    assert.ok(fs.existsSync(petPath), `Missing ${id} pet sprite`);
+    const png = fs.readFileSync(petPath);
+    assert.equal(png.subarray(1, 4).toString("ascii"), "PNG", `${id} must be a PNG`);
+    assert.equal(png.readUInt32BE(16), 96, `${id} sprite width must match upstream topology`);
+    assert.equal(png.readUInt32BE(20), 96, `${id} sprite height must match upstream topology`);
+  }
+  assert.match(bridgeSource, /const petBaseNames\s*=\s*\["Claudio",\s*"Gitcat",\s*"Scout",\s*"Pixel"\]/);
+  assert.match(bridgeSource, /const petVariantNames\s*=\s*\["",\s*" Mint",\s*" Amber",\s*" Violet",\s*" Sky",\s*" Rose"\]/);
+  const petTypeSource = extractFunction(bridgeSource, "petTypeForFloor");
+  const petFixture = {
+    selectedPet: "gitcat",
+    petNames: Array.from({ length: 24 }, (_, index) => `Pet ${index}`)
+  };
+  vm.runInNewContext(
+    `${petTypeSource}
+     this.floorPetTypes = Array.from({ length: 12 }, (_, index) => petTypeForFloor(index + 1));`,
+    petFixture
+  );
+  assert.equal(
+    new Set(petFixture.floorPetTypes).size,
+    12,
+    "Every supported tower floor must receive a distinct deterministic pet"
+  );
+  assert.match(browserMockSource, /function tintPetFrames\(frames,\s*tint,\s*strength\)/);
+  assert.match(browserMockSource, /const variants\s*=\s*\[/);
+  for (const id of ["gitcat", "claudio", "dog", "lizard"]) {
+    assert.match(html, new RegExp(`<option\\s+value="${id}"`), `Settings must offer ${id}`);
+  }
 });
 
 test("pasted agent images are bounded, referenced, and uploaded for SSH workspaces", () => {
@@ -568,20 +708,19 @@ test("pasted agent images are bounded, referenced, and uploaded for SSH workspac
   assert.match(styles, /\.agent-slot\.agent-paste-target/, "Image transfer needs visible in-cell feedback");
 });
 
-test("cool agent names expose a deterministic 1,024-name pool", () => {
+test("agent names use a deterministic pool of 1,024 normal one-word names", () => {
   const mainSource = read("main.js");
-  const adjectives = extractArray(mainSource, "AGENT_NAME_ADJECTIVES");
-  const nouns = extractArray(mainSource, "AGENT_NAME_NOUNS");
-  assert.equal(adjectives.length, 32);
-  assert.equal(nouns.length, 32);
-  assert.equal(new Set(adjectives).size * new Set(nouns).size, 1_024);
+  const nameData = JSON.parse(read("assets/agent-names.json"));
+  const names = nameData.names;
+  assert.equal(names.length, 1_024);
+  assert.equal(new Set(names.map((name) => name.toLowerCase())).size, 1_024);
+  assert.ok(names.every((name) => /^[A-Za-z]+$/.test(name)), "Every agent name should be one word");
 
   const source = extractFunction(mainSource, "coolAgentName");
   const buildContext = () => {
     const context = { crypto };
     vm.runInNewContext(
-      `const AGENT_NAME_ADJECTIVES = ${JSON.stringify(adjectives)};
-       const AGENT_NAME_NOUNS = ${JSON.stringify(nouns)};
+      `const AGENT_NAMES = ${JSON.stringify(names)};
        ${source}
        this.coolAgentName = coolAgentName;`,
       context
@@ -593,7 +732,7 @@ test("cool agent names expose a deterministic 1,024-name pool", () => {
   const firstRun = [1, 2, 3, 4].map((number) => first.coolAgentName("fixture-agent", number));
   const secondRun = [1, 2, 3, 4].map((number) => second.coolAgentName("fixture-agent", number));
   assert.deepEqual(firstRun, secondRun, "Names must remain deterministic across runtimes");
-  assert.ok(firstRun.every((name) => /^\S+ \S+$/.test(name)), "Names should be adjective/noun pairs");
+  assert.ok(firstRun.every((name) => /^[A-Za-z]+$/.test(name)), "Names should be normal one-word names");
 });
 
 test("cross-platform packaging entrypoints exist and remain wired", () => {
@@ -624,6 +763,97 @@ test("cross-platform packaging entrypoints exist and remain wired", () => {
   assert.match(platformPackager, /process\.platform\s*!==\s*targetPlatform/);
   assert.match(platformPackager, /process\.env\.npm_execpath/);
   assert.match(platformPackager, /process\.env\.ComSpec\s*\|\|\s*"cmd\.exe"/);
+});
+
+test("workspace tabs keep every agent estimate visible", () => {
+  const styles = read("styles.css");
+  const rendererSource = read("renderer.js");
+  assert.match(rendererSource, /tab\.dataset\.agentCount\s*=\s*String\(count\)/);
+  assert.match(rendererSource, /etaGroup\.dataset\.agentCount\s*=\s*String\(count\)/);
+  assert.match(rendererSource, /tabTail\.append\(renderedTabs\.at\(-1\),\s*addTabButton\)/);
+  assert.match(rendererSource, /activeTab\?\.scrollIntoView\(\{\s*block:\s*"nearest",\s*inline:\s*"nearest"\s*\}\)/);
+  assert.match(styles, /\.workspace-editor-tab \.agent-eta\s*\{[\s\S]*?display:\s*grid;/);
+  assert.match(styles, /\.workspace-editor-tab \.agent-eta\s*\{[\s\S]*?flex:\s*0 0 auto;/);
+  assert.match(styles, /\.workspace-editor-tab \.agent-eta\s*\{[\s\S]*?overflow:\s*visible;/);
+  assert.match(styles, /\.workspace-editor-tab \.agent-eta\[data-agent-count="4"\]\s*\{[\s\S]*?repeat\(4,\s*40px\)/);
+  assert.match(styles, /\.workspace-editor-tab\[data-agent-count="4"\]\s*\{[\s\S]*?min-width:\s*244px;/);
+  assert.match(styles, /\.workspace-editor-tab \.workspace-editor-label\s*\{[\s\S]*?text-overflow:\s*ellipsis;/);
+});
+
+test("remote status control opens SSH with the active connection", () => {
+  const html = read("index.html");
+  const rendererSource = read("renderer.js");
+  assert.match(html, /id="remoteStatusButton"[\s\S]*?aria-label="Open remote workspace"/);
+  assert.match(rendererSource, /remoteStatusButton\.classList\.toggle\("connected",\s*connectedRemotely\)/);
+  assert.match(rendererSource, /openSshDialog\(workspace\?\.type\s*===\s*"ssh"\s*\?\s*workspace\.remote\s*:\s*null,\s*false\)/);
+});
+
+test("metadata writes are serialized and use collision-proof temporary files", async () => {
+  const source = extractFunction(read("main.js"), "writeJson");
+  const temporaryPaths = [];
+  const renames = [];
+  let activeWrites = 0;
+  let maximumActiveWrites = 0;
+  const context = {
+    crypto,
+    jsonWriteQueues: new Map(),
+    path,
+    process: { pid: 90210 },
+    fsp: {
+      async mkdir() {},
+      async writeFile(filePath) {
+        temporaryPaths.push(filePath);
+        activeWrites += 1;
+        maximumActiveWrites = Math.max(maximumActiveWrites, activeWrites);
+        await Promise.resolve();
+        activeWrites -= 1;
+      },
+      async rename(sourcePath, destinationPath) {
+        renames.push([sourcePath, destinationPath]);
+      }
+    }
+  };
+  vm.createContext(context);
+  vm.runInContext(`${source}\nthis.writeJson = writeJson;`, context);
+  await Promise.all(
+    Array.from({ length: 16 }, (_, index) => context.writeJson("/tmp/agent.json", { index }))
+  );
+  assert.equal(maximumActiveWrites, 1, "Writes to one metadata file must stay ordered");
+  assert.equal(new Set(temporaryPaths).size, temporaryPaths.length, "Every write needs a unique temporary path");
+  assert.equal(renames.length, 16);
+  assert.ok(renames.every(([, destination]) => destination === "/tmp/agent.json"));
+});
+
+test("terminal output stays bounded and yields between animation frames", () => {
+  const rendererSource = read("renderer.js");
+  const source = [
+    extractFunction(rendererSource, "flushTerminalOutput"),
+    extractFunction(rendererSource, "queueTerminalOutput")
+  ].join("\n");
+  const frames = [];
+  const writes = [];
+  const context = {
+    requestAnimationFrame(callback) {
+      frames.push(callback);
+    }
+  };
+  vm.createContext(context);
+  vm.runInContext(`${source}\nthis.queueTerminalOutput = queueTerminalOutput;`, context);
+  const session = {
+    terminalWriteScheduled: false,
+    pendingTerminalOutput: [],
+    pendingTerminalOutputBytes: 0,
+    term: { write(chunk) { writes.push(chunk); } }
+  };
+  for (let index = 0; index < 5200; index += 1) {
+    context.queueTerminalOutput(session, "x".repeat(1024));
+  }
+  assert.equal(frames.length, 1, "A burst should schedule only one animation frame");
+  assert.equal(writes.length, 0, "Output must not block the input turn with synchronous writes");
+  assert.ok(session.pendingTerminalOutputBytes <= 4 * 1024 * 1024 + 1024);
+  frames.shift()();
+  assert.equal(writes.length, 1, "Only one queued chunk may render per frame");
+  assert.equal(frames.length, 1, "Remaining output should yield to another frame");
 });
 
 let failures = 0;

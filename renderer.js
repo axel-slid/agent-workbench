@@ -77,6 +77,7 @@ const outputPathForm = document.getElementById("outputPathForm");
 const outputPathInput = document.getElementById("outputPathInput");
 const codexUsageText = document.getElementById("codexUsageText");
 const codexUsageMeter = document.getElementById("codexUsageMeter");
+const remoteStatusButton = document.getElementById("remoteStatusButton");
 const footerStatus = document.getElementById("footerStatus");
 const toast = document.getElementById("toast");
 const fileResizeHandle = document.getElementById("fileResizeHandle");
@@ -195,7 +196,10 @@ let pixelFloorCount = Math.max(
 let pixelBaseLayout = null;
 let pixelPreviewGenerationBusy = false;
 let pixelPreviewRefreshNeeded = true;
+let pixelPreviewRefreshTimer = null;
 const pixelRoomStates = new Map();
+const pixelDirtyPreviewFloors = new Set();
+const pixelSessionPreviewSignatures = new Map();
 let globalCleanMode = localStorage.getItem("agentWorkbenchGlobalCleanMode") === "1";
 let selectedAgentId = null;
 let agentsPaused = false;
@@ -537,6 +541,13 @@ function setFooter(message) {
   const workspacePath = workspace ? remoteWorkspaceLabel(workspace) : "";
   footerStatus.textContent = workspacePath || message || "No workspace";
   footerStatus.title = workspacePath || message || "No workspace";
+  const connectedRemotely = workspace?.type === "ssh";
+  const remoteLabel = connectedRemotely
+    ? `Remote: ${workspacePath}. Open SSH connections`
+    : "Open remote workspace";
+  remoteStatusButton.classList.toggle("connected", connectedRemotely);
+  remoteStatusButton.title = remoteLabel;
+  remoteStatusButton.setAttribute("aria-label", remoteLabel);
 }
 
 function showToast(message) {
@@ -691,9 +702,174 @@ function activePixelSessions() {
     .sort((left, right) => left.slotIndex - right.slotIndex);
 }
 
+function pixelAgentAssignmentKey(workspaceId) {
+  return `agentWorkbenchPixelAgentFloors:${workspaceId || "workspace"}`;
+}
+
+function pixelAgentFloorAssignments(workspaceId) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(pixelAgentAssignmentKey(workspaceId)) || "{}");
+    return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function savePixelAgentFloorAssignments(workspaceId, assignments) {
+  localStorage.setItem(pixelAgentAssignmentKey(workspaceId), JSON.stringify(assignments));
+}
+
+function ensurePixelFloorCapacity(requiredFloors) {
+  const nextFloorCount = Math.max(
+    pixelFloorCount,
+    Math.min(12, Math.max(1, Number(requiredFloors) || 1))
+  );
+  if (nextFloorCount === pixelFloorCount) return false;
+  pixelFloorCount = nextFloorCount;
+  localStorage.setItem("agentWorkbenchPixelFloorCount", String(pixelFloorCount));
+  initializePixelFloors();
+  pixelPreviewRefreshNeeded = true;
+  if (pixelFrameReady) {
+    postPixelMessage({
+      type: "houseConfig",
+      floors: pixelFloorCount,
+      slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4,
+      petsEnabled: booleanPreference("agentWorkbenchPixelPets", true),
+      pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat"
+    });
+  }
+  schedulePixelPreviewRefresh(180);
+  return true;
+}
+
+function reconcilePixelAgentFloorAssignments(workspaceId) {
+  const workspaceSessions = Array.from(sessions.values())
+    .filter((session) => session.workspaceId === workspaceId)
+    .sort((left, right) => left.slotIndex - right.slotIndex);
+  if (workspaceId === activeWorkspaceId) ensurePixelFloorCapacity(workspaceSessions.length);
+  const assignments = pixelAgentFloorAssignments(workspaceId);
+  const activeAssignmentIds = new Set(
+    workspaceSessions.map((session) => String(session.slotIndex + 1))
+  );
+  let changed = false;
+  for (const assignmentId of Object.keys(assignments)) {
+    if (!activeAssignmentIds.has(assignmentId)) {
+      delete assignments[assignmentId];
+      changed = true;
+    }
+  }
+
+  const usedFloors = new Set();
+  for (const session of workspaceSessions) {
+    const assignmentId = String(session.slotIndex + 1);
+    const savedFloor = Number(assignments[assignmentId]);
+    let floor = Number.isInteger(savedFloor)
+      && savedFloor >= 1
+      && savedFloor <= pixelFloorCount
+      && !usedFloors.has(savedFloor)
+      ? savedFloor
+      : 0;
+    if (!floor) {
+      const start = session.slotIndex % pixelFloorCount;
+      for (let offset = 0; offset < pixelFloorCount; offset += 1) {
+        const candidate = ((start + offset) % pixelFloorCount) + 1;
+        if (!usedFloors.has(candidate)) {
+          floor = candidate;
+          break;
+        }
+      }
+    }
+    if (assignments[assignmentId] !== floor) {
+      assignments[assignmentId] = floor;
+      changed = true;
+    }
+    usedFloors.add(floor);
+  }
+  if (changed) savePixelAgentFloorAssignments(workspaceId, assignments);
+  return assignments;
+}
+
+function pixelFloorForSession(session) {
+  const workspaceId = session?.workspaceId || activeWorkspaceId;
+  const assignments = reconcilePixelAgentFloorAssignments(workspaceId);
+  const assignmentId = String((Number(session?.slotIndex) || 0) + 1);
+  return Math.max(1, Math.min(pixelFloorCount, Number(assignments[assignmentId]) || 1));
+}
+
+function pixelSessionsForFloor(floor) {
+  const normalizedFloor = Math.max(1, Math.min(pixelFloorCount, Number(floor) || 1));
+  const assignments = reconcilePixelAgentFloorAssignments(activeWorkspaceId);
+  return activePixelSessions().filter(
+    (session) => Number(assignments[String(session.slotIndex + 1)]) === normalizedFloor
+  );
+}
+
+function reindexPixelAgentFloorsAfterDelete(deletedFloor, nextFloorCount) {
+  for (const workspace of workspaces) {
+    const assignments = pixelAgentFloorAssignments(workspace.id);
+    let changed = false;
+    for (const [assignmentId, value] of Object.entries(assignments)) {
+      const floor = Number(value);
+      if (!Number.isInteger(floor)) continue;
+      const nextFloor = floor > deletedFloor
+        ? floor - 1
+        : floor === deletedFloor
+          ? Math.min(deletedFloor, nextFloorCount)
+          : floor;
+      if (nextFloor !== floor) {
+        assignments[assignmentId] = Math.max(1, nextFloor);
+        changed = true;
+      }
+    }
+    if (changed) savePixelAgentFloorAssignments(workspace.id, assignments);
+  }
+}
+
+function pixelSessionPreviewSignature(session) {
+  const metadata = session?.metadata || {};
+  return JSON.stringify([
+    metadata.name || "",
+    metadata.status || "",
+    metadata.state || "",
+    metadata.currentTask || "",
+    metadata.tldr || "",
+    Number(metadata.progressPercent) || 0,
+    Boolean(session?.pausedByUser),
+    Boolean(session?.exited)
+  ]);
+}
+
+function schedulePixelPreviewRefresh(delay = 480) {
+  if (!pixelModeEnabled || !pixelFrameReady) return;
+  if (pixelPreviewRefreshTimer) clearTimeout(pixelPreviewRefreshTimer);
+  pixelPreviewRefreshTimer = setTimeout(() => {
+    pixelPreviewRefreshTimer = null;
+    refreshPixelFloorPreviews();
+  }, delay);
+}
+
+function queuePixelFloorPreviewRefresh(floor, delay = 480) {
+  const normalizedFloor = Math.max(1, Math.min(pixelFloorCount, Number(floor) || 1));
+  pixelDirtyPreviewFloors.add(normalizedFloor);
+  schedulePixelPreviewRefresh(delay);
+}
+
+function notePixelSessionPreviewChange(session) {
+  if (!session || session.workspaceId !== activeWorkspaceId) return;
+  const signature = pixelSessionPreviewSignature(session);
+  const previous = pixelSessionPreviewSignatures.get(session.id);
+  pixelSessionPreviewSignatures.set(session.id, signature);
+  if (previous !== signature) {
+    queuePixelFloorPreviewRefresh(pixelFloorForSession(session));
+  }
+}
+
 function renderPixelAgentRoster() {
   const activeSessions = activePixelSessions();
   const workspace = activeWorkspace();
+  const assignments = workspace
+    ? reconcilePixelAgentFloorAssignments(workspace.id)
+    : {};
   const now = Date.now();
   pixelAgentRosterCount.textContent = `${activeSessions.length}/${workspace ? workspaceLayoutFor(workspace.id) : 4}`;
   pixelAgentClipboardCount.textContent = String(activeSessions.length);
@@ -713,20 +889,28 @@ function renderPixelAgentRoster() {
   for (const session of activeSessions) {
     const rawStatus = session.metadata.status || "working";
     const status = rawStatus === "done" ? "idle" : rawStatus;
+    const assignedFloor = Number(assignments[String(session.slotIndex + 1)]) || 1;
     const item = document.createElement("button");
     item.className = "pixel-roster-agent";
     item.type = "button";
     item.dataset.agentSlot = String(session.slotIndex);
-    item.title = `Open Agent ${session.slotIndex + 1}`;
+    item.dataset.pixelFloor = String(assignedFloor);
+    item.title = `Open Agent ${session.slotIndex + 1} · Floor ${assignedFloor}`;
+    item.setAttribute(
+      "aria-label",
+      `Agent ${session.slotIndex + 1}, ${session.metadata.name || `${session.kind} agent`}, floor ${assignedFloor}, ${status}`
+    );
     item.innerHTML = `
       <span class="pixel-roster-eta"></span>
-      <span class="pixel-roster-number">${session.slotIndex + 1}</span>
+      <span class="pixel-roster-avatar" aria-hidden="true"></span>
       <span class="pixel-roster-copy">
         <strong></strong>
         <small></small>
       </span>
-      <span class="pixel-roster-state">${status}</span>
+      <span class="pixel-roster-state">floor ${assignedFloor} · ${status}</span>
     `;
+    item.querySelector(".pixel-roster-avatar").style.backgroundImage =
+      `url("pixel-agents-mode/assets/characters/char_${session.slotIndex % 6}.png")`;
     item.querySelector(".pixel-roster-eta").textContent = pixelRosterEtaText(session, now);
     item.querySelector(".pixel-roster-copy strong").textContent =
       session.metadata.name || `${session.kind} agent`;
@@ -797,6 +981,8 @@ function waitForPixelPreview(milliseconds) {
 
 function refreshPixelFloorPreviewsForWorkspaceSwitch() {
   pixelPreviewRefreshNeeded = true;
+  pixelDirtyPreviewFloors.clear();
+  pixelSessionPreviewSignatures.clear();
   pixelRoomStates.clear();
   for (let floor = 1; floor <= pixelFloorCount; floor += 1) {
     localStorage.removeItem(pixelFloorPreviewKey(floor));
@@ -808,34 +994,47 @@ function refreshPixelFloorPreviewsForWorkspaceSwitch() {
 }
 
 async function refreshPixelFloorPreviews() {
-  if (!pixelModeEnabled || !pixelFrameReady || pixelPreviewGenerationBusy) return;
+  if (!pixelModeEnabled || !pixelFrameReady) return;
+  if (pixelPreviewGenerationBusy) {
+    schedulePixelPreviewRefresh(220);
+    return;
+  }
+  const floorsToRefresh = pixelPreviewRefreshNeeded || pixelDirtyPreviewFloors.size === 0
+    ? Array.from({ length: pixelFloorCount }, (_, index) => pixelFloorCount - index)
+    : Array.from(pixelDirtyPreviewFloors).sort((left, right) => right - left);
+  pixelDirtyPreviewFloors.clear();
   pixelPreviewGenerationBusy = true;
   pixelPreviewRefreshNeeded = false;
   pixelModeView.classList.add("refreshing-floor-previews");
   const originalFloor = activePixelFloor;
-  const previewSessions = activePixelSessions();
   try {
     postPixelMessage({ type: "previewCycle", active: true });
-    for (let floor = pixelFloorCount; floor >= 1; floor -= 1) {
+    for (const floor of floorsToRefresh) {
       const layout = await pixelLayoutForFloor(floor);
       postPixelMessage({ type: "layoutLoaded", layout });
+      setPixelVisibleSessionsForFloor(floor);
       await waitForPixelPreview(280);
       requestPixelFloorPreview(floor);
       await waitForPixelPreview(90);
     }
     const originalLayout = await pixelLayoutForFloor(originalFloor);
     postPixelMessage({ type: "layoutLoaded", layout: originalLayout });
+    setPixelVisibleSessionsForFloor(originalFloor);
     await waitForPixelPreview(280);
     requestPixelFloorPreview(originalFloor);
     await waitForPixelPreview(90);
   } catch (error) {
   } finally {
     postPixelMessage({ type: "previewCycle", active: false });
-    for (const session of previewSessions) syncPixelSession(session);
+    setPixelVisibleSessionsForFloor(originalFloor);
     pixelModeView.classList.remove("refreshing-floor-previews");
     pixelPreviewGenerationBusy = false;
-    if (pixelPreviewRefreshNeeded && pixelModeEnabled && pixelFrameReady) {
-      setTimeout(refreshPixelFloorPreviews, 180);
+    if (
+      (pixelPreviewRefreshNeeded || pixelDirtyPreviewFloors.size > 0)
+      && pixelModeEnabled
+      && pixelFrameReady
+    ) {
+      schedulePixelPreviewRefresh(180);
     }
   }
 }
@@ -844,6 +1043,12 @@ function decoratePixelFloorButton(button) {
   const floor = Number(button.dataset.pixelFloor);
   const room = button.querySelector(".pixel-floor-room");
   const preview = room?.querySelector("img");
+  let summary = room?.querySelector(".pixel-floor-summary");
+  if (room && !summary) {
+    summary = document.createElement("small");
+    summary.className = "pixel-floor-summary";
+    room.appendChild(summary);
+  }
   const roomState = pixelRoomStates.get(floor);
   const agentCount = Array.isArray(roomState?.agents) ? roomState.agents.length : 0;
   const petCount = Array.isArray(roomState?.pets) ? roomState.pets.length : 0;
@@ -854,6 +1059,15 @@ function decoratePixelFloorButton(button) {
   button.setAttribute("aria-label", button.title);
   if (room) room.style.setProperty("--pixel-floor-texture", pixelFloorTexture(floor));
   if (preview) preview.src = pixelFloorPreview(floor) || "pixel-agents-mode/office.png";
+  if (summary) {
+    const agentLabel = roomState
+      ? agentCount === 1
+        ? "1 agent"
+        : `${agentCount} agents`
+      : "loading";
+    const petName = roomState?.pets?.[0]?.name || "";
+    summary.textContent = [agentLabel, petName].filter(Boolean).join(" · ");
+  }
 }
 
 function createPixelFloorButton(floor) {
@@ -864,6 +1078,7 @@ function createPixelFloorButton(floor) {
     <span class="pixel-floor-elevator">${floor}</span>
     <span class="pixel-floor-room">
       <img src="pixel-agents-mode/office.png" alt="">
+      <small class="pixel-floor-summary">loading</small>
     </span>
   `;
   decoratePixelFloorButton(button);
@@ -900,10 +1115,13 @@ function addPixelFloor() {
   postPixelMessage({
     type: "houseConfig",
     floors: pixelFloorCount,
-    slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4
+    slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4,
+    petsEnabled: booleanPreference("agentWorkbenchPixelPets", true),
+    pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat"
   });
   pixelPreviewRefreshNeeded = true;
   applyPixelFloor(pixelFloorCount);
+  schedulePixelPreviewRefresh(180);
   button.scrollIntoView({ block: "nearest" });
   showToast(`Floor ${pixelFloorCount} added.`);
 }
@@ -911,6 +1129,15 @@ function addPixelFloor() {
 function deletePixelFloor() {
   if (pixelFloorCount <= 1) {
     showToast("The tower needs at least one floor.");
+    return;
+  }
+  const agentCounts = new Map();
+  for (const session of sessions.values()) {
+    agentCounts.set(session.workspaceId, (agentCounts.get(session.workspaceId) || 0) + 1);
+  }
+  const requiredFloorCount = Math.max(1, ...agentCounts.values());
+  if (pixelFloorCount <= requiredFloorCount) {
+    showToast("Each active agent needs its own floor.");
     return;
   }
   const floor = activePixelFloor;
@@ -937,17 +1164,22 @@ function deletePixelFloor() {
   for (const [stateFloor, state] of shiftedRoomStates) {
     pixelRoomStates.set(stateFloor, state);
   }
+  reindexPixelAgentFloorsAfterDelete(floor, pixelFloorCount - 1);
   pixelFloorCount -= 1;
   localStorage.setItem("agentWorkbenchPixelFloorCount", String(pixelFloorCount));
+  for (const workspace of workspaces) reconcilePixelAgentFloorAssignments(workspace.id);
   activePixelFloor = Math.min(floor, pixelFloorCount);
   initializePixelFloors();
   postPixelMessage({
     type: "houseConfig",
     floors: pixelFloorCount,
-    slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4
+    slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4,
+    petsEnabled: booleanPreference("agentWorkbenchPixelPets", true),
+    pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat"
   });
   pixelPreviewRefreshNeeded = true;
   applyPixelFloor(activePixelFloor);
+  schedulePixelPreviewRefresh(180);
   showToast(`Floor ${floor} deleted.`);
 }
 
@@ -1083,7 +1315,7 @@ async function applyPixelFloor(floor, { persist = true } = {}) {
     const layout = await pixelLayoutForFloor(activePixelFloor);
     postPixelMessage({ type: "layoutLoaded", layout });
     setTimeout(() => {
-      for (const session of activePixelSessions()) syncPixelSession(session);
+      setPixelVisibleSessionsForFloor(activePixelFloor);
     }, 60);
   } catch (error) {
     showToast("Could not open that floor.");
@@ -1094,12 +1326,12 @@ function syncPixelMode(reset = false) {
   if (!pixelFrameReady) return;
   const workspace = activeWorkspace();
   const activeSessions = activePixelSessions();
-  const agents = activeSessions.map((session) => session.slotIndex + 1);
+  ensurePixelFloorCapacity(activeSessions.length);
+  const visibleSessions = pixelSessionsForFloor(activePixelFloor);
+  const agents = visibleSessions.map((session) => session.slotIndex + 1);
   const nextAgentIds = new Set(agents);
-  if (reset) {
-    for (const id of pixelKnownAgentIds) {
-      if (!nextAgentIds.has(id)) postPixelMessage({ type: "agentClosed", id });
-    }
+  for (const id of pixelKnownAgentIds) {
+    if (!nextAgentIds.has(id)) postPixelMessage({ type: "agentClosed", id });
   }
   const folderNames = Object.fromEntries(agents.map((id) => [id, workspace?.name || "Workspace"]));
   postPixelMessage({
@@ -1133,13 +1365,13 @@ function syncPixelMode(reset = false) {
   postPixelMessage({ type: "layoutLoaded", layout: null });
   applyPixelFloor(activePixelFloor, { persist: false });
   for (const session of activeSessions) {
-    syncPixelSession(session);
+    notePixelSessionPreviewChange(session);
   }
   renderPixelAgentRoster();
 }
 
-function syncPixelSession(session) {
-  if (!pixelFrameReady || session.workspaceId !== activeWorkspaceId) return;
+function postPixelSessionDetails(session) {
+  if (!pixelFrameReady) return;
   const id = session.slotIndex + 1;
   const status = session.metadata.status || "working";
   const communicating = /collaborat|meeting|code review|pairing|communicat/i.test(
@@ -1192,6 +1424,30 @@ function syncPixelSession(session) {
   });
 }
 
+function setPixelVisibleSessionsForFloor(floor) {
+  if (!pixelFrameReady) return;
+  const visibleSessions = pixelSessionsForFloor(floor);
+  const nextAgentIds = new Set(visibleSessions.map((session) => session.slotIndex + 1));
+  for (const id of Array.from(pixelKnownAgentIds)) {
+    if (nextAgentIds.has(id)) continue;
+    postPixelMessage({ type: "agentClosed", id });
+    pixelKnownAgentIds.delete(id);
+  }
+  for (const session of visibleSessions) postPixelSessionDetails(session);
+}
+
+function syncPixelSession(session) {
+  notePixelSessionPreviewChange(session);
+  if (
+    !pixelFrameReady
+    || session.workspaceId !== activeWorkspaceId
+    || pixelFloorForSession(session) !== activePixelFloor
+  ) {
+    return;
+  }
+  postPixelSessionDetails(session);
+}
+
 function setPixelAgentClipboard(open) {
   const next = Boolean(open);
   pixelAgentClipboard.hidden = !next;
@@ -1222,7 +1478,7 @@ function setPixelMode(enabled, { persist = true } = {}) {
       }
     });
   }
-  if (pixelModeEnabled && pixelPreviewRefreshNeeded) {
+  if (pixelModeEnabled && (pixelPreviewRefreshNeeded || pixelDirtyPreviewFloors.size > 0)) {
     setTimeout(refreshPixelFloorPreviews, 220);
   }
 }
@@ -1776,12 +2032,15 @@ function workspaceLayoutFor(workspaceId) {
 function renderWorkspaceEditorTabs() {
   workspaceEditorTabs.innerHTML = "";
   workspaceEtaNodes.clear();
+  const renderedTabs = [];
+  let activeTab = null;
 
   for (const workspace of workspaces) {
     const isActive = workspace.id === activeWorkspaceId;
     const count = workspaceLayoutFor(workspace.id);
     const tab = document.createElement("div");
     tab.className = "editor-tab workspace-editor-tab";
+    tab.dataset.agentCount = String(count);
     tab.classList.toggle("active", isActive);
     tab.setAttribute("role", "tab");
     tab.setAttribute("aria-selected", String(isActive));
@@ -1794,6 +2053,7 @@ function renderWorkspaceEditorTabs() {
 
     const etaGroup = document.createElement("span");
     etaGroup.className = "agent-eta";
+    etaGroup.dataset.agentCount = String(count);
     etaGroup.setAttribute("aria-label", `${workspace.name} agent estimates`);
     for (let index = 0; index < count; index += 1) {
       const eta = document.createElement("span");
@@ -1818,6 +2078,8 @@ function renderWorkspaceEditorTabs() {
     makeInteractive(tab, () => selectWorkspace(workspace.id));
     tab.addEventListener("contextmenu", (event) => beginEditorTabRename(event, tab, workspace));
     workspaceEditorTabs.appendChild(tab);
+    renderedTabs.push(tab);
+    if (isActive) activeTab = tab;
   }
 
   const addTabButton = document.createElement("button");
@@ -1833,9 +2095,18 @@ function renderWorkspaceEditorTabs() {
     event.stopPropagation();
     openWorkspaceSetup();
   });
-  workspaceEditorTabs.appendChild(addTabButton);
+  if (renderedTabs.length) {
+    const tabTail = document.createElement("div");
+    tabTail.className = "workspace-tab-tail";
+    tabTail.setAttribute("role", "presentation");
+    tabTail.append(renderedTabs.at(-1), addTabButton);
+    workspaceEditorTabs.appendChild(tabTail);
+  } else {
+    workspaceEditorTabs.appendChild(addTabButton);
+  }
 
   updateAgentEta();
+  requestAnimationFrame(() => activeTab?.scrollIntoView({ block: "nearest", inline: "nearest" }));
 }
 
 function layoutSummary(count) {
@@ -2025,7 +2296,7 @@ function closeSettings() {
   settingsOverlay.hidden = true;
 }
 
-function applyPalette(palette, mode) {
+function applyPalette(palette, mode, theme = "") {
   const root = document.documentElement;
   for (const [key, value] of Object.entries(palette)) {
     root.style.setProperty(`--theme-${key}`, value);
@@ -2033,7 +2304,9 @@ function applyPalette(palette, mode) {
   root.style.setProperty("--theme-background", palette.background || palette.bg);
   root.style.setProperty("--theme-terminal", palette.terminal || palette.bg);
   root.dataset.appearanceMode = mode.toLowerCase().replace(/\s+/g, "-");
-  root.style.colorScheme = mode.toLowerCase().startsWith("light") ? "light" : "dark";
+  const lightAppearance = mode.toLowerCase().startsWith("light") || theme === "pixel-studio";
+  root.dataset.appearanceTone = lightAppearance ? "light" : "dark";
+  root.style.colorScheme = lightAppearance ? "light" : "dark";
   const terminalTheme = terminalThemeFromPalette(palette);
   for (const session of sessions.values()) {
     session.term.options.theme = terminalTheme;
@@ -2069,7 +2342,7 @@ function selectTheme(theme, { syncCategory = true } = {}) {
   const palette = THEME_PALETTES[theme] || THEME_PALETTES["dark-plus"];
   themeOptions.forEach((option) => option.classList.toggle("active", option.dataset.theme === theme));
   document.documentElement.dataset.theme = theme;
-  applyPalette(palette, category);
+  applyPalette(palette, category, theme);
   localStorage.setItem("agentWorkbenchTheme", theme);
   localStorage.setItem(`agentWorkbenchTheme:${category}`, theme);
   if (syncCategory) {
@@ -2382,8 +2655,8 @@ function renderSshConnectionHistory() {
   renderSshRecentFolders();
 }
 
-async function openSshDialog() {
-  sshOpenedFromWorkspaceSetup = true;
+async function openSshDialog(prefill = null, openedFromWorkspaceSetup = true) {
+  sshOpenedFromWorkspaceSetup = openedFromWorkspaceSetup;
   setWorkspaceAddMenu(false);
   cleanupSshAuthentication();
   sshStatus.textContent = "";
@@ -2399,7 +2672,9 @@ async function openSshDialog() {
       option.textContent = host;
       sshKnownHostSelect.appendChild(option);
     }
-    if (!sshHostInput.value.trim() && sshConnectionHistory[0]) {
+    if (prefill) {
+      setSshFields(prefill, prefill.root || prefill.path || prefill.lastPath || "~");
+    } else if (!sshHostInput.value.trim() && sshConnectionHistory[0]) {
       setSshFields(sshConnectionHistory[0]);
     }
     renderSshConnectionHistory();
@@ -4073,6 +4348,12 @@ function updateAgentEta() {
       `[data-agent-slot="${session.slotIndex}"] .pixel-roster-eta`
     );
     if (eta) eta.textContent = pixelRosterEtaText(session, now);
+    if (
+      pixelFloorForSession(session) !== activePixelFloor
+      || !pixelKnownAgentIds.has(session.slotIndex + 1)
+    ) {
+      continue;
+    }
     postPixelMessage({
       type: "agentEta",
       id: session.slotIndex + 1,
@@ -4226,6 +4507,7 @@ function updateAgentMetadata(session, metadata) {
 async function stopAgent(id) {
   const session = sessions.get(id);
   if (!session) return;
+  const assignedFloor = pixelFloorForSession(session);
   session.stoppingByUser = true;
   session.notifiedFailure = true;
   session.finishNotified = true;
@@ -4235,6 +4517,8 @@ async function stopAgent(id) {
   session.observer.disconnect();
   session.term.dispose();
   sessions.delete(id);
+  pixelSessionPreviewSignatures.delete(id);
+  reconcilePixelAgentFloorAssignments(session.workspaceId);
   if (selectedAgentId === id) selectedAgentId = null;
   slots[session.slotIndex] = null;
   agentGrid.classList.remove("has-maximized");
@@ -4243,6 +4527,7 @@ async function stopAgent(id) {
   renderAgentSidebar();
   setFooter("Agent stopped");
   syncPixelMode(true);
+  queuePixelFloorPreviewRefresh(assignedFloor, 180);
   renderPixelAgentRoster();
 }
 
@@ -4606,6 +4891,11 @@ workspaceSetupNextButton.addEventListener("click", () => {
 });
 workspaceAgentsBackButton.addEventListener("click", () => showWorkspaceSetupStep("layout"));
 workspaceSetupFinishButton.addEventListener("click", finishWorkspaceSetup);
+remoteStatusButton.addEventListener("click", () => {
+  const workspace = activeWorkspace();
+  openSshDialog(workspace?.type === "ssh" ? workspace.remote : null, false)
+    .catch((error) => showToast(error.message || String(error)));
+});
 makeInteractive(commandCenter, openCommandPalette);
 commandPaletteInput.addEventListener("input", () => {
   commandPaletteSelection = 0;
@@ -4751,10 +5041,14 @@ settingsPixelPets.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchPixelPets", settingsPixelPets.checked ? "1" : "0");
   settingsPixelPetChoice.disabled = !settingsPixelPets.checked;
   syncPixelMode(true);
+  pixelPreviewRefreshNeeded = true;
+  schedulePixelPreviewRefresh(180);
 });
 settingsPixelPetChoice.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchPixelPetChoice", settingsPixelPetChoice.value);
   syncPixelMode(true);
+  pixelPreviewRefreshNeeded = true;
+  schedulePixelPreviewRefresh(180);
 });
 settingsTerminalFontSize.addEventListener("input", () => {
   localStorage.setItem("agentWorkbenchTerminalFontSize", settingsTerminalFontSize.value);
