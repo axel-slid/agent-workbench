@@ -9,8 +9,8 @@
       <stop offset=".45" stop-color="#5d87ff"/>
       <stop offset="1" stop-color="#ae7cff"/>
     </linearGradient>
-    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="18" result="blur"/>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -18,17 +18,20 @@
     </filter>
   </defs>
   <rect x="70" y="70" width="884" height="884" rx="220" fill="#05070d"/>
-  <rect x="82" y="82" width="860" height="860" rx="208" fill="url(#bg)" stroke="url(#rim)" stroke-width="20"/>
+  <rect x="84" y="84" width="856" height="856" rx="206" fill="url(#bg)" stroke="url(#rim)" stroke-width="16"/>
   <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M240 256Q240 222 274 222H455V455H240Z" stroke="#69b7ff" stroke-width="28"/>
-    <path d="M569 222H750Q784 222 784 256V455H569Z" stroke="#ff8b72" stroke-width="28"/>
-    <path d="M240 569H455V802H274Q240 802 240 768Z" stroke="#b188ff" stroke-width="28"/>
-    <path d="M569 569H784V768Q784 802 750 802H569Z" stroke="#62d8b4" stroke-width="28"/>
-    <g filter="url(#glow)" stroke-width="24">
-      <path d="m304 322 54 50-54 50M382 422h30" stroke="#69b7ff"/>
-      <path d="m633 322 54 50-54 50M711 422h30" stroke="#ff8b72"/>
-      <path d="m304 635 54 50-54 50M382 735h30" stroke="#b188ff"/>
-      <path d="m633 635 54 50-54 50M711 735h30" stroke="#62d8b4"/>
+    <g stroke-width="22">
+      <rect x="218" y="218" width="258" height="258" rx="52" fill="#69b7ff" fill-opacity=".055" stroke="#69b7ff"/>
+      <rect x="548" y="218" width="258" height="258" rx="52" fill="#ff8b72" fill-opacity=".055" stroke="#ff8b72"/>
+      <rect x="218" y="548" width="258" height="258" rx="52" fill="#b188ff" fill-opacity=".055" stroke="#b188ff"/>
+      <rect x="548" y="548" width="258" height="258" rx="52" fill="#62d8b4" fill-opacity=".055" stroke="#62d8b4"/>
     </g>
+    <g filter="url(#glow)" stroke-width="22">
+      <path d="m282 290 49 43-49 43M358 376h42" stroke="#69b7ff"/>
+      <path d="m612 290 49 43-49 43M688 376h42" stroke="#ff8b72"/>
+      <path d="m282 620 49 43-49 43M358 706h42" stroke="#b188ff"/>
+      <path d="m612 620 49 43-49 43M688 706h42" stroke="#62d8b4"/>
+    </g>
+    <path d="m512 487 25 25-25 25-25-25z" fill="#dce8ff" fill-opacity=".88" stroke="url(#rim)" stroke-width="8"/>
   </g>
 </svg>

@@ -78,9 +78,12 @@ const toggleFilesButton = document.getElementById("toggleFilesButton");
 const openSettingsButton = document.getElementById("openSettingsButton");
 const notificationButton = document.getElementById("notificationButton");
 const notificationBadge = document.getElementById("notificationBadge");
+const notificationPanel = document.getElementById("notificationPanel");
+const notificationList = document.getElementById("notificationList");
 const titlebarTime = document.getElementById("titlebarTime");
 const titlebarBattery = document.getElementById("titlebarBattery");
 const titlebarBatteryFill = document.getElementById("titlebarBatteryFill");
+const titlebarBatteryCharge = document.getElementById("titlebarBatteryCharge");
 const titlebarBatteryText = document.getElementById("titlebarBatteryText");
 const settingsOverlay = document.getElementById("settingsOverlay");
 const closeSettingsButton = document.getElementById("closeSettingsButton");
@@ -174,7 +177,18 @@ let pixelBaseLayout = null;
 let globalCleanMode = localStorage.getItem("agentWorkbenchGlobalCleanMode") === "1";
 let selectedAgentId = null;
 let agentsPaused = false;
-let unreadAgentNotifications = 0;
+let agentNotifications = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem("agentWorkbenchNotifications") || "[]");
+    return Array.isArray(saved) ? saved.slice(0, 50) : [];
+  } catch (error) {
+    return [];
+  }
+})();
+let unreadAgentNotifications = Math.max(
+  0,
+  Number(localStorage.getItem("agentWorkbenchUnreadNotifications")) || 0
+);
 let lastTerminalInputAt = 0;
 const pixelKnownAgentIds = new Set();
 const pendingSshAuthExits = new Map();
@@ -333,8 +347,66 @@ function activeWorkspace() {
 }
 
 function remainingEtaSeconds(session, now = Date.now()) {
+  if (session?.etaPaused && Number.isFinite(session.etaPausedSeconds)) {
+    return session.etaPausedSeconds;
+  }
   if (!session || !Number.isFinite(session.etaDeadline)) return null;
   return Math.max(0, Math.ceil((session.etaDeadline - now) / 1000));
+}
+
+function pauseSessionEta(session, now = Date.now()) {
+  if (!session || session.etaPaused) return;
+  session.etaPaused = true;
+  session.etaPausedSeconds = Number.isFinite(session.etaDeadline)
+    ? Math.max(0, Math.ceil((session.etaDeadline - now) / 1000))
+    : null;
+  session.etaDeadline = null;
+  for (const etaState of session.checklistEtaState?.values() || []) {
+    if (!etaState.countsDown) continue;
+    etaState.pausedSeconds = Number.isFinite(etaState.deadline)
+      ? Math.max(0, Math.ceil((etaState.deadline - now) / 1000))
+      : Number.isFinite(etaState.reportedSeconds)
+        ? etaState.reportedSeconds
+        : null;
+    etaState.deadline = null;
+  }
+}
+
+function resumeSessionEta(session, now = Date.now()) {
+  if (!session?.etaPaused) return;
+  session.etaPaused = false;
+  session.etaDeadline = Number.isFinite(session.etaPausedSeconds)
+    ? now + session.etaPausedSeconds * 1000
+    : null;
+  session.etaPausedSeconds = null;
+  for (const etaState of session.checklistEtaState?.values() || []) {
+    if (!etaState.countsDown) continue;
+    etaState.deadline = Number.isFinite(etaState.pausedSeconds)
+      ? now + etaState.pausedSeconds * 1000
+      : null;
+    etaState.pausedSeconds = null;
+  }
+}
+
+function interruptAgentSession(session, { send = true, announce = true } = {}) {
+  if (!session || session.exited || session.etaPaused) return false;
+  pauseSessionEta(session);
+  session.metadata = {
+    ...session.metadata,
+    status: "waiting",
+    state: "waiting",
+    currentTask: "Interrupted"
+  };
+  session.pausedByUser = true;
+  if (send) api.writeAgent(session.id, "\u001b");
+  updateAgentStatusCard(session);
+  renderAgentCleanView(session);
+  updateAgentEta();
+  updateRuntimeStatus();
+  renderAgentSidebar();
+  syncPixelSession(session);
+  if (announce) showToast(`Interrupted Agent ${session.slotIndex + 1}`);
+  return true;
 }
 
 function reportedEtaSeconds(metadata) {
@@ -411,6 +483,51 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove("visible"), 2600);
 }
 
+function persistNotifications() {
+  localStorage.setItem("agentWorkbenchNotifications", JSON.stringify(agentNotifications.slice(0, 50)));
+  localStorage.setItem("agentWorkbenchUnreadNotifications", String(unreadAgentNotifications));
+}
+
+function formatNotificationTime(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+  const today = new Date();
+  const sameDay = date.toDateString() === today.toDateString();
+  return new Intl.DateTimeFormat([], sameDay
+    ? { hour: "numeric", minute: "2-digit" }
+    : { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }
+  ).format(date);
+}
+
+function renderNotificationHistory() {
+  notificationList.replaceChildren();
+  if (!agentNotifications.length) {
+    const empty = document.createElement("div");
+    empty.className = "notification-empty";
+    empty.textContent = "No notifications yet.";
+    notificationList.appendChild(empty);
+    return;
+  }
+  for (const notification of agentNotifications) {
+    const item = document.createElement("article");
+    item.className = `notification-item ${notification.kind || "complete"}`;
+    const number = document.createElement("span");
+    number.className = "notification-agent-number";
+    number.textContent = notification.agentNumber || "—";
+    const copy = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = notification.title || "Agent update";
+    const detail = document.createElement("span");
+    detail.textContent = notification.detail || "";
+    copy.append(title, detail);
+    const time = document.createElement("time");
+    time.dateTime = notification.timestamp || "";
+    time.textContent = formatNotificationTime(notification.timestamp);
+    item.append(number, copy, time);
+    notificationList.appendChild(item);
+  }
+}
+
 function renderNotificationBell() {
   const count = unreadAgentNotifications;
   notificationBadge.hidden = count === 0;
@@ -421,9 +538,49 @@ function renderNotificationBell() {
     : "No unread agent notifications";
 }
 
-function notifyAgentFinished(session) {
+function recordAgentNotification(session, kind, title, detail) {
+  agentNotifications.unshift({
+    id: `${Date.now()}-${session?.id || Math.random().toString(36).slice(2)}`,
+    kind,
+    agentNumber: session ? String(session.slotIndex + 1) : "",
+    title,
+    detail,
+    timestamp: new Date().toISOString()
+  });
+  agentNotifications = agentNotifications.slice(0, 50);
   unreadAgentNotifications += 1;
+  persistNotifications();
   renderNotificationBell();
+  if (!notificationPanel.hidden) renderNotificationHistory();
+}
+
+function setNotificationPanel(open) {
+  const next = Boolean(open);
+  notificationPanel.hidden = !next;
+  notificationButton.setAttribute("aria-expanded", String(next));
+  if (!next) return;
+  unreadAgentNotifications = 0;
+  persistNotifications();
+  renderNotificationBell();
+  renderNotificationHistory();
+}
+
+function clearAgentNotifications() {
+  agentNotifications = [];
+  unreadAgentNotifications = 0;
+  persistNotifications();
+  renderNotificationBell();
+  renderNotificationHistory();
+  showToast("Notifications cleared.");
+}
+
+function notifyAgentFinished(session) {
+  recordAgentNotification(
+    session,
+    "complete",
+    `${session.metadata.name || `Agent ${session.slotIndex + 1}`} finished`,
+    session.metadata.tldr || "Task finished."
+  );
   showToast(`Agent ${session.slotIndex + 1} finished`);
   const workspace = workspaces.find((item) => item.id === session.workspaceId);
   api.notifyAgentFinished({
@@ -967,21 +1124,34 @@ function normalizedAgentChecklist(metadata = {}) {
 function syncChecklistEtaState(session, metadata, now = Date.now()) {
   if (!session?.checklistEtaState) return;
   const checklist = normalizedAgentChecklist(metadata);
+  const activeIndex = checklist.findIndex((item) => item.status === "working");
   const next = new Map();
   checklist.forEach((item, index) => {
     const key = `${index}:${item.text}`;
     const previous = session.checklistEtaState.get(key);
+    const countsDown = index === activeIndex && item.status === "working";
     const shouldReset = !previous
       || previous.reportedSeconds !== item.etaSeconds
-      || previous.status !== item.status;
+      || previous.status !== item.status
+      || previous.countsDown !== countsDown;
     next.set(key, {
       reportedSeconds: item.etaSeconds,
       status: item.status,
-      deadline: item.status === "done" || !Number.isFinite(item.etaSeconds)
+      countsDown,
+      deadline: !countsDown || !Number.isFinite(item.etaSeconds)
         ? null
+        : session.etaPaused
+          ? null
         : shouldReset
           ? now + item.etaSeconds * 1000
-          : previous.deadline
+          : previous.deadline,
+      pausedSeconds: session.etaPaused && countsDown
+        ? Number.isFinite(previous?.pausedSeconds)
+          ? previous.pausedSeconds
+          : Number.isFinite(previous?.deadline)
+            ? Math.max(0, Math.ceil((previous.deadline - now) / 1000))
+            : item.etaSeconds
+        : null
     });
   });
   session.checklistEtaState = next;
@@ -992,10 +1162,16 @@ function renderAgentCleanView(session, now = Date.now()) {
   const metadata = session.metadata || {};
   const state = normalizedAgentState(metadata);
   const etaSeconds = remainingEtaSeconds(session, now);
+  if (session.cleanInterruptButton) {
+    const unavailable = session.exited || session.etaPaused || state === "complete" || state === "failed";
+    session.cleanInterruptButton.disabled = unavailable;
+    session.cleanInterruptButton.title = session.etaPaused ? "Agent interrupted" : "Interrupt agent";
+    session.cleanInterruptButton.setAttribute("aria-label", session.cleanInterruptButton.title);
+  }
   session.cleanEtaText.textContent = state === "complete"
     ? "✓"
     : Number.isFinite(etaSeconds)
-      ? formatEtaClock(etaSeconds)
+      ? `${session.etaPaused ? "Ⅱ " : ""}${formatEtaClock(etaSeconds)}`
       : "—";
   session.cleanChecklist.replaceChildren();
 
@@ -1008,18 +1184,13 @@ function renderAgentCleanView(session, now = Date.now()) {
       : "Waiting for the agent’s checklist…";
     session.cleanChecklist.appendChild(empty);
   } else {
+    const activeIndex = checklist.findIndex((item) => item.status === "working");
     checklist.forEach((item, index) => {
       const row = document.createElement("div");
       row.className = `agent-checklist-item ${item.status}`;
       const marker = document.createElement("span");
       marker.className = "agent-checklist-marker";
-      marker.textContent = item.status === "done"
-        ? "✓"
-        : item.status === "working"
-          ? "›"
-          : item.status === "blocked"
-            ? "!"
-            : "○";
+      marker.setAttribute("aria-hidden", "true");
       const text = document.createElement("span");
       text.className = "agent-checklist-copy";
       text.textContent = item.text;
@@ -1028,14 +1199,20 @@ function renderAgentCleanView(session, now = Date.now()) {
       const etaState = session.checklistEtaState.get(`${index}:${item.text}`);
       const remaining = Number.isFinite(etaState?.deadline)
         ? Math.max(0, Math.ceil((etaState.deadline - now) / 1000))
+        : session.etaPaused && Number.isFinite(etaState?.pausedSeconds)
+          ? etaState.pausedSeconds
         : null;
       eta.textContent = item.status === "done"
         ? "done"
         : item.status === "blocked"
           ? "blocked"
-          : Number.isFinite(remaining)
-            ? formatEtaClock(remaining)
-            : "—";
+          : index === activeIndex && Number.isFinite(remaining)
+            ? `${session.etaPaused ? "Ⅱ " : ""}${formatEtaClock(remaining)}`
+            : Number.isFinite(item.etaSeconds)
+              ? `~${formatEtaClock(item.etaSeconds)}`
+              : item.status === "pending"
+                ? "queued"
+                : "—";
       row.append(marker, text, eta);
       session.cleanChecklist.appendChild(row);
     });
@@ -1119,10 +1296,12 @@ function toggleRunPauseAll() {
   for (const session of workspaceSessions) {
     if (shouldResume) {
       session.pausedByUser = false;
+      resumeSessionEta(session);
       api.writeAgent(session.id, "Continue from where you paused.\\r");
       session.metadata = { ...session.metadata, status: "working", state: "coding", currentTask: "Resuming task" };
     } else {
       session.pausedByUser = true;
+      pauseSessionEta(session);
       api.writeAgent(session.id, "\u001b");
       session.metadata = { ...session.metadata, status: "waiting", state: "waiting", currentTask: "Paused" };
     }
@@ -1521,6 +1700,8 @@ const FILES_COLLAPSED_LABEL = '<span class="pane-collapsed-label">Files</span>';
 const OUTPUTS_COLLAPSED_LABEL = '<span class="pane-collapsed-label">Outputs</span>';
 const AGENT_MAXIMIZE_ICON = '<svg class="agent-resize-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M7 7 2.5 2.5M2.5 6V2.5H6M11 11l4.5 4.5M12 15.5h3.5V12"/></svg>';
 const AGENT_RESTORE_ICON = '<svg class="agent-resize-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M2.5 2.5 7 7M7 3.5V7H3.5M15.5 15.5 11 11M11 14.5V11h3.5"/></svg>';
+const AGENT_ZEN_ICON = '<svg class="agent-zen-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3.5H4.5a1 1 0 0 0-1 1V7M13 3.5h2.5a1 1 0 0 1 1 1V7M7 16.5H4.5a1 1 0 0 1-1-1V13M13 16.5h2.5a1 1 0 0 0 1-1V13"/><path d="m6.4 10 2.1 2.1 5-5.1"/></svg>';
+const AGENT_INTERRUPT_ICON = '<svg class="agent-interrupt-icon" viewBox="0 0 18 18" aria-hidden="true"><rect x="4.2" y="4.2" width="9.6" height="9.6" rx="1.3"/></svg>';
 
 function setOutputCollapsed(collapsed) {
   document.body.classList.toggle("output-collapsed", collapsed);
@@ -3039,7 +3220,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         <input class="agent-name-input" maxlength="48" aria-label="Agent name">
         <div class="agent-actions">
           <button class="agent-action agent-more" type="button" title="More actions" aria-label="More actions">⋯</button>
-          <button class="agent-action agent-clean-toggle" type="button" title="Zen view" aria-label="Show Zen view" aria-pressed="false">☷</button>
+          <button class="agent-action agent-clean-toggle" type="button" title="Zen view" aria-label="Show Zen view" aria-pressed="false">${AGENT_ZEN_ICON}</button>
           <button class="agent-action agent-maximize" type="button" title="Maximize agent" aria-label="Maximize agent">${AGENT_MAXIMIZE_ICON}</button>
           <button class="agent-action agent-wide" type="button" title="Swap left or right" aria-label="Swap left or right">
             <svg class="agent-swap-icon" viewBox="0 0 18 18" aria-hidden="true">
@@ -3074,6 +3255,9 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         </div>
         <div class="agent-clean-compose">
           <textarea rows="3" placeholder="Send another instruction…" aria-label="Send another instruction"></textarea>
+          <button class="agent-clean-interrupt" type="button" title="Interrupt agent" aria-label="Interrupt agent">
+            ${AGENT_INTERRUPT_ICON}
+          </button>
         </div>
       </section>
       <div class="terminal-host"></div>
@@ -3107,6 +3291,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   const cleanFiles = slot.querySelector(".agent-clean-files");
   const cleanFileList = slot.querySelector(".agent-clean-file-list");
   const cleanComposeInput = slot.querySelector(".agent-clean-compose textarea");
+  const cleanInterruptButton = slot.querySelector(".agent-clean-interrupt");
 
   const term = new Terminal({
     allowProposedApi: false,
@@ -3124,6 +3309,21 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   term.open(terminalHost);
   term.onData((data) => {
     lastTerminalInputAt = Date.now();
+    if (data === "\u001b" || data.includes("\u0003")) {
+      interruptAgentSession(session, { send: false, announce: false });
+    } else if ((data.includes("\r") || data.includes("\n")) && session.etaPaused) {
+      resumeSessionEta(session);
+      session.pausedByUser = false;
+      session.metadata = {
+        ...session.metadata,
+        status: "working",
+        state: "coding",
+        currentTask: session.metadata.currentTask === "Interrupted"
+          ? "Resuming task"
+          : session.metadata.currentTask
+      };
+      updateAgentEta();
+    }
     api.writeAgent(descriptor.id, data);
   });
   term.onResize(({ cols, rows }) => api.resizeAgent(descriptor.id, cols, rows));
@@ -3156,7 +3356,10 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     cleanFiles,
     cleanFileList,
     cleanComposeInput,
+    cleanInterruptButton,
     checklistEtaState: new Map(),
+    etaPaused: false,
+    etaPausedSeconds: null,
     cleanMode: false,
     recentFooter,
     recentFilesNode,
@@ -3198,9 +3401,21 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     const message = cleanComposeInput.value.trim();
     if (!message) return;
     lastTerminalInputAt = Date.now();
+    resumeSessionEta(session);
+    session.pausedByUser = false;
+    session.metadata = {
+      ...session.metadata,
+      status: "working",
+      state: "coding",
+      currentTask: message.slice(0, 120)
+    };
+    updateRuntimeStatus();
     api.writeAgent(descriptor.id, `${message}\r`);
     cleanComposeInput.value = "";
     showToast(`Sent to Agent ${session.slotIndex + 1}`);
+  });
+  cleanInterruptButton.addEventListener("click", () => {
+    interruptAgentSession(session);
   });
   slot.querySelector(".agent-close").addEventListener("click", () => stopAgent(descriptor.id));
   slot.addEventListener("pointerdown", (event) => {
@@ -3455,7 +3670,14 @@ function updateAgentMetadata(session, metadata) {
   const etaWasReported = Object.prototype.hasOwnProperty.call(metadata, "etaSeconds")
     || Object.prototype.hasOwnProperty.call(metadata, "etaMinutes");
   const nextReportedEta = reportedEtaSeconds(nextMetadata);
-  if (nextStatus !== "working") {
+  if (nextStatus === "done" || nextStatus === "error") {
+    session.etaPaused = false;
+    session.etaPausedSeconds = null;
+    session.etaDeadline = null;
+    session.lastReportedEtaSeconds = null;
+  } else if (session.etaPaused) {
+    session.etaDeadline = null;
+  } else if (nextStatus !== "working") {
     session.etaDeadline = null;
     session.lastReportedEtaSeconds = null;
   } else if (etaWasReported && Number.isFinite(nextReportedEta)) {
@@ -3473,8 +3695,12 @@ function updateAgentMetadata(session, metadata) {
   const agentState = normalizedAgentState(session.metadata);
   if (agentState === "failed" && !session.notifiedFailure) {
     session.notifiedFailure = true;
-    unreadAgentNotifications += 1;
-    renderNotificationBell();
+    recordAgentNotification(
+      session,
+      "failed",
+      `${session.metadata.name || `Agent ${session.slotIndex + 1}`} failed`,
+      session.metadata.tldr || session.metadata.currentTask || "The agent stopped with an error."
+    );
     showToast(`Agent ${session.slotIndex + 1} failed`);
   } else if (agentState !== "failed") {
     session.notifiedFailure = false;
@@ -3484,8 +3710,12 @@ function updateAgentMetadata(session, metadata) {
   );
   if (needsApproval && !session.notifiedApproval) {
     session.notifiedApproval = true;
-    unreadAgentNotifications += 1;
-    renderNotificationBell();
+    recordAgentNotification(
+      session,
+      "approval",
+      `${session.metadata.name || `Agent ${session.slotIndex + 1}`} needs approval`,
+      session.metadata.currentTask || session.metadata.tldr || "An approval is waiting."
+    );
     showToast(`Agent ${session.slotIndex + 1} needs approval`);
   } else if (!needsApproval) {
     session.notifiedApproval = false;
@@ -3536,6 +3766,9 @@ function updateAgentMetadata(session, metadata) {
 async function stopAgent(id) {
   const session = sessions.get(id);
   if (!session) return;
+  session.stoppingByUser = true;
+  session.notifiedFailure = true;
+  session.finishNotified = true;
   postPixelMessage({ type: "agentClosed", id: session.slotIndex + 1 });
   pixelKnownAgentIds.delete(session.slotIndex + 1);
   await api.killAgent(id);
@@ -3693,8 +3926,13 @@ async function refreshPowerStatus() {
   const percent = Math.max(0, Math.min(100, Number(status.percent) || 0));
   titlebarBatteryText.textContent = `${Math.round(percent)}%`;
   titlebarBatteryFill.setAttribute("width", String(10.8 * percent / 100));
-  titlebarBattery.classList.toggle("charging", Boolean(status.charging));
-  titlebarBattery.title = `${Math.round(percent)}% · ${status.charged ? "charged" : status.charging ? "charging" : "on battery"}`;
+  const charging = Boolean(status.charging);
+  titlebarBattery.classList.toggle("charging", charging);
+  titlebarBattery.classList.toggle("charged", Boolean(status.charged));
+  titlebarBatteryCharge.hidden = !charging;
+  const stateLabel = status.charged ? "charged" : charging ? "charging" : "on battery";
+  titlebarBattery.title = `${Math.round(percent)}% · ${stateLabel}`;
+  titlebarBattery.setAttribute("aria-label", `${Math.round(percent)} percent, ${stateLabel}`);
 }
 
 function formatCompactBytes(value) {
@@ -3947,9 +4185,13 @@ spotifyArtwork.addEventListener("error", () => {
   spotifyArtwork.hidden = true;
 });
 notificationButton.addEventListener("click", () => {
-  unreadAgentNotifications = 0;
-  renderNotificationBell();
-  showToast("Agent notifications cleared.");
+  setNotificationPanel(notificationPanel.hidden);
+});
+notificationButton.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  clearAgentNotifications();
+  setNotificationPanel(false);
 });
 openSettingsButton.addEventListener("click", openSettings);
 closeSettingsButton.addEventListener("click", closeSettings);
@@ -4121,14 +4363,20 @@ api.onAgentExit(({ id, code, signal }) => {
   session.metadata.state = finalStatus === "done" ? "complete" : "failed";
   session.metadata.progressPercent = finalStatus === "done" ? 100 : Number(session.metadata.progressPercent) || 0;
   session.metadata.etaMinutes = 0;
+  session.etaPaused = false;
+  session.etaPausedSeconds = null;
   session.etaDeadline = null;
   session.term.writeln("");
   session.term.writeln(`\x1b[38;5;244m[process exited: ${signal || code || 0}]\x1b[0m`);
   updateAgentStatusCard(session);
   if (finalStatus === "error" && !session.notifiedFailure) {
     session.notifiedFailure = true;
-    unreadAgentNotifications += 1;
-    renderNotificationBell();
+    recordAgentNotification(
+      session,
+      "failed",
+      `${session.metadata.name || `Agent ${session.slotIndex + 1}`} failed`,
+      session.metadata.tldr || "The agent process exited with an error."
+    );
     showToast(`Agent ${session.slotIndex + 1} failed`);
   }
   updateAgentEta();
@@ -4244,6 +4492,10 @@ window.addEventListener("keydown", (event) => {
     return;
   }
   if (event.key === "Escape") {
+    if (!notificationPanel.hidden) {
+      setNotificationPanel(false);
+      return;
+    }
     if (!workspaceRemoveBackdrop.hidden) {
       closeWorkspaceRemoveDialog();
       return;
@@ -4281,6 +4533,11 @@ window.addEventListener("beforeunload", () => {
   if (powerStatusTimer) clearInterval(powerStatusTimer);
   if (etaTimer) clearInterval(etaTimer);
   for (const session of sessions.values()) session.observer.disconnect();
+});
+
+document.addEventListener("pointerdown", (event) => {
+  if (notificationPanel.hidden || event.target.closest(".notification-control")) return;
+  setNotificationPanel(false);
 });
 
 async function initialize() {

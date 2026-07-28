@@ -162,8 +162,22 @@ button {
   fill: currentColor;
 }
 
+.battery-charge {
+  fill: var(--theme-bg, #11151b);
+  stroke: color-mix(in srgb, var(--theme-bg, #11151b) 82%, transparent);
+  stroke-width: 0.35;
+}
+
+.battery-charge[hidden] {
+  display: none;
+}
+
 .titlebar-battery.charging {
   color: var(--theme-accent, #74d3a3);
+}
+
+.titlebar-battery.charged {
+  color: var(--theme-status, #74d3a3);
 }
 
 .titlebar-battery strong {
@@ -4238,6 +4252,13 @@ body.output-collapsed #artifactResizeHandle:hover {
   position: relative;
 }
 
+.notification-control {
+  -webkit-app-region: no-drag;
+  align-items: center;
+  display: flex;
+  position: relative;
+}
+
 .notification-symbol {
   fill: none;
   height: 18px;
@@ -4274,6 +4295,126 @@ body.output-collapsed #artifactResizeHandle:hover {
 
 .notification-badge[hidden] {
   display: none !important;
+}
+
+.notification-panel {
+  background: color-mix(in srgb, var(--theme-panel) 96%, var(--theme-bg));
+  border: 1px solid var(--theme-border);
+  border-radius: 9px;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.42);
+  color: var(--theme-text);
+  overflow: hidden;
+  position: absolute;
+  right: -42px;
+  top: calc(100% + 7px);
+  width: min(330px, calc(100vw - 28px));
+  z-index: 1400;
+}
+
+.notification-panel[hidden] {
+  display: none !important;
+}
+
+.notification-panel > header {
+  align-items: center;
+  border-bottom: 1px solid var(--theme-border);
+  display: flex;
+  justify-content: space-between;
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.notification-panel > header strong {
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.notification-panel > header span {
+  color: var(--theme-muted);
+  font: 7px/1 var(--mono);
+}
+
+.notification-list {
+  display: grid;
+  max-height: 290px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  align-items: center;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 72%, transparent);
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 25px minmax(0, 1fr) auto;
+  min-height: 48px;
+  padding: 6px 9px;
+}
+
+.notification-item:last-child {
+  border-bottom: 0;
+}
+
+.notification-item > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.notification-item strong,
+.notification-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notification-item strong {
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.notification-item > div > span,
+.notification-item time {
+  color: var(--theme-muted);
+  font-size: 8px;
+}
+
+.notification-item time {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.notification-agent-number {
+  align-items: center;
+  background: color-mix(in srgb, var(--theme-accent) 13%, var(--theme-bg));
+  border: 1px solid color-mix(in srgb, var(--theme-accent) 38%, var(--theme-border));
+  border-radius: 6px;
+  color: var(--theme-accent);
+  display: flex;
+  font: 700 8px/1 var(--mono);
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.notification-item.failed .notification-agent-number {
+  background: color-mix(in srgb, #df665f 12%, var(--theme-bg));
+  border-color: color-mix(in srgb, #df665f 48%, var(--theme-border));
+  color: #e67b74;
+}
+
+.notification-item.approval .notification-agent-number {
+  background: color-mix(in srgb, #dfa85f 12%, var(--theme-bg));
+  border-color: color-mix(in srgb, #dfa85f 48%, var(--theme-border));
+  color: #e4b66f;
+}
+
+.notification-empty {
+  align-items: center;
+  color: var(--theme-muted);
+  display: flex;
+  font-size: 9px;
+  justify-content: center;
+  min-height: 92px;
 }
 
 .settings-controls {
@@ -6255,11 +6396,14 @@ body.focus-mode .pixel-roster-resize-handle {
 }
 
 .agent-checklist-item.done {
-  opacity: 0.58;
+  opacity: 0.68;
 }
 
 .agent-checklist-item.done .agent-checklist-copy {
+  color: var(--theme-muted);
   text-decoration: line-through;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1.5px;
 }
 
 .agent-checklist-item.blocked {
@@ -6267,21 +6411,45 @@ body.focus-mode .pixel-roster-resize-handle {
 }
 
 .agent-checklist-marker {
-  color: var(--theme-muted);
-  font: 700 11px/1 var(--mono);
-  text-align: center;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--theme-muted) 80%, transparent);
+  border-radius: 50%;
+  box-sizing: border-box;
+  color: var(--theme-bg);
+  display: flex;
+  height: 13px;
+  justify-content: center;
+  position: relative;
+  width: 13px;
 }
 
 .agent-checklist-item.working .agent-checklist-marker {
-  color: var(--agent-color);
+  border-color: var(--agent-color);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--agent-color) 14%, transparent);
 }
 
 .agent-checklist-item.done .agent-checklist-marker {
-  color: var(--theme-status);
+  background: var(--theme-status);
+  border-color: var(--theme-status);
+  border-radius: 2px;
+}
+
+.agent-checklist-item.done .agent-checklist-marker::after {
+  color: var(--theme-bg);
+  content: "✓";
+  font: 900 9px/1 var(--mono);
 }
 
 .agent-checklist-item.blocked .agent-checklist-marker {
+  border-color: #e46c64;
+  border-radius: 2px;
+}
+
+.agent-checklist-item.blocked .agent-checklist-marker::after {
   color: #e46c64;
+  content: "!";
+  font: 900 9px/1 var(--mono);
 }
 
 .agent-checklist-copy {
@@ -6313,8 +6481,10 @@ body.focus-mode .pixel-roster-resize-handle {
 }
 
 .agent-clean-compose {
+  align-items: stretch;
   display: grid;
-  gap: 3px;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) 36px;
 }
 
 .agent-clean-compose textarea {
@@ -6333,6 +6503,37 @@ body.focus-mode .pixel-roster-resize-handle {
 .agent-clean-compose textarea:focus {
   border-color: var(--agent-color);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--agent-color) 24%, transparent);
+}
+
+.agent-clean-interrupt {
+  align-items: center;
+  background: color-mix(in srgb, #dc655f 7%, var(--theme-panel));
+  border: 1px solid color-mix(in srgb, #dc655f 38%, var(--theme-border));
+  border-radius: 7px;
+  color: #df746e;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  padding: 0;
+}
+
+.agent-clean-interrupt:hover:not(:disabled),
+.agent-clean-interrupt:focus-visible {
+  background: color-mix(in srgb, #dc655f 16%, var(--theme-hover));
+  border-color: #df746e;
+  outline: 0;
+}
+
+.agent-clean-interrupt:disabled {
+  color: var(--theme-muted);
+  cursor: default;
+  opacity: 0.42;
+}
+
+.agent-interrupt-icon {
+  fill: currentColor;
+  height: 16px;
+  width: 16px;
 }
 
 .agent-clean-compose > span {
@@ -6487,10 +6688,25 @@ body.focus-mode .pixel-roster-resize-handle {
   width: 21px;
 }
 
+.agent-zen-icon {
+  fill: none;
+  height: 18px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
+  width: 18px;
+}
+
 .global-zen-button.active {
-  background: color-mix(in srgb, var(--theme-accent) 16%, var(--theme-hover));
-  box-shadow: inset 0 -2px 0 var(--theme-accent);
+  background: transparent;
+  box-shadow: none;
   color: var(--theme-accent);
+}
+
+body:not(.files-collapsed) .files-panel .sidebar-title,
+body:not(.output-collapsed) .output-panel .sidebar-title {
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .agent-slot.clean-mode .agent-clean-view {
