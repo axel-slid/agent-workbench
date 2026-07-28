@@ -622,6 +622,8 @@ test("cross-platform packaging entrypoints exist and remain wired", () => {
   const platformPackager = read("scripts/package-platform.mjs");
   assert.match(platformPackager, /new Set\(\["win32",\s*"linux"\]\)/);
   assert.match(platformPackager, /process\.platform\s*!==\s*targetPlatform/);
+  assert.match(platformPackager, /process\.env\.npm_execpath/);
+  assert.match(platformPackager, /process\.env\.ComSpec\s*\|\|\s*"cmd\.exe"/);
 });
 
 let failures = 0;

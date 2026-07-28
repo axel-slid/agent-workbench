@@ -28,6 +28,21 @@ function run(command, args, options = {}) {
   execFileSync(command, args, { ...options, stdio: "inherit" });
 }
 
+function runNpm(args, options = {}) {
+  const npmExecPath = process.env.npm_execpath;
+  if (npmExecPath && fs.existsSync(npmExecPath)) {
+    run(process.execPath, [npmExecPath, ...args], options);
+    return;
+  }
+
+  if (targetPlatform === "win32") {
+    run(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", "npm.cmd", ...args], options);
+    return;
+  }
+
+  run("npm", args, options);
+}
+
 function assertHostMatchesTarget() {
   if (!supportedPlatforms.has(targetPlatform)) {
     throw new Error("Pass a supported target platform: win32 or linux.");
@@ -128,8 +143,7 @@ async function packageCurrentPlatform() {
   await fsp.rm(path.join(resources, "default_app.asar"), { force: true });
   await copyAppPayload(appResources);
 
-  const npmCommand = targetPlatform === "win32" ? "npm.cmd" : "npm";
-  run(npmCommand, ["ci", "--omit=dev", "--no-audit", "--no-fund"], { cwd: appResources });
+  runNpm(["ci", "--omit=dev", "--no-audit", "--no-fund"], { cwd: appResources });
 
   if (targetPlatform === "linux") await makeLinuxMetadata(bundleRoot);
 
