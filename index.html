@@ -34,6 +34,12 @@
         <button id="newCodexButton" class="top-action accent-action" type="button" title="New Codex agent" aria-label="New Codex agent"><img class="brand-symbol" src="assets/openai-blossom.svg" alt=""></button>
         <button id="newClaudeButton" class="top-action claude-action" type="button" title="New Claude agent" aria-label="New Claude agent"><img class="brand-symbol" src="assets/claude-symbol.svg" alt=""></button>
         <button id="openCodeButton" class="top-action" type="button" title="Open workspace in Visual Studio Code" aria-label="Open workspace in Visual Studio Code"><img class="vscode-symbol" src="assets/vscode.svg" alt=""></button>
+        <button id="globalZenButton" class="top-action global-zen-button" type="button" title="Zen view for all agents" aria-label="Zen view for all agents" aria-pressed="false">
+          <svg class="global-zen-symbol" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M3.5 4.5h13v11h-13z"/>
+            <path d="m5.8 8 1.2 1.2 2-2M10.7 8.2h3.5M5.8 12l1.2 1.2 2-2M10.7 12.2h3.5"/>
+          </svg>
+        </button>
         <button id="pixelModeButton" class="top-action pixel-mode-button" type="button" title="Pixel mode" aria-label="Pixel mode" aria-pressed="false">
           <svg viewBox="0 0 20 20" aria-hidden="true">
             <path d="M2.2 10s2.8-5 7.8-5 7.8 5 7.8 5-2.8 5-7.8 5-7.8-5-7.8-5Z"/>
@@ -212,21 +218,44 @@
         <section id="pixelModeView" class="pixel-mode-view" aria-label="Pixel Agents office" hidden>
           <iframe id="pixelModeFrame" title="Pixel Agents office" src="pixel-agents-mode/index.html"></iframe>
           <nav id="pixelFloorStack" class="pixel-floor-stack" aria-label="Pixel Agents floors">
-            <button type="button" data-pixel-floor="3" title="Floor 3 · design, documentation, lounge" aria-label="Open floor 3: design, documentation, and lounge">
-              <img src="pixel-agents-mode/office.png" alt=""><span>3</span>
-            </button>
-            <button type="button" data-pixel-floor="2" title="Floor 2 · coding, testing, review, deployment" aria-label="Open floor 2: coding, testing, code review, and deployment">
-              <img src="pixel-agents-mode/office.png" alt=""><span>2</span>
-            </button>
-            <button type="button" data-pixel-floor="1" class="active" title="Floor 1 · office and meeting rooms" aria-label="Open floor 1: office and meeting rooms" aria-current="true">
-              <img src="pixel-agents-mode/office.png" alt=""><span>1</span>
-            </button>
+            <div class="pixel-tower-roof" aria-hidden="true">
+              <i></i><i></i><i></i>
+            </div>
+            <div id="pixelFloorList" class="pixel-floor-list">
+              <button type="button" data-pixel-floor="3" title="Open floor 3" aria-label="Open floor 3">
+                <span class="pixel-floor-elevator">3</span>
+                <span class="pixel-floor-room">
+                  <img src="pixel-agents-mode/office.png" alt="">
+                </span>
+              </button>
+              <button type="button" data-pixel-floor="2" title="Open floor 2" aria-label="Open floor 2">
+                <span class="pixel-floor-elevator">2</span>
+                <span class="pixel-floor-room">
+                  <img src="pixel-agents-mode/office.png" alt="">
+                </span>
+              </button>
+              <button type="button" data-pixel-floor="1" class="active" title="Open floor 1" aria-label="Open floor 1" aria-current="true">
+                <span class="pixel-floor-elevator">1</span>
+                <span class="pixel-floor-room">
+                  <img src="pixel-agents-mode/office.png" alt="">
+                </span>
+              </button>
+            </div>
+            <div class="pixel-tower-lobby" aria-hidden="true">
+              <span></span><span></span><i></i>
+            </div>
           </nav>
-          <div id="pixelRosterResizeHandle" class="pixel-roster-resize-handle" role="separator" aria-label="Resize agent roster"></div>
-          <aside class="pixel-agent-roster" aria-label="Active agents">
+          <button id="pixelAddFloorButton" class="pixel-add-floor-button" type="button" title="Add floor" aria-label="Add floor">+</button>
+          <button id="pixelAgentClipboardButton" class="pixel-agent-clipboard-button" type="button" title="Agent clipboard" aria-label="Open agent clipboard" aria-expanded="false">
+            <span class="pixel-clipboard-glyph" aria-hidden="true"></span>
+            <strong id="pixelAgentClipboardCount">0</strong>
+          </button>
+          <aside id="pixelAgentClipboard" class="pixel-agent-clipboard" aria-label="Agent clipboard" hidden>
             <header>
+              <span class="pixel-clipboard-clip" aria-hidden="true"></span>
               <span>Agents</span>
               <strong id="pixelAgentRosterCount">0/4</strong>
+              <button id="closePixelAgentClipboardButton" type="button" title="Close clipboard" aria-label="Close agent clipboard">×</button>
             </header>
             <div id="pixelAgentRosterList" class="pixel-agent-roster-list"></div>
           </aside>
@@ -463,6 +492,13 @@
         <button id="closeSshDialogButton" class="icon-button" type="button" title="Close" aria-label="Close">×</button>
       </header>
       <div class="ssh-dialog-body">
+        <section id="sshRecentSection" class="ssh-recent-section" hidden>
+          <div class="ssh-section-heading">
+            <span>Recent connections</span>
+            <small>Click to reconnect</small>
+          </div>
+          <div id="sshRecentConnections" class="ssh-recent-connections"></div>
+        </section>
         <label>
           <span>Known hosts</span>
           <select id="sshKnownHostSelect">
@@ -483,6 +519,13 @@
           <span>Server path</span>
           <input id="sshPathInput" type="text" value="~" placeholder="~/project">
         </label>
+        <section id="sshRecentFoldersSection" class="ssh-recent-folders-section" hidden>
+          <div class="ssh-section-heading">
+            <span>Recent folders</span>
+            <small>Click to reconnect</small>
+          </div>
+          <div id="sshRecentFolders" class="ssh-recent-folders"></div>
+        </section>
         <p class="ssh-help">Uses your existing secure-shell config and keys. The remote folder is mirrored for fast Explorer previews; agents run on the server.</p>
         <div id="sshAuthTerminalShell" class="ssh-auth-terminal-shell" hidden>
           <div class="ssh-auth-terminal-title"><span>Secure-shell authentication</span><small>Complete any password, passphrase, or host prompt below.</small></div>

@@ -47,6 +47,10 @@ function workspacesPath() {
   return path.join(app.getPath("userData"), "workspaces.json");
 }
 
+function sshHistoryPath() {
+  return path.join(app.getPath("userData"), "ssh-history.json");
+}
+
 function sessionMetadataRoot() {
   return path.join(app.getPath("userData"), "agent-sessions");
 }
@@ -109,7 +113,9 @@ function validateRemote(remote = {}) {
 
 function sshControlPath(remote = {}) {
   const normalized = normalizeRemoteOptions(remote);
-  const key = `${normalized.user || "user"}-${normalized.host || "host"}-${normalized.path || "home"}`;
+  // One master connection per login endpoint. Remote folders deliberately share
+  // the same socket so switching projects never asks the user to authenticate again.
+  const key = `${normalized.user || "user"}-${normalized.host || "host"}`;
   const uid = typeof process.getuid === "function" ? process.getuid() : os.userInfo().username;
   const hash = crypto.createHash("sha1").update(key).digest("hex").slice(0, 16);
   return path.join("/tmp", `agent-workbench-ssh-${uid}`, `${hash}.sock`);
@@ -122,7 +128,7 @@ function sshConnectionArgs(remote = {}) {
   return [
     "-S", controlPath,
     "-o", "ControlMaster=auto",
-    "-o", "ControlPersist=8h",
+    "-o", "ControlPersist=24h",
     "-o", "BatchMode=yes",
     "-o", "ConnectTimeout=15"
   ];
@@ -206,7 +212,7 @@ async function startSshAuthentication(_event, payload = {}) {
   const args = [
     "-S", controlPath,
     "-o", "ControlMaster=auto",
-    "-o", "ControlPersist=8h",
+    "-o", "ControlPersist=24h",
     "-o", "ConnectTimeout=20",
     "-o", "BatchMode=no",
     "-o", "StrictHostKeyChecking=ask",
@@ -349,6 +355,65 @@ async function mirrorRemoteWorkspaceInBackground(workspace) {
   }
 }
 
+function normalizedSshHistoryEntry(remote = {}) {
+  const normalized = normalizeRemoteOptions(remote);
+  if (!normalized.host) return null;
+  const target = remoteTarget(normalized);
+  const lastPath = String(normalized.root || normalized.path || "~").trim() || "~";
+  return {
+    id: crypto.createHash("sha1").update(target).digest("hex").slice(0, 16),
+    user: normalized.user,
+    host: normalized.host,
+    target,
+    lastPath
+  };
+}
+
+async function readSshHistory() {
+  const history = await readJson(sshHistoryPath(), []);
+  if (!Array.isArray(history)) return [];
+  return history
+    .filter((entry) => entry && entry.host)
+    .map((entry) => ({
+      id: String(entry.id || ""),
+      user: String(entry.user || ""),
+      host: String(entry.host || ""),
+      target: String(entry.target || remoteTarget(entry)),
+      lastPath: String(entry.lastPath || "~"),
+      lastUsedAt: String(entry.lastUsedAt || ""),
+      paths: (Array.isArray(entry.paths) ? entry.paths : [])
+        .filter((item) => item && item.path)
+        .map((item) => ({
+          path: String(item.path),
+          lastUsedAt: String(item.lastUsedAt || "")
+        }))
+        .slice(0, 16)
+    }))
+    .slice(0, 16);
+}
+
+async function rememberSshConnection(remote = {}) {
+  const normalized = normalizedSshHistoryEntry(remote);
+  if (!normalized) return;
+  const now = new Date().toISOString();
+  const history = await readSshHistory();
+  const existingIndex = history.findIndex((entry) =>
+    entry.user === normalized.user && entry.host === normalized.host
+  );
+  const existing = existingIndex >= 0 ? history.splice(existingIndex, 1)[0] : null;
+  const paths = Array.isArray(existing?.paths) ? existing.paths : [];
+  const nextPaths = [
+    { path: normalized.lastPath, lastUsedAt: now },
+    ...paths.filter((item) => item.path !== normalized.lastPath)
+  ].slice(0, 16);
+  history.unshift({
+    ...normalized,
+    lastUsedAt: now,
+    paths: nextPaths
+  });
+  await writeJson(sshHistoryPath(), history.slice(0, 16));
+}
+
 async function listSshHosts() {
   const hosts = new Set();
   const sshDirectory = path.join(os.homedir(), ".ssh");
@@ -375,11 +440,49 @@ async function listSshHosts() {
     });
   } catch (error) {
   }
-  return { hosts: Array.from(hosts).sort((a, b) => a.localeCompare(b)) };
+
+  const history = await readSshHistory();
+  const workspaces = await readWorkspaces();
+  for (const workspace of workspaces) {
+    if (workspace.type !== "ssh" || !workspace.remote) continue;
+    const normalized = normalizedSshHistoryEntry(workspace.remote);
+    if (!normalized) continue;
+    const existing = history.find((entry) =>
+      entry.user === normalized.user && entry.host === normalized.host
+    );
+    const workspacePath = normalized.lastPath;
+    if (existing) {
+      if (!existing.paths.some((item) => item.path === workspacePath)) {
+        existing.paths.push({
+          path: workspacePath,
+          lastUsedAt: workspace.lastOpenedAt || workspace.createdAt || ""
+        });
+      }
+      continue;
+    }
+    history.push({
+      ...normalized,
+      lastUsedAt: workspace.lastOpenedAt || workspace.createdAt || "",
+      paths: [{
+        path: workspacePath,
+        lastUsedAt: workspace.lastOpenedAt || workspace.createdAt || ""
+      }]
+    });
+  }
+  history.sort((left, right) =>
+    String(right.lastUsedAt || "").localeCompare(String(left.lastUsedAt || ""))
+  );
+  await writeJson(sshHistoryPath(), history.slice(0, 16));
+  history.forEach((entry) => hosts.add(entry.host));
+  return {
+    hosts: Array.from(hosts).sort((a, b) => a.localeCompare(b)),
+    recentConnections: history.slice(0, 16)
+  };
 }
 
 async function connectSshWorkspace(_event, remote = {}) {
   const verified = await verifySshConnection(remote);
+  await rememberSshConnection(verified);
   const root = remoteWorkspaceCachePath(verified);
   await fsp.mkdir(root, { recursive: true });
   const now = new Date().toISOString();
@@ -1038,9 +1141,9 @@ function agentProtocol(metadataPath, workspaceRoot) {
     `Your workspace is ${workspaceRoot}.`,
     `Maintain your session metadata at ${metadataPath}.`,
     "Immediately, and whenever your task or progress changes, write valid JSON to that file.",
-    'Use exactly these fields: {"name":"short task-specific name","tldr":"one sentence under 140 characters","status":"working|waiting|done|error","state":"planning|coding|waiting|failed|complete","model":"model name","currentTask":"short current step","etaSeconds":number|null,"etaMinutes":number|null,"progressPercent":number,"inputTokens":number|null,"outputTokens":number|null,"costUsd":number|null,"testsPassed":number|null,"testsFailed":number|null,"relevantFiles":["workspace-relative/path"],"previewFile":"workspace-relative/path"|null}.',
+    'Use exactly these fields: {"name":"short task-specific name","tldr":"one sentence under 140 characters","status":"working|waiting|done|error","state":"planning|coding|waiting|failed|complete","model":"exact model name and effort","currentTask":"short current step","etaSeconds":number|null,"etaMinutes":number|null,"progressPercent":number,"checklist":[{"text":"short concrete step","status":"pending|working|done|blocked","etaSeconds":number|null}],"inputTokens":number|null,"outputTokens":number|null,"costUsd":number|null,"testsPassed":number|null,"testsFailed":number|null,"relevantFiles":["workspace-relative/path"],"previewFile":"workspace-relative/path"|null}.',
     "Choose your own short name based on what you are doing. Keep relevantFiles current, ordered most useful first, with only files the user is likely to want to open. Use workspace-relative paths and omit incidental implementation files.",
-    "Keep model, currentTask, progressPercent, token counts, costUsd, test results, and state current. Use null when your runtime does not expose a metric; never invent usage, cost, or test results.",
+    "Keep model, currentTask, progressPercent, checklist, token counts, costUsd, test results, and state current. Keep checklist items short, cross them to done immediately when finished, mark exactly one active step working when possible, and give every unfinished item an honest etaSeconds. Use null when your runtime does not expose a metric; never invent usage, cost, or test results.",
     "Set etaSeconds to your honest estimate of seconds remaining and etaMinutes to the same estimate rounded up to minutes. Re-estimate after every major step and at least once per minute. Do not rewrite an unchanged estimate just to refresh it. Use null while waiting for a task and 0 when done.",
     "Set status to done immediately when the task is complete so Agent Workbench can notify the user.",
     "Whenever you create or materially update a viewable output such as an image, PDF, HTML, SVG, Markdown, text report, chart, or data file, set previewFile to its workspace-relative path so Agent Workbench opens it in the Agent Output pane.",
@@ -1074,6 +1177,7 @@ function initialAgentMetadata(id, kind, task, workspaceId, agentNumber, modelLab
     etaSeconds: null,
     etaMinutes: null,
     progressPercent: task ? 5 : 0,
+    checklist: [],
     inputTokens: null,
     outputTokens: null,
     costUsd: null,

@@ -37,13 +37,19 @@ const agentGrid = document.getElementById("agentGrid");
 const newCodexButton = document.getElementById("newCodexButton");
 const newClaudeButton = document.getElementById("newClaudeButton");
 const openCodeButton = document.getElementById("openCodeButton");
+const globalZenButton = document.getElementById("globalZenButton");
 const pixelModeButton = document.getElementById("pixelModeButton");
 const pixelModeView = document.getElementById("pixelModeView");
 const pixelModeFrame = document.getElementById("pixelModeFrame");
 const pixelAgentRosterCount = document.getElementById("pixelAgentRosterCount");
 const pixelAgentRosterList = document.getElementById("pixelAgentRosterList");
-const pixelFloorButtons = Array.from(document.querySelectorAll("[data-pixel-floor]"));
-const pixelRosterResizeHandle = document.getElementById("pixelRosterResizeHandle");
+const pixelAgentClipboard = document.getElementById("pixelAgentClipboard");
+const pixelAgentClipboardButton = document.getElementById("pixelAgentClipboardButton");
+const pixelAgentClipboardCount = document.getElementById("pixelAgentClipboardCount");
+const closePixelAgentClipboardButton = document.getElementById("closePixelAgentClipboardButton");
+const pixelFloorList = document.getElementById("pixelFloorList");
+const pixelAddFloorButton = document.getElementById("pixelAddFloorButton");
+let pixelFloorButtons = [];
 const runPauseAllButton = document.getElementById("runPauseAllButton");
 const quickAddAgentButton = document.getElementById("quickAddAgentButton");
 const stopAllAgentsButton = document.getElementById("stopAllAgentsButton");
@@ -114,6 +120,10 @@ const sshKnownHostSelect = document.getElementById("sshKnownHostSelect");
 const sshUserInput = document.getElementById("sshUserInput");
 const sshHostInput = document.getElementById("sshHostInput");
 const sshPathInput = document.getElementById("sshPathInput");
+const sshRecentSection = document.getElementById("sshRecentSection");
+const sshRecentConnections = document.getElementById("sshRecentConnections");
+const sshRecentFoldersSection = document.getElementById("sshRecentFoldersSection");
+const sshRecentFolders = document.getElementById("sshRecentFolders");
 const sshStatus = document.getElementById("sshStatus");
 const sshAuthTerminalShell = document.getElementById("sshAuthTerminalShell");
 const sshAuthTerminal = document.getElementById("sshAuthTerminal");
@@ -146,6 +156,7 @@ let pendingWorkspaceLayout = 4;
 let pendingWorkspaceRemoval = null;
 let sshOpenedFromWorkspaceSetup = false;
 let sshAuthSession = null;
+let sshConnectionHistory = [];
 let systemMetricsTimer = null;
 let spotifyTimer = null;
 let titlebarClockTimer = null;
@@ -155,7 +166,12 @@ let spotifyRefreshBusy = false;
 let pixelModeEnabled = false;
 let pixelFrameReady = false;
 let activePixelFloor = Number(localStorage.getItem("agentWorkbenchPixelFloor")) || 1;
+let pixelFloorCount = Math.max(
+  3,
+  Math.min(12, Number(localStorage.getItem("agentWorkbenchPixelFloorCount")) || 3)
+);
 let pixelBaseLayout = null;
+let globalCleanMode = localStorage.getItem("agentWorkbenchGlobalCleanMode") === "1";
 let selectedAgentId = null;
 let agentsPaused = false;
 let unreadAgentNotifications = 0;
@@ -458,7 +474,20 @@ function renderPixelAgentRoster() {
   const workspace = activeWorkspace();
   const now = Date.now();
   pixelAgentRosterCount.textContent = `${activeSessions.length}/${workspace ? workspaceLayoutFor(workspace.id) : 4}`;
+  pixelAgentClipboardCount.textContent = String(activeSessions.length);
+  pixelAgentClipboardButton.classList.toggle("has-agents", activeSessions.length > 0);
   pixelAgentRosterList.replaceChildren();
+  if (!activeSessions.length) {
+    const empty = document.createElement("div");
+    empty.className = "pixel-clipboard-empty";
+    empty.innerHTML = `
+      <img class="pixel-coffee-sprite" src="pixel-agents-mode/assets/furniture/COFFEE/COFFEE.png" alt="">
+      <strong>No agents yet</strong>
+      <small>Start one from the toolbar.</small>
+    `;
+    pixelAgentRosterList.appendChild(empty);
+    return;
+  }
   for (const session of activeSessions) {
     const rawStatus = session.metadata.status || "working";
     const status = rawStatus === "done" ? "idle" : rawStatus;
@@ -501,6 +530,69 @@ function updatePixelFloorButtons() {
     if (active) button.setAttribute("aria-current", "true");
     else button.removeAttribute("aria-current");
   });
+}
+
+function pixelFloorTexture(floor) {
+  const texture = ((Math.max(1, Number(floor) || 1) - 1) * 3 + 1) % 9;
+  return `url("pixel-agents-mode/assets/floors/floor_${texture}.png")`;
+}
+
+function decoratePixelFloorButton(button) {
+  const floor = Number(button.dataset.pixelFloor);
+  const room = button.querySelector(".pixel-floor-room");
+  button.title = `Open floor ${floor}`;
+  button.setAttribute("aria-label", `Open floor ${floor}`);
+  if (room) room.style.setProperty("--pixel-floor-texture", pixelFloorTexture(floor));
+}
+
+function createPixelFloorButton(floor) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.pixelFloor = String(floor);
+  button.innerHTML = `
+    <span class="pixel-floor-elevator">${floor}</span>
+    <span class="pixel-floor-room">
+      <img src="pixel-agents-mode/office.png" alt="">
+    </span>
+  `;
+  decoratePixelFloorButton(button);
+  return button;
+}
+
+function bindPixelFloorButton(button) {
+  decoratePixelFloorButton(button);
+  button.addEventListener("click", () => applyPixelFloor(button.dataset.pixelFloor));
+}
+
+function initializePixelFloors() {
+  for (let floor = 4; floor <= pixelFloorCount; floor += 1) {
+    pixelFloorList.prepend(createPixelFloorButton(floor));
+  }
+  pixelFloorButtons = Array.from(pixelFloorList.querySelectorAll("[data-pixel-floor]"));
+  pixelFloorButtons.forEach(bindPixelFloorButton);
+  activePixelFloor = Math.max(1, Math.min(pixelFloorCount, activePixelFloor));
+  updatePixelFloorButtons();
+}
+
+function addPixelFloor() {
+  if (pixelFloorCount >= 12) {
+    showToast("The tower is full.");
+    return;
+  }
+  pixelFloorCount += 1;
+  localStorage.setItem("agentWorkbenchPixelFloorCount", String(pixelFloorCount));
+  const button = createPixelFloorButton(pixelFloorCount);
+  pixelFloorList.prepend(button);
+  bindPixelFloorButton(button);
+  pixelFloorButtons = Array.from(pixelFloorList.querySelectorAll("[data-pixel-floor]"));
+  postPixelMessage({
+    type: "houseConfig",
+    floors: pixelFloorCount,
+    slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4
+  });
+  applyPixelFloor(pixelFloorCount);
+  button.scrollIntoView({ block: "nearest" });
+  showToast(`Floor ${pixelFloorCount} added.`);
 }
 
 async function pixelLayoutForFloor(floor) {
@@ -590,12 +682,41 @@ async function pixelLayoutForFloor(floor) {
       { uid: "f3-plant-2", type: "PLANT_2", col: 12, row: 11 },
       { uid: "f3-plant-3", type: "PLANT", col: 18, row: 18 }
     ];
+  } else if (floor > 3) {
+    const primaryTile = ((floor * 2) % 8) + 1;
+    const secondaryTile = ((floor * 2 + 3) % 8) + 1;
+    const splitColumn = 7 + (floor % 5);
+    layout.tiles = Array(layout.cols * layout.rows).fill(255);
+    for (let row = 10; row <= 20; row += 1) {
+      for (let column = 0; column <= 19; column += 1) {
+        const edge = row === 10 || column === 0 || column === 19;
+        const divider = column === splitColumn && ![14, 15].includes(row);
+        const tile = edge || divider ? 0 : column < splitColumn ? primaryTile : secondaryTile;
+        layout.tiles[row * layout.cols + column] = tile;
+      }
+    }
+    layout.tileColors = Array(layout.tiles.length).fill(null);
+    const rightDeskColumn = Math.min(15, splitColumn + 2);
+    layout.furniture = [
+      { uid: `f${floor}-desk-1`, type: "DESK_FRONT", col: 1, row: 12 },
+      { uid: `f${floor}-pc-1`, type: "PC_FRONT_OFF", col: 2, row: 12 },
+      { uid: `f${floor}-chair-1`, type: "CUSHIONED_BENCH", col: 2, row: 14 },
+      { uid: `f${floor}-desk-2`, type: "DESK_FRONT", col: Math.max(4, splitColumn - 4), row: 17 },
+      { uid: `f${floor}-pc-2`, type: "PC_FRONT_OFF", col: Math.max(5, splitColumn - 3), row: 17 },
+      { uid: `f${floor}-table`, type: floor % 2 ? "TABLE_FRONT" : "COFFEE_TABLE", col: rightDeskColumn, row: 13 },
+      { uid: `f${floor}-seat-1`, type: "WOODEN_CHAIR_SIDE", col: rightDeskColumn - 1, row: 14 },
+      { uid: `f${floor}-seat-2`, type: "WOODEN_CHAIR_SIDE:left", col: Math.min(18, rightDeskColumn + 3), row: 14 },
+      { uid: `f${floor}-books`, type: "DOUBLE_BOOKSHELF", col: Math.min(17, splitColumn + 1), row: 10 },
+      { uid: `f${floor}-plant-1`, type: "PLANT", col: Math.max(1, splitColumn - 1), row: 11 },
+      { uid: `f${floor}-plant-2`, type: "PLANT_2", col: 18, row: 18 },
+      { uid: `f${floor}-coffee`, type: "COFFEE", col: Math.min(18, rightDeskColumn + 1), row: 14 }
+    ];
   }
   return layout;
 }
 
 async function applyPixelFloor(floor, { persist = true } = {}) {
-  activePixelFloor = Math.max(1, Math.min(3, Number(floor) || 1));
+  activePixelFloor = Math.max(1, Math.min(pixelFloorCount, Number(floor) || 1));
   if (persist) localStorage.setItem("agentWorkbenchPixelFloor", String(activePixelFloor));
   updatePixelFloorButtons();
   if (!pixelFrameReady) return;
@@ -633,7 +754,7 @@ function syncPixelMode(reset = false) {
   });
   postPixelMessage({
     type: "houseConfig",
-    floors: 3,
+    floors: pixelFloorCount,
     slots: workspace ? workspaceLayoutFor(workspace.id) : 4
   });
   postPixelMessage({
@@ -710,6 +831,14 @@ function syncPixelSession(session) {
   });
 }
 
+function setPixelAgentClipboard(open) {
+  const next = Boolean(open);
+  pixelAgentClipboard.hidden = !next;
+  pixelAgentClipboardButton.setAttribute("aria-expanded", String(next));
+  pixelAgentClipboardButton.classList.toggle("active", next);
+  if (next) renderPixelAgentRoster();
+}
+
 function setPixelMode(enabled, { persist = true } = {}) {
   pixelModeEnabled = Boolean(enabled);
   agentGrid.hidden = pixelModeEnabled;
@@ -721,14 +850,17 @@ function setPixelMode(enabled, { persist = true } = {}) {
   pixelModeButton.setAttribute("aria-label", pixelModeButton.title);
   if (persist) localStorage.setItem("agentWorkbenchPixelMode", pixelModeEnabled ? "1" : "0");
   if (pixelModeEnabled) syncPixelMode(true);
-  else requestAnimationFrame(() => {
-    for (const session of activePixelSessions()) {
-      try {
-        session.fitAddon.fit();
-      } catch (error) {
+  else {
+    setPixelAgentClipboard(false);
+    requestAnimationFrame(() => {
+      for (const session of activePixelSessions()) {
+        try {
+          session.fitAddon.fit();
+        } catch (error) {
+        }
       }
-    }
-  });
+    });
+  }
 }
 
 function normalizedAgentState(metadata = {}) {
@@ -815,6 +947,146 @@ function updateAgentStatusCard(session, now = Date.now()) {
       && Number.isFinite(Number(metadata.costUsd))
       ? Number(metadata.costUsd).toFixed(2)
       : "—";
+}
+
+function normalizedAgentChecklist(metadata = {}) {
+  return (Array.isArray(metadata.checklist) ? metadata.checklist : [])
+    .filter((item) => item && String(item.text || "").trim())
+    .map((item) => ({
+      text: String(item.text || "").trim().slice(0, 180),
+      status: ["pending", "working", "done", "blocked"].includes(String(item.status || "").toLowerCase())
+        ? String(item.status).toLowerCase()
+        : "pending",
+      etaSeconds: Number.isFinite(Number(item.etaSeconds)) && Number(item.etaSeconds) >= 0
+        ? Math.round(Number(item.etaSeconds))
+        : null
+    }))
+    .slice(0, 16);
+}
+
+function syncChecklistEtaState(session, metadata, now = Date.now()) {
+  if (!session?.checklistEtaState) return;
+  const checklist = normalizedAgentChecklist(metadata);
+  const next = new Map();
+  checklist.forEach((item, index) => {
+    const key = `${index}:${item.text}`;
+    const previous = session.checklistEtaState.get(key);
+    const shouldReset = !previous
+      || previous.reportedSeconds !== item.etaSeconds
+      || previous.status !== item.status;
+    next.set(key, {
+      reportedSeconds: item.etaSeconds,
+      status: item.status,
+      deadline: item.status === "done" || !Number.isFinite(item.etaSeconds)
+        ? null
+        : shouldReset
+          ? now + item.etaSeconds * 1000
+          : previous.deadline
+    });
+  });
+  session.checklistEtaState = next;
+}
+
+function renderAgentCleanView(session, now = Date.now()) {
+  if (!session?.cleanView) return;
+  const metadata = session.metadata || {};
+  const state = normalizedAgentState(metadata);
+  const etaSeconds = remainingEtaSeconds(session, now);
+  session.cleanEtaText.textContent = state === "complete"
+    ? "✓"
+    : Number.isFinite(etaSeconds)
+      ? formatEtaClock(etaSeconds)
+      : "—";
+  session.cleanChecklist.replaceChildren();
+
+  const checklist = normalizedAgentChecklist(metadata);
+  if (!checklist.length) {
+    const empty = document.createElement("div");
+    empty.className = "agent-clean-empty";
+    empty.textContent = metadata.status === "waiting"
+      ? "Waiting for a task."
+      : "Waiting for the agent’s checklist…";
+    session.cleanChecklist.appendChild(empty);
+  } else {
+    checklist.forEach((item, index) => {
+      const row = document.createElement("div");
+      row.className = `agent-checklist-item ${item.status}`;
+      const marker = document.createElement("span");
+      marker.className = "agent-checklist-marker";
+      marker.textContent = item.status === "done"
+        ? "✓"
+        : item.status === "working"
+          ? "›"
+          : item.status === "blocked"
+            ? "!"
+            : "○";
+      const text = document.createElement("span");
+      text.className = "agent-checklist-copy";
+      text.textContent = item.text;
+      const eta = document.createElement("span");
+      eta.className = "agent-checklist-eta";
+      const etaState = session.checklistEtaState.get(`${index}:${item.text}`);
+      const remaining = Number.isFinite(etaState?.deadline)
+        ? Math.max(0, Math.ceil((etaState.deadline - now) / 1000))
+        : null;
+      eta.textContent = item.status === "done"
+        ? "done"
+        : item.status === "blocked"
+          ? "blocked"
+          : Number.isFinite(remaining)
+            ? formatEtaClock(remaining)
+            : "—";
+      row.append(marker, text, eta);
+      session.cleanChecklist.appendChild(row);
+    });
+  }
+
+  session.cleanFileList.replaceChildren();
+  const relevantFiles = Array.isArray(metadata.relevantFiles)
+    ? metadata.relevantFiles.slice(0, 3)
+    : [];
+  session.cleanFiles.hidden = relevantFiles.length === 0;
+  for (const relativePath of relevantFiles) {
+    session.cleanFileList.appendChild(createAgentRelevantFile(session, relativePath, "agent-clean-file"));
+  }
+}
+
+function setAgentCleanMode(session, enabled, { focus = true } = {}) {
+  if (!session?.slot) return;
+  const next = Boolean(enabled);
+  session.cleanMode = next;
+  session.slot.classList.toggle("clean-mode", next);
+  const button = session.slot.querySelector(".agent-clean-toggle");
+  button.classList.toggle("active", next);
+  button.setAttribute("aria-pressed", String(next));
+  button.title = next ? "Terminal view" : "Zen view";
+  button.setAttribute("aria-label", next ? "Show terminal view" : "Show Zen view");
+  if (next) {
+    renderAgentCleanView(session);
+    if (focus) session.cleanComposeInput.focus();
+  } else {
+    requestAnimationFrame(() => {
+      try {
+        session.fitAddon.fit();
+        session.term.focus();
+      } catch (error) {
+      }
+    });
+  }
+}
+
+function setGlobalCleanMode(enabled, { persist = true } = {}) {
+  globalCleanMode = Boolean(enabled);
+  if (persist) {
+    localStorage.setItem("agentWorkbenchGlobalCleanMode", globalCleanMode ? "1" : "0");
+  }
+  globalZenButton.classList.toggle("active", globalCleanMode);
+  globalZenButton.setAttribute("aria-pressed", String(globalCleanMode));
+  globalZenButton.title = globalCleanMode ? "Terminal view for all agents" : "Zen view for all agents";
+  globalZenButton.setAttribute("aria-label", globalZenButton.title);
+  for (const session of sessions.values()) {
+    setAgentCleanMode(session, globalCleanMode, { focus: false });
+  }
 }
 
 function activeWorkspaceSessions() {
@@ -954,6 +1226,7 @@ function paletteCommands() {
     { id: "agents-stop", icon: "■", label: "Stop all agents", detail: "Stop every agent in the active workspace", run: stopAllAgents },
     { id: "agents-retry", icon: "↻", label: "Retry failed agents", detail: "Restart failed tasks in their current slots", run: retryFailedAgents },
     { id: "agents-status", icon: "?", label: "Ask for status", detail: "Request fresh progress, usage, and ETA metadata", run: () => askAgentsForStatus() },
+    { id: "agents-zen", icon: "☷", label: globalCleanMode ? "Show all terminals" : "Zen view for all agents", detail: "Show checklists, ETAs, files, and prompt boxes", run: () => setGlobalCleanMode(!globalCleanMode) },
     { id: "focus-mode", icon: "⌗", label: document.body.classList.contains("focus-mode") ? "Exit focus mode" : "Enter focus mode", detail: "Hide side panels and maximize the workspace", run: toggleFocusMode },
     { id: "settings", icon: "⚙", label: "Open settings", detail: "Appearance, workspace, and profile", run: openSettings }
   ];
@@ -1589,6 +1862,77 @@ function remoteWorkspaceLabel(workspace) {
   return `${target}:${remote.root || remote.path || "~"}`;
 }
 
+function setSshFields(connection, folderPath = "") {
+  if (!connection) return;
+  sshUserInput.value = connection.user || "";
+  sshHostInput.value = connection.host || "";
+  sshPathInput.value = folderPath || connection.lastPath || "~";
+  renderSshRecentFolders();
+}
+
+function matchingSshHistoryConnection() {
+  const host = sshHostInput.value.trim();
+  const user = sshUserInput.value.trim();
+  return sshConnectionHistory.find((connection) =>
+    connection.host === host && (!user || connection.user === user)
+  ) || sshConnectionHistory.find((connection) => connection.host === host);
+}
+
+function renderSshRecentFolders() {
+  const connection = matchingSshHistoryConnection();
+  const paths = Array.isArray(connection?.paths) ? connection.paths : [];
+  sshRecentFolders.replaceChildren();
+  sshRecentFoldersSection.hidden = paths.length === 0;
+  for (const entry of paths) {
+    const item = document.createElement("div");
+    item.className = "ssh-recent-folder";
+    item.setAttribute("role", "button");
+    item.tabIndex = 0;
+    item.title = `Reconnect to ${connection.target}:${entry.path}`;
+    const glyph = document.createElement("span");
+    glyph.className = "ssh-recent-folder-glyph";
+    glyph.textContent = "▱";
+    const copy = document.createElement("span");
+    copy.className = "ssh-recent-folder-path";
+    copy.textContent = entry.path;
+    const age = document.createElement("small");
+    age.textContent = entry.lastUsedAt ? timeAgo(entry.lastUsedAt) : "";
+    item.append(glyph, copy, age);
+    makeInteractive(item, async () => {
+      if (connectSshButton.disabled) return;
+      setSshFields(connection, entry.path);
+      await connectSshWorkspace();
+    });
+    sshRecentFolders.appendChild(item);
+  }
+}
+
+function renderSshConnectionHistory() {
+  sshRecentConnections.replaceChildren();
+  sshRecentSection.hidden = sshConnectionHistory.length === 0;
+  for (const connection of sshConnectionHistory) {
+    const item = document.createElement("div");
+    item.className = "ssh-recent-connection";
+    item.setAttribute("role", "button");
+    item.tabIndex = 0;
+    item.title = `Reconnect to ${connection.target}:${connection.lastPath}`;
+    const target = document.createElement("strong");
+    target.textContent = connection.target;
+    const folder = document.createElement("span");
+    folder.textContent = connection.lastPath || "~";
+    const age = document.createElement("small");
+    age.textContent = connection.lastUsedAt ? timeAgo(connection.lastUsedAt) : "";
+    item.append(target, folder, age);
+    makeInteractive(item, async () => {
+      if (connectSshButton.disabled) return;
+      setSshFields(connection);
+      await connectSshWorkspace();
+    });
+    sshRecentConnections.appendChild(item);
+  }
+  renderSshRecentFolders();
+}
+
 async function openSshDialog() {
   sshOpenedFromWorkspaceSetup = true;
   setWorkspaceAddMenu(false);
@@ -1599,13 +1943,20 @@ async function openSshDialog() {
   sshKnownHostSelect.innerHTML = '<option value="">Choose a known host…</option>';
   try {
     const result = await api.listSshHosts();
+    sshConnectionHistory = Array.isArray(result.recentConnections) ? result.recentConnections : [];
     for (const host of result.hosts || []) {
       const option = document.createElement("option");
       option.value = host;
       option.textContent = host;
       sshKnownHostSelect.appendChild(option);
     }
+    if (!sshHostInput.value.trim() && sshConnectionHistory[0]) {
+      setSshFields(sshConnectionHistory[0]);
+    }
+    renderSshConnectionHistory();
   } catch (error) {
+    sshConnectionHistory = [];
+    renderSshConnectionHistory();
   }
   requestAnimationFrame(() => sshHostInput.focus());
 }
@@ -1721,6 +2072,7 @@ function parseSshTarget(value) {
 }
 
 async function connectSshWorkspace() {
+  if (connectSshButton.disabled) return;
   const remote = {
     user: sshUserInput.value.trim(),
     host: sshHostInput.value.trim(),
@@ -2077,6 +2429,76 @@ async function importDroppedFiles(event, parentPath = "") {
     showToast(error.message || String(error));
     setFooter("Import failed");
   }
+}
+
+function agentFileReference(relativePath) {
+  const value = String(relativePath || "").replace(/\\/g, "/");
+  return /\s/.test(value)
+    ? `@"${value.replace(/"/g, '\\"')}"`
+    : `@${value}`;
+}
+
+async function importDroppedFilesToAgent(event, slotIndex) {
+  event.preventDefault();
+  event.stopPropagation();
+  const slot = event.currentTarget;
+  slot.classList.remove("agent-drop-target");
+  const paths = droppedFilePaths(event);
+  if (!paths.length || !activeWorkspaceId) return;
+  const workspace = activeWorkspace();
+  setFooter(`${workspace?.type === "ssh" ? "Uploading" : "Importing"} for Agent ${slotIndex + 1}…`);
+  try {
+    const imported = await api.importWorkspacePaths(activeWorkspaceId, "", paths);
+    const references = imported.map((item) => agentFileReference(item.relativePath)).join(" ");
+    const sessionId = slots[slotIndex];
+    const session = sessionId ? sessions.get(sessionId) : null;
+    if (session && references) {
+      api.writeAgent(session.id, ` ${references}`);
+      session.term.focus();
+    } else {
+      const taskInput = slot.querySelector(".agent-task-input");
+      if (taskInput && references) {
+        const separator = taskInput.value && !/\s$/.test(taskInput.value) ? " " : "";
+        taskInput.value = `${taskInput.value}${separator}${references}`;
+        taskInput.dispatchEvent(new Event("input", { bubbles: true }));
+        taskInput.focus();
+      }
+    }
+    if (imported[0]) {
+      selectedFilePath = imported[0].relativePath;
+      selectedFileKind = imported[0].type;
+    }
+    await refreshWorkspacePanels();
+    showToast(`${imported.length} item${imported.length === 1 ? "" : "s"} added to Agent ${slotIndex + 1}`);
+  } catch (error) {
+    showToast(error.message || String(error));
+    setFooter("Agent file import failed");
+  }
+}
+
+function enableAgentFileDrop(slot, slotIndex) {
+  if (slot.dataset.fileDropReady === "true") return;
+  slot.dataset.fileDropReady = "true";
+  slot.addEventListener("dragenter", (event) => {
+    if (!Array.from(event.dataTransfer?.types || []).includes("Files")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    slot.classList.add("agent-drop-target");
+  });
+  slot.addEventListener("dragover", (event) => {
+    if (!Array.from(event.dataTransfer?.types || []).includes("Files")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "copy";
+    slot.classList.add("agent-drop-target");
+  });
+  slot.addEventListener("dragleave", (event) => {
+    if (!slot.contains(event.relatedTarget)) slot.classList.remove("agent-drop-target");
+  });
+  slot.addEventListener("drop", (event) => {
+    const currentSlotIndex = Number(slot.dataset.slot);
+    importDroppedFilesToAgent(event, Number.isInteger(currentSlotIndex) ? currentSlotIndex : slotIndex);
+  });
 }
 
 function beginCreateWorkspaceEntry(kind) {
@@ -2475,6 +2897,7 @@ function buildAgentSlots() {
     const slot = document.createElement("article");
     slot.className = "agent-slot empty";
     slot.dataset.slot = String(index);
+    slot.dataset.agentNumber = String(index + 1);
     slot.style.order = String(index);
     renderEmptySlot(slot, index);
     agentGrid.appendChild(slot);
@@ -2497,6 +2920,7 @@ function renderWorkspaceAgentGrid() {
     const session = sessionsBySlot.get(index);
     if (session) {
       session.slot.dataset.slot = String(index);
+      session.slot.dataset.agentNumber = String(index + 1);
       session.slot.style.order = String(index);
       slots[index] = session.id;
       agentGrid.appendChild(session.slot);
@@ -2506,6 +2930,7 @@ function renderWorkspaceAgentGrid() {
     const slot = document.createElement("article");
     slot.className = "agent-slot empty";
     slot.dataset.slot = String(index);
+    slot.dataset.agentNumber = String(index + 1);
     slot.style.order = String(index);
     renderEmptySlot(slot, index);
     agentGrid.appendChild(slot);
@@ -2525,6 +2950,8 @@ function renderWorkspaceAgentGrid() {
 
 function renderEmptySlot(slot, index) {
   slot.className = "agent-slot empty";
+  slot.dataset.agentNumber = String(index + 1);
+  enableAgentFileDrop(slot, index);
   slot.innerHTML = "";
   const launcher = document.createElement("div");
   launcher.className = "agent-launcher";
@@ -2602,6 +3029,8 @@ async function startAgent(slotIndex, kind, task = "") {
 
 function renderAgentCard(slot, slotIndex, descriptor) {
   slot.className = "agent-slot";
+  slot.dataset.agentNumber = String(slotIndex + 1);
+  enableAgentFileDrop(slot, slotIndex);
   slot.innerHTML = `
     <div class="agent-card">
       <header class="agent-card-header">
@@ -2610,6 +3039,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         <input class="agent-name-input" maxlength="48" aria-label="Agent name">
         <div class="agent-actions">
           <button class="agent-action agent-more" type="button" title="More actions" aria-label="More actions">⋯</button>
+          <button class="agent-action agent-clean-toggle" type="button" title="Zen view" aria-label="Show Zen view" aria-pressed="false">☷</button>
           <button class="agent-action agent-maximize" type="button" title="Maximize agent" aria-label="Maximize agent">${AGENT_MAXIMIZE_ICON}</button>
           <button class="agent-action agent-wide" type="button" title="Swap left or right" aria-label="Swap left or right">
             <svg class="agent-swap-icon" viewBox="0 0 18 18" aria-hidden="true">
@@ -2631,6 +3061,21 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         <div class="agent-menu-item clear-terminal" role="menuitem" tabindex="0"><span>⌫</span><span>Clear terminal</span></div>
         <div class="agent-menu-item stop-terminal" role="menuitem" tabindex="0"><span>×</span><span>Stop agent</span></div>
       </div>
+      <section class="agent-clean-view" aria-label="Agent progress">
+        <div class="agent-clean-heading">Checklist</div>
+        <div class="agent-clean-checklist" aria-label="Agent checklist"></div>
+        <div class="agent-clean-eta-row">
+          <span>ETA</span>
+          <strong class="agent-clean-eta-text">—</strong>
+        </div>
+        <div class="agent-clean-files" hidden>
+          <span>Files</span>
+          <div class="agent-clean-file-list"></div>
+        </div>
+        <div class="agent-clean-compose">
+          <textarea rows="3" placeholder="Send another instruction…" aria-label="Send another instruction"></textarea>
+        </div>
+      </section>
       <div class="terminal-host"></div>
       <footer class="agent-recent-footer" hidden>
         <div class="recent-files" aria-label="Relevant files reported by this agent"></div>
@@ -2656,6 +3101,12 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   const recentFooter = slot.querySelector(".agent-recent-footer");
   const recentFilesNode = slot.querySelector(".recent-files");
   const terminalHost = slot.querySelector(".terminal-host");
+  const cleanView = slot.querySelector(".agent-clean-view");
+  const cleanChecklist = slot.querySelector(".agent-clean-checklist");
+  const cleanEtaText = slot.querySelector(".agent-clean-eta-text");
+  const cleanFiles = slot.querySelector(".agent-clean-files");
+  const cleanFileList = slot.querySelector(".agent-clean-file-list");
+  const cleanComposeInput = slot.querySelector(".agent-clean-compose textarea");
 
   const term = new Terminal({
     allowProposedApi: false,
@@ -2699,6 +3150,14 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     nameInput,
     tldrNode,
     statusCard,
+    cleanView,
+    cleanChecklist,
+    cleanEtaText,
+    cleanFiles,
+    cleanFileList,
+    cleanComposeInput,
+    checklistEtaState: new Map(),
+    cleanMode: false,
     recentFooter,
     recentFilesNode,
     actionMenu: slot.querySelector(".agent-action-menu"),
@@ -2716,6 +3175,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     : "";
   sessions.set(descriptor.id, session);
   updateAgentMetadata(session, descriptor.metadata);
+  if (globalCleanMode) setAgentCleanMode(session, true, { focus: false });
   term.writeln(`\x1b[38;5;114m${descriptor.commandLabel}\x1b[0m`);
   term.writeln(`\x1b[38;5;244m${descriptor.cwd}\x1b[0m`);
   const pending = pendingTerminalData.get(descriptor.id) || [];
@@ -2729,9 +3189,22 @@ function renderAgentCard(slot, slotIndex, descriptor) {
       nameInput.blur();
     }
   });
+  slot.querySelector(".agent-clean-toggle").addEventListener("click", () => {
+    setAgentCleanMode(session, !session.cleanMode);
+  });
+  cleanComposeInput.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+    event.preventDefault();
+    const message = cleanComposeInput.value.trim();
+    if (!message) return;
+    lastTerminalInputAt = Date.now();
+    api.writeAgent(descriptor.id, `${message}\r`);
+    cleanComposeInput.value = "";
+    showToast(`Sent to Agent ${session.slotIndex + 1}`);
+  });
   slot.querySelector(".agent-close").addEventListener("click", () => stopAgent(descriptor.id));
   slot.addEventListener("pointerdown", (event) => {
-    if (event.target.closest("button, input, [role='menuitem']")) return;
+    if (event.target.closest("button, input, textarea, [role='menuitem']")) return;
     selectAgentSession(session);
   });
   slot.querySelector(".agent-more").addEventListener("click", (event) => {
@@ -2833,10 +3306,12 @@ function swapAgentSlot(session, axis) {
   const targetSession = targetId ? sessions.get(targetId) : null;
 
   session.slot.dataset.slot = String(targetIndex);
+  session.slot.dataset.agentNumber = String(targetIndex + 1);
   session.slot.style.order = String(targetIndex);
   session.slotIndex = targetIndex;
   session.slot.querySelector(".agent-number").textContent = String(targetIndex + 1);
   targetSlot.dataset.slot = String(currentIndex);
+  targetSlot.dataset.agentNumber = String(currentIndex + 1);
   targetSlot.style.order = String(currentIndex);
   if (targetSession) {
     targetSession.slotIndex = currentIndex;
@@ -2935,7 +3410,10 @@ function updateAgentEta() {
       present: true
     });
   }
-  for (const session of sessions.values()) updateAgentStatusCard(session, now);
+  for (const session of sessions.values()) {
+    updateAgentStatusCard(session, now);
+    renderAgentCleanView(session, now);
+  }
   updateCommandCenterStatus();
   updateRuntimeStatus(now);
 }
@@ -2950,10 +3428,29 @@ async function openReportedAgentPreview(session, relativePath) {
   }
 }
 
+function createAgentRelevantFile(session, relativePath, className = "recent-file") {
+  const item = document.createElement("div");
+  item.className = className;
+  item.setAttribute("role", "button");
+  item.title = relativePath;
+  const fileName = relativePath.split("/").pop();
+  const icon = document.createElement("img");
+  icon.className = "relevant-file-icon";
+  icon.src = `${MATERIAL_ICON_BASE}/${fileIconName({ name: fileName })}`;
+  icon.alt = "";
+  const label = document.createElement("span");
+  label.className = "relevant-file-name";
+  label.textContent = fileName;
+  item.append(icon, label);
+  makeInteractive(item, () => previewWorkspaceFile(session.workspaceId, relativePath));
+  return item;
+}
+
 function updateAgentMetadata(session, metadata) {
   const previousStatus = session.metadata?.status || "";
   const recentFooterWasHidden = session.recentFooter.hidden;
   const nextMetadata = { ...session.metadata, ...metadata };
+  syncChecklistEtaState(session, nextMetadata);
   const nextStatus = nextMetadata.status || "";
   const etaWasReported = Object.prototype.hasOwnProperty.call(metadata, "etaSeconds")
     || Object.prototype.hasOwnProperty.call(metadata, "etaMinutes");
@@ -2972,6 +3469,7 @@ function updateAgentMetadata(session, metadata) {
   }
   session.metadata = nextMetadata;
   updateAgentStatusCard(session);
+  renderAgentCleanView(session);
   const agentState = normalizedAgentState(session.metadata);
   if (agentState === "failed" && !session.notifiedFailure) {
     session.notifiedFailure = true;
@@ -3011,21 +3509,7 @@ function updateAgentMetadata(session, metadata) {
     : [];
   session.recentFooter.hidden = relevantFiles.length === 0;
   for (const relativePath of relevantFiles) {
-    const item = document.createElement("div");
-    item.className = "recent-file";
-    item.setAttribute("role", "button");
-    item.title = relativePath;
-    const fileName = relativePath.split("/").pop();
-    const icon = document.createElement("img");
-    icon.className = "relevant-file-icon";
-    icon.src = `${MATERIAL_ICON_BASE}/${fileIconName({ name: fileName })}`;
-    icon.alt = "";
-    const label = document.createElement("span");
-    label.className = "relevant-file-name";
-    label.textContent = fileName;
-    item.append(icon, label);
-    makeInteractive(item, () => previewWorkspaceFile(session.workspaceId, relativePath));
-    session.recentFilesNode.appendChild(item);
+    session.recentFilesNode.appendChild(createAgentRelevantFile(session, relativePath));
   }
   const previewFile = typeof session.metadata.previewFile === "string"
     ? session.metadata.previewFile.trim()
@@ -3249,13 +3733,9 @@ function setupPanelResizing() {
   const root = document.documentElement;
   const savedFiles = Number(localStorage.getItem("agentWorkbenchFilesWidth"));
   const savedArtifacts = Number(localStorage.getItem("agentWorkbenchArtifactsWidth"));
-  const savedPixelRoster = Number(localStorage.getItem("agentWorkbenchPixelRosterWidth"));
   const rememberWidths = booleanPreference("agentWorkbenchRememberWidths", true);
   if (rememberWidths && savedFiles) root.style.setProperty("--files-width", `${Math.max(170, Math.min(380, savedFiles))}px`);
   if (rememberWidths && savedArtifacts) root.style.setProperty("--artifacts-width", `${Math.max(200, Math.min(500, savedArtifacts))}px`);
-  if (rememberWidths && savedPixelRoster) {
-    root.style.setProperty("--pixel-roster-width", `${Math.max(150, Math.min(420, savedPixelRoster))}px`);
-  }
 
   const attach = (handle, collapsedTab, property, storageKey, direction, min, max, collapsedClass, setCollapsed) => {
     handle.addEventListener("pointerdown", (event) => {
@@ -3339,27 +3819,6 @@ function setupPanelResizing() {
 
   attach(fileResizeHandle, toggleFilesButton, "--files-width", "agentWorkbenchFilesWidth", 1, 170, 380, "files-collapsed", setFilesCollapsed);
   attach(artifactResizeHandle, toggleOutputButton, "--artifacts-width", "agentWorkbenchArtifactsWidth", -1, 200, 500, "output-collapsed", setOutputCollapsed);
-  pixelRosterResizeHandle.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    const startX = event.clientX;
-    const current = Number.parseFloat(getComputedStyle(root).getPropertyValue("--pixel-roster-width")) || 218;
-    document.body.classList.add("is-resizing");
-    const move = (moveEvent) => {
-      const next = Math.max(150, Math.min(420, current - (moveEvent.clientX - startX)));
-      root.style.setProperty("--pixel-roster-width", `${next}px`);
-    };
-    const up = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      document.body.classList.remove("is-resizing");
-      const value = Number.parseFloat(getComputedStyle(root).getPropertyValue("--pixel-roster-width"));
-      if (booleanPreference("agentWorkbenchRememberWidths", true)) {
-        localStorage.setItem("agentWorkbenchPixelRosterWidth", String(Math.round(value)));
-      }
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-  });
 }
 
 function scheduleWorkspaceRefresh(payload) {
@@ -3464,6 +3923,12 @@ openCodeButton.addEventListener("click", async () => {
   if (activeWorkspaceId) await api.openInCode(activeWorkspaceId);
 });
 pixelModeButton.addEventListener("click", () => setPixelMode(!pixelModeEnabled));
+globalZenButton.addEventListener("click", () => setGlobalCleanMode(!globalCleanMode));
+pixelAgentClipboardButton.addEventListener("click", () => {
+  setPixelAgentClipboard(pixelAgentClipboard.hidden);
+});
+closePixelAgentClipboardButton.addEventListener("click", () => setPixelAgentClipboard(false));
+pixelAddFloorButton.addEventListener("click", addPixelFloor);
 runPauseAllButton.addEventListener("click", toggleRunPauseAll);
 quickAddAgentButton.addEventListener("click", () => {
   const kind = localStorage.getItem("agentWorkbenchDefaultAgent") || "codex";
@@ -3473,9 +3938,8 @@ stopAllAgentsButton.addEventListener("click", stopAllAgents);
 retryFailedAgentsButton.addEventListener("click", retryFailedAgents);
 askStatusButton.addEventListener("click", () => askAgentsForStatus());
 focusModeButton.addEventListener("click", toggleFocusMode);
-pixelFloorButtons.forEach((button) => {
-  button.addEventListener("click", () => applyPixelFloor(button.dataset.pixelFloor));
-});
+initializePixelFloors();
+setGlobalCleanMode(globalCleanMode, { persist: false });
 spotifyPreviousButton.addEventListener("click", () => controlSpotify("previous"));
 spotifyPlayPauseButton.addEventListener("click", () => controlSpotify("playpause"));
 spotifyNextButton.addEventListener("click", () => controlSpotify("next"));
@@ -3559,14 +4023,31 @@ connectSshButton.addEventListener("click", connectSshWorkspace);
 sshKnownHostSelect.addEventListener("change", () => {
   if (!sshKnownHostSelect.value) return;
   const target = parseSshTarget(sshKnownHostSelect.value);
-  if (target.user) sshUserInput.value = target.user;
-  sshHostInput.value = target.host;
+  const recent = sshConnectionHistory.find((connection) =>
+    connection.host === target.host && (!target.user || connection.user === target.user)
+  );
+  if (recent) setSshFields(recent);
+  else {
+    if (target.user) sshUserInput.value = target.user;
+    sshHostInput.value = target.host;
+    renderSshRecentFolders();
+  }
 });
+sshUserInput.addEventListener("input", renderSshRecentFolders);
+sshHostInput.addEventListener("input", renderSshRecentFolders);
 sshModalBackdrop.addEventListener("click", (event) => {
   if (event.target === sshModalBackdrop) closeSshDialog(true);
 });
 document.addEventListener("click", (event) => {
   if (!workspaceAddMenu.contains(event.target) && event.target !== addWorkspaceButton) setWorkspaceAddMenu(false);
+  if (
+    pixelModeEnabled &&
+    !pixelAgentClipboard.hidden &&
+    !pixelAgentClipboard.contains(event.target) &&
+    !pixelAgentClipboardButton.contains(event.target)
+  ) {
+    setPixelAgentClipboard(false);
+  }
   for (const session of sessions.values()) {
     if (!session.actionMenu.contains(event.target) && !session.slot.querySelector(".agent-more").contains(event.target)) {
       session.actionMenu.hidden = true;
@@ -3744,6 +4225,11 @@ window.addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "f") {
     event.preventDefault();
     toggleFocusMode();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.altKey && event.key.toLowerCase() === "z") {
+    event.preventDefault();
+    setGlobalCleanMode(!globalCleanMode);
     return;
   }
   if ((event.metaKey || event.ctrlKey) && /^[1-4]$/.test(event.key)) {

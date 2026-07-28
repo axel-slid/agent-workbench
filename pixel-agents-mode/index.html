@@ -34,6 +34,111 @@
         subtree: true
       });
       window.addEventListener("DOMContentLoaded", useSymbolButtons);
+
+      // Pixel Agents natively uses middle-drag for panning and modifier+wheel
+      // for zooming. Agent Workbench exposes the more direct controls requested
+      // by the desktop app: left-drag to pan and a plain wheel to zoom.
+      (function installWorkbenchNavigation() {
+        let panCandidate = null;
+        let panActive = false;
+        let forwardingMouse = false;
+        let forwardingWheel = false;
+        let suppressNextClick = false;
+
+        function canvasTarget(target) {
+          return target && target.tagName === "CANVAS" ? target : null;
+        }
+
+        document.addEventListener("mousedown", function (event) {
+          if (forwardingMouse || event.button !== 0) return;
+          const canvas = canvasTarget(event.target);
+          if (!canvas) return;
+          panCandidate = {
+            canvas,
+            startX: event.clientX,
+            startY: event.clientY
+          };
+          panActive = false;
+        }, true);
+
+        document.addEventListener("mousemove", function (event) {
+          if (forwardingMouse || !panCandidate) return;
+          const distance = Math.hypot(
+            event.clientX - panCandidate.startX,
+            event.clientY - panCandidate.startY
+          );
+          if (!panActive && distance > 4) {
+            panActive = true;
+            forwardingMouse = true;
+            panCandidate.canvas.dispatchEvent(new MouseEvent("mousedown", {
+              bubbles: true,
+              cancelable: true,
+              button: 1,
+              buttons: 4,
+              clientX: panCandidate.startX,
+              clientY: panCandidate.startY
+            }));
+            forwardingMouse = false;
+          }
+          if (!panActive) return;
+          forwardingMouse = true;
+          panCandidate.canvas.dispatchEvent(new MouseEvent("mousemove", {
+            bubbles: true,
+            cancelable: true,
+            button: 1,
+            buttons: 4,
+            clientX: event.clientX,
+            clientY: event.clientY
+          }));
+          forwardingMouse = false;
+        }, true);
+
+        document.addEventListener("mouseup", function (event) {
+          if (forwardingMouse || event.button !== 0 || !panCandidate) return;
+          if (panActive) {
+            forwardingMouse = true;
+            panCandidate.canvas.dispatchEvent(new MouseEvent("mouseup", {
+              bubbles: true,
+              cancelable: true,
+              button: 1,
+              buttons: 0,
+              clientX: event.clientX,
+              clientY: event.clientY
+            }));
+            forwardingMouse = false;
+            suppressNextClick = true;
+          }
+          panCandidate = null;
+          panActive = false;
+        }, true);
+
+        document.addEventListener("click", function (event) {
+          if (!suppressNextClick || !canvasTarget(event.target)) return;
+          suppressNextClick = false;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }, true);
+
+        document.addEventListener("wheel", function (event) {
+          if (forwardingWheel || event.ctrlKey || event.metaKey) return;
+          const canvas = canvasTarget(event.target);
+          if (!canvas) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          forwardingWheel = true;
+          canvas.dispatchEvent(new WheelEvent("wheel", {
+            bubbles: true,
+            cancelable: true,
+            ctrlKey: true,
+            deltaMode: event.deltaMode,
+            deltaX: event.deltaX,
+            deltaY: event.deltaY,
+            clientX: event.clientX,
+            clientY: event.clientY
+          }));
+          forwardingWheel = false;
+        }, { capture: true, passive: false });
+      })();
     </script>
     <script type="module" crossorigin src="./assets/index-CDwRPJIS.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-DX7upZNH.css">

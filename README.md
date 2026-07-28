@@ -7,15 +7,17 @@ agents in a VS Code-inspired 2×2 interface.
 
 ## Highlights
 
-- Four independent agent terminals with self-reported names, TLDRs, ETAs, and relevant files
-- Local and SSH workspaces in persistent tabs
+- Four independent agent terminals with self-reported names, tl;drs, ETAs, checklists, and relevant files
+- Per-agent and global Zen views for checklist-first prompting without hiding generated files
+- Local and SSH workspaces in persistent tabs, with reusable SSH sessions and recent remote folders
+- Drag local files or folders into any agent, including direct local-to-SSH transfers
 - Explorer and output panes with resizable or fully collapsible sidebars
 - Embedded previews for images, HTML, PDFs, code, and generated artifacts
 - Live CPU, memory, NVIDIA GPU, battery, Codex usage, and Spotify status
 - Openleaf theme catalog shared across the application and terminals
 - Command palette, workspace context menus, and `⌘1`–`⌘4` agent navigation
 - Native notifications and an unread bell when an agent finishes
-- Pixel Mode with idle/working characters, mouse pan/zoom, and a live agent roster
+- Pixel Mode with a growable textured tower, idle/working characters, mouse pan/zoom, and a clipboard agent roster
 
 ![Agent Workbench Pixel Mode](docs/screenshots/pixel-mode.jpg)
 
@@ -50,7 +52,12 @@ directory and updates it with:
   "name": "Short task-specific name",
   "tldr": "One sentence describing current progress.",
   "status": "working",
-  "etaMinutes": 3,
+  "etaSeconds": 180,
+  "progressPercent": 40,
+  "checklist": [
+    { "text": "Implement the parser", "status": "working", "etaSeconds": 120 },
+    { "text": "Run regression tests", "status": "pending", "etaSeconds": 240 }
+  ],
   "relevantFiles": ["relative/path/to/output.png"],
   "previewFile": "relative/path/to/output.png"
 }
@@ -63,5 +70,5 @@ Pixel Mode, and output previews in sync.
 
 Pixel Mode embeds the open-source
 [Pixel Agents](https://github.com/pixel-agents-hq/pixel-agents) webview under
-its MIT license. Scroll to pan, use `⌘`/`Ctrl` + scroll or the `+`/`−` controls
-to zoom, and middle-drag to pan directly.
+its MIT license. Left-drag to pan and use the scroll wheel or the `+`/`−`
+controls to zoom. Use the tower’s `+` control to add a persistent floor.
