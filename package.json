@@ -9,11 +9,19 @@
     "url": "https://github.com/axel-slid/agent-workbench.git"
   },
   "main": "main.js",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10"
+  },
   "scripts": {
     "start": "node scripts/start.mjs",
     "dev": "electron .",
-    "check": "node --check main.js && node --check preload.js && node --check renderer.js",
-    "package:mac": "node scripts/package-mac.mjs"
+    "check": "node --check main.js && node --check preload.js && node --check renderer.js && node --check scripts/import-openleaf-themes.mjs && node --check scripts/package-mac.mjs && node --check scripts/package-platform.mjs && node --check scripts/package-current.mjs && node scripts/validate-package-config.mjs",
+    "package:current": "node scripts/package-current.mjs",
+    "package:mac": "node scripts/package-mac.mjs",
+    "package:windows": "node scripts/package-platform.mjs win32",
+    "package:win": "npm run package:windows",
+    "package:linux": "node scripts/package-platform.mjs linux"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",

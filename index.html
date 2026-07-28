@@ -23,7 +23,9 @@
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 3.5 7 4.5-7 4.5zM12.5 3v10"/></svg>
         </button>
         <div class="spotify-track-copy">
-          <strong id="spotifyTrackName">Spotify</strong>
+          <div class="spotify-track-name-clip">
+            <strong id="spotifyTrackName">Spotify</strong>
+          </div>
           <span id="spotifyTrackDetail"></span>
         </div>
       </div>
@@ -31,6 +33,11 @@
         <span id="activeWorkspaceName">No workspace selected</span>
       </div>
       <div class="titlebar-actions">
+        <button id="homeButton" class="top-action" type="button" title="Home" aria-label="Home" aria-pressed="false">
+          <svg class="home-symbol" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="m3 9 7-6 7 6v8h-5v-5H8v5H3z"/>
+          </svg>
+        </button>
         <button id="newCodexButton" class="top-action accent-action" type="button" title="New Codex agent" aria-label="New Codex agent"><img class="brand-symbol" src="assets/openai-blossom.svg" alt=""></button>
         <button id="newClaudeButton" class="top-action claude-action" type="button" title="New Claude agent" aria-label="New Claude agent"><img class="brand-symbol" src="assets/claude-symbol.svg" alt=""></button>
         <button id="openCodeButton" class="top-action" type="button" title="Open workspace in Visual Studio Code" aria-label="Open workspace in Visual Studio Code"><img class="vscode-symbol" src="assets/vscode.svg" alt=""></button>
@@ -92,12 +99,32 @@
       </section>
     </div>
 
+    <section id="homeView" class="home-view" aria-label="Home" hidden>
+      <div class="home-content">
+        <header class="home-heading">
+          <div>
+            <span>BsCode</span>
+            <h1>Pick up where you left off</h1>
+            <p>Recent local and remote workspaces stay ready here.</p>
+          </div>
+          <button id="homeAddWorkspaceButton" type="button" title="Add workspace" aria-label="Add workspace">＋</button>
+        </header>
+        <div id="homeWorkspaceGrid" class="home-workspace-grid" aria-label="Recent workspaces"></div>
+      </div>
+    </section>
+
     <div class="main-layout" id="mainLayout">
       <aside class="files-panel">
         <section class="workspace-explorer">
           <div class="sidebar-title">
-            <span>Files</span>
+            <span id="sidebarViewTitle">Files</span>
             <div class="file-header-actions">
+              <button id="sidebarViewToggleButton" class="icon-button sidebar-view-toggle" type="button" title="Show workspaces" aria-label="Show workspaces" aria-pressed="false">
+                <svg viewBox="0 0 18 18" aria-hidden="true">
+                  <path d="M2.5 4.5h5l1.4 1.7h6.6v8.3h-13z"/>
+                  <path d="M5 2.5h8.5v2"/>
+                </svg>
+              </button>
               <button id="toggleFilesButton" class="icon-button pane-toggle-button" type="button" title="Close files pane" aria-label="Close files pane">
                 <svg class="pane-toggle-icon" viewBox="0 0 20 20" aria-hidden="true">
                   <rect x="2.5" y="2.5" width="15" height="15" rx="1.7"/>
@@ -105,22 +132,22 @@
                   <path class="pane-toggle-dots" d="M15 6.5h.01M15 10h.01M15 13.5h.01"/>
                 </svg>
               </button>
-              <button id="collapseFolderTreeButton" class="icon-button file-create-button" type="button" title="Collapse all folders" aria-label="Collapse all folders">
+              <button id="collapseFolderTreeButton" class="icon-button file-create-button file-view-action" type="button" title="Collapse all folders" aria-label="Collapse all folders">
                 <svg viewBox="0 0 16 16" aria-hidden="true">
                   <path d="M2.5 4h11M4.5 7.5h7M6.5 11h3"/>
                 </svg>
               </button>
-              <button id="newFileButton" class="icon-button file-create-button" type="button" title="New file" aria-label="New file">
+              <button id="newFileButton" class="icon-button file-create-button file-view-action" type="button" title="New file" aria-label="New file">
                 <svg viewBox="0 0 16 16" aria-hidden="true">
                   <path d="M3.5 1.5h5l4 4v9h-9zM8.5 1.5v4h4M8 8v4M6 10h4"/>
                 </svg>
               </button>
-              <button id="newFolderButton" class="icon-button file-create-button" type="button" title="New folder" aria-label="New folder">
+              <button id="newFolderButton" class="icon-button file-create-button file-view-action" type="button" title="New folder" aria-label="New folder">
                 <svg viewBox="0 0 16 16" aria-hidden="true">
                   <path d="M1.5 3.5h5l1.5 2h6.5v8h-13zM8 8v4M6 10h4"/>
                 </svg>
               </button>
-              <button id="addWorkspaceButton" class="icon-button" type="button" title="Add workspace" aria-label="Add workspace">＋</button>
+              <button id="addWorkspaceButton" class="icon-button workspace-view-action" type="button" title="Add workspace" aria-label="Add workspace" hidden>＋</button>
             </div>
           </div>
           <div id="workspaceAddMenu" class="workspace-add-menu" hidden>
@@ -301,12 +328,18 @@
             <button id="closeOutputPanelButton" class="icon-button output-close-button" type="button" title="Close outputs" aria-label="Close outputs">×</button>
           </div>
         </div>
+        <form id="outputPathForm" class="output-path-form">
+          <input id="outputPathInput" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a local or remote file path…" aria-label="File path to preview">
+          <button type="submit" title="Preview path" aria-label="Preview path">
+            <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 9h10M9.5 5.5 13 9l-3.5 3.5"/></svg>
+          </button>
+        </form>
         <section class="artifact-browser" aria-label="Output files">
           <button id="toggleArtifactListButton" class="artifact-list-title" type="button" aria-expanded="true">
             <span class="artifact-list-arrow" aria-hidden="true">
               <svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4"/></svg>
             </span>
-            <span>Output files</span>
+            <span>Session files</span>
           </button>
           <div id="artifactList" class="artifact-list"></div>
         </section>
@@ -370,6 +403,7 @@
           <div class="appearance-category" role="tab" tabindex="0">Gradient</div>
           <div class="appearance-category active" role="tab" tabindex="0">Dark</div>
           <div class="appearance-category" role="tab" tabindex="0">Dark Contrast</div>
+          <div class="appearance-category" role="tab" tabindex="0">Pixelized</div>
         </div>
 
         <div id="themeGrid" class="theme-grid">
@@ -423,6 +457,7 @@
           <div><span>Current workspace</span><strong id="settingsWorkspacePath">No workspace selected</strong></div>
           <label><span>Default layout<small>Used for newly added workspaces</small></span><select id="settingsDefaultLayout"><option value="1">1×1</option><option value="2">1×2</option><option value="4">2×2</option></select></label>
           <label><span>Remember sidebar widths<small>Restore both resize positions on launch</small></span><input id="settingsRememberWidths" type="checkbox"></label>
+          <label><span>Snap sidebars closed<small>Collapse Files or Outputs while a divider is dragged past its edge</small></span><input id="settingsAutoCollapsePanes" type="checkbox"></label>
           <div><span>Connections</span><strong>Local + remote</strong></div>
         </div>
       </section>
@@ -430,14 +465,19 @@
       <section class="settings-page" data-settings-page="agents" hidden>
         <div class="settings-controls">
           <label><span>Default agent<small>Used when Enter starts an empty cell</small></span><select id="settingsDefaultAgent"><option value="codex">Codex</option><option value="claude">Claude</option><option value="shell">Shell</option></select></label>
+          <label><span>Zen view by default<small>Show checklists, ETA, files, and the prompt instead of terminal output</small></span><input id="settingsDefaultZen" type="checkbox"></label>
           <label><span>Auto-open generated files<small>Show viewable agent output as soon as it is reported</small></span><input id="settingsAutoPreview" type="checkbox"></label>
+          <label><span>System completion banners<small>Send a desktop notification when an agent finishes</small></span><input id="settingsAgentNotifications" type="checkbox"></label>
           <label><span>Recent file history<small>Scrollable files retained in each agent footer</small></span><select id="settingsRecentFilesLimit"><option value="8">8 files</option><option value="20">20 files</option><option value="40">40 files</option></select></label>
+          <label><span>Pixel pets<small>Let a walking companion live with agents in Pixel mode</small></span><input id="settingsPixelPets" type="checkbox"></label>
+          <label><span>Pet sprite<small>Choose the companion used when Pixel pets are enabled</small></span><select id="settingsPixelPetChoice"><option value="gitcat">Gitcat</option><option value="claudio">Claudio</option></select></label>
         </div>
       </section>
 
       <section class="settings-page" data-settings-page="terminal" hidden>
         <div class="settings-controls">
           <label><span>Font size<small>Applied immediately to every open terminal</small></span><span class="range-control"><input id="settingsTerminalFontSize" type="range" min="8" max="16" step="1"><output id="settingsTerminalFontSizeValue">9 px</output></span></label>
+          <label><span>Line spacing<small>Increase vertical room between terminal lines</small></span><span class="range-control"><input id="settingsTerminalLineHeight" type="range" min="1" max="1.5" step="0.05"><output id="settingsTerminalLineHeightValue">1.15×</output></span></label>
           <label><span>Scrollback<small>Maximum lines retained per terminal</small></span><select id="settingsTerminalScrollback"><option value="1000">1,000 lines</option><option value="3000">3,000 lines</option><option value="6000">6,000 lines</option><option value="10000">10,000 lines</option></select></label>
           <label><span>Blinking cursor<small>Animate the active terminal cursor</small></span><input id="settingsTerminalCursorBlink" type="checkbox"></label>
           <div><span>Shell</span><strong>Login shell</strong></div>

@@ -24,6 +24,8 @@ const remoteWorkspaceSyncTimers = new Map();
 const remoteWorkspaceSyncBusy = new Set();
 const remoteSystemMetricsCache = new Map();
 const remoteSystemMetricsInFlight = new Map();
+const workspaceOutputSessionStarts = new Map();
+const workspaceOutputSessionBaselines = new Map();
 let previousCpuSample = null;
 
 const ARTIFACT_EXTENSIONS = new Set([
@@ -32,6 +34,15 @@ const ARTIFACT_EXTENSIONS = new Set([
   ".ppt", ".pptx", ".doc", ".docx", ".xls", ".xlsx"
 ]);
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]);
+const PASTED_IMAGE_MIME_EXTENSIONS = new Map([
+  ["image/png", ".png"],
+  ["image/jpeg", ".jpg"],
+  ["image/gif", ".gif"],
+  ["image/webp", ".webp"],
+  ["image/svg+xml", ".svg"]
+]);
+const MAX_PASTED_IMAGE_BYTES = 24 * 1024 * 1024;
+const MAX_PASTED_IMAGE_TOTAL_BYTES = 40 * 1024 * 1024;
 const TEXT_EXTENSIONS = new Set([
   ".md", ".txt", ".csv", ".json", ".html", ".htm", ".js", ".mjs",
   ".cjs", ".ts", ".tsx", ".jsx", ".css", ".scss", ".py", ".rb", ".rs",
@@ -42,6 +53,25 @@ const IGNORED_DIRECTORIES = new Set([
   ".git", ".agent-workbench", "node_modules", ".next", ".cache",
   "__pycache__", ".venv", "venv", "dist", "build"
 ]);
+const AGENT_NAME_ADJECTIVES = [
+  "Amber", "Arcane", "Arctic", "Astral", "Azure", "Binary", "Brisk", "Bronze",
+  "Cinder", "Cobalt", "Cosmic", "Crimson", "Crystal", "Daring", "Electric", "Ember",
+  "Fabled", "Golden", "Hidden", "Indigo", "Iron", "Jade", "Lunar", "Neon",
+  "Nimble", "Nova", "Obsidian", "Quantum", "Silver", "Solar", "Velvet", "Vivid"
+];
+const AGENT_NAME_NOUNS = [
+  "Atlas", "Badger", "Beacon", "Comet", "Crane", "Drift", "Falcon", "Finch",
+  "Forge", "Fox", "Harbor", "Hawk", "Juniper", "Kestrel", "Lantern", "Lynx",
+  "Mantis", "Maple", "Marten", "Meteor", "Moth", "Orchid", "Otter", "Phoenix",
+  "Pioneer", "Raven", "Relay", "Sparrow", "Tundra", "Voyager", "Willow", "Wren"
+];
+
+function coolAgentName(id, agentNumber) {
+  const digest = crypto.createHash("sha256").update(`${id}:${agentNumber}`).digest();
+  const adjective = AGENT_NAME_ADJECTIVES[digest[0] % AGENT_NAME_ADJECTIVES.length];
+  const noun = AGENT_NAME_NOUNS[digest[1] % AGENT_NAME_NOUNS.length];
+  return `${adjective} ${noun}`;
+}
 
 function workspacesPath() {
   return path.join(app.getPath("userData"), "workspaces.json");
@@ -118,11 +148,19 @@ function sshControlPath(remote = {}) {
   const key = `${normalized.user || "user"}-${normalized.host || "host"}`;
   const uid = typeof process.getuid === "function" ? process.getuid() : os.userInfo().username;
   const hash = crypto.createHash("sha1").update(key).digest("hex").slice(0, 16);
-  return path.join("/tmp", `agent-workbench-ssh-${uid}`, `${hash}.sock`);
+  return path.join(os.tmpdir(), `bscode-ssh-${uid}`, `${hash}.sock`);
 }
 
 function sshConnectionArgs(remote = {}) {
   const normalized = validateRemote(remote);
+  if (process.platform === "win32") {
+    return [
+      "-o", "BatchMode=yes",
+      "-o", "ConnectTimeout=15",
+      "-o", "ServerAliveInterval=30",
+      "-o", "ServerAliveCountMax=3"
+    ];
+  }
   const controlPath = normalized.controlPath || sshControlPath(normalized);
   fs.mkdirSync(path.dirname(controlPath), { recursive: true });
   return [
@@ -130,7 +168,9 @@ function sshConnectionArgs(remote = {}) {
     "-o", "ControlMaster=auto",
     "-o", "ControlPersist=24h",
     "-o", "BatchMode=yes",
-    "-o", "ConnectTimeout=15"
+    "-o", "ConnectTimeout=15",
+    "-o", "ServerAliveInterval=30",
+    "-o", "ServerAliveCountMax=3"
   ];
 }
 
@@ -146,7 +186,15 @@ function shellQuoteRemotePath(value) {
 }
 
 function remoteLoginCommand(command) {
-  return `exec \${SHELL:-/bin/bash} -lic ${shellQuote(command)}`;
+  const bootstrap = [
+    'export PATH="$HOME/.local/bin:$HOME/bin:$HOME/.npm-global/bin:$HOME/.volta/bin:$HOME/.bun/bin:$PATH"',
+    'for candidate in "$HOME"/.nvm/versions/node/*/bin; do [ -d "$candidate" ] && PATH="$candidate:$PATH"; done',
+    'if command -v npm >/dev/null 2>&1; then npm_global="$(npm prefix -g 2>/dev/null)/bin"; [ -d "$npm_global" ] && PATH="$npm_global:$PATH"; fi',
+    "export PATH",
+    command
+  ].join("; ");
+  const bashCommand = `exec /bin/bash -c ${shellQuote(bootstrap)}`;
+  return `exec \${SHELL:-/bin/bash} -lic ${shellQuote(bashCommand)}`;
 }
 
 function remoteWorkspaceCachePath(remote = {}) {
@@ -788,6 +836,118 @@ async function importWorkspacePaths(_event, payload = {}) {
   return imported;
 }
 
+function pastedImageBuffer(value) {
+  if (Buffer.isBuffer(value)) return value;
+  if (value instanceof ArrayBuffer) return Buffer.from(value);
+  if (ArrayBuffer.isView(value)) {
+    return Buffer.from(value.buffer, value.byteOffset, value.byteLength);
+  }
+  throw new Error("The pasted image data could not be read.");
+}
+
+function verifyPastedImage(buffer, mimeType) {
+  if (!buffer.length) throw new Error("The pasted image is empty.");
+  if (mimeType === "image/png" && !buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
+    throw new Error("The pasted PNG data is invalid.");
+  }
+  if (mimeType === "image/jpeg" && !(buffer[0] === 0xff && buffer[1] === 0xd8)) {
+    throw new Error("The pasted JPEG data is invalid.");
+  }
+  if (mimeType === "image/gif" && !/^GIF8[79]a/.test(buffer.subarray(0, 6).toString("ascii"))) {
+    throw new Error("The pasted GIF data is invalid.");
+  }
+  if (
+    mimeType === "image/webp"
+    && !(buffer.subarray(0, 4).toString("ascii") === "RIFF" && buffer.subarray(8, 12).toString("ascii") === "WEBP")
+  ) {
+    throw new Error("The pasted WebP data is invalid.");
+  }
+  if (mimeType === "image/svg+xml" && !/<svg(?:\s|>)/i.test(buffer.subarray(0, 8192).toString("utf8"))) {
+    throw new Error("The pasted SVG data is invalid.");
+  }
+}
+
+async function importWorkspaceData(_event, payload = {}) {
+  const workspace = await getWorkspace(payload.workspaceId);
+  const parentPath = String(payload.parentPath || "").replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  const parentDirectory = safeWorkspacePath(workspace.root, parentPath);
+  await fsp.mkdir(parentDirectory, { recursive: true });
+  const sourceItems = (Array.isArray(payload.items) ? payload.items : []).slice(0, 8);
+  if (!sourceItems.length) throw new Error("Paste an image to attach it.");
+
+  let totalBytes = 0;
+  const imported = [];
+  for (let index = 0; index < sourceItems.length; index += 1) {
+    const item = sourceItems[index] || {};
+    const mimeType = String(item.type || "").trim().toLowerCase();
+    const extension = PASTED_IMAGE_MIME_EXTENSIONS.get(mimeType);
+    if (!extension) throw new Error(`Unsupported pasted image type: ${mimeType || "unknown"}.`);
+    const data = pastedImageBuffer(item.data);
+    if (data.length > MAX_PASTED_IMAGE_BYTES) {
+      throw new Error("A pasted image is larger than the 24 MB limit.");
+    }
+    totalBytes += data.length;
+    if (totalBytes > MAX_PASTED_IMAGE_TOTAL_BYTES) {
+      throw new Error("The pasted images are larger than the 40 MB combined limit.");
+    }
+    verifyPastedImage(data, mimeType);
+
+    const suppliedName = path.basename(String(item.name || "").trim());
+    const suppliedStem = path.parse(suppliedName).name.replace(/[\0\r\n]/g, "").trim();
+    const fallbackStem = `pasted-image-${Date.now()}-${index + 1}`;
+    const requestedName = validWorkspaceEntryName(`${suppliedStem || fallbackStem}${extension}`);
+    const destination = await uniqueWorkspaceDestination(parentDirectory, requestedName);
+    await fsp.writeFile(destination.path, data, { flag: "wx" });
+
+    const relativePath = normalizedRelativePath(workspace.root, destination.path);
+    try {
+      if (workspace.type === "ssh" && workspace.remote) {
+        const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+        const remoteParent = remoteChildPath(remoteRoot, parentPath);
+        await execFileAsync(
+          resolveExecutable("ssh"),
+          [
+            ...sshConnectionArgs(workspace.remote),
+            remoteTarget(workspace.remote),
+            `mkdir -p ${shellQuoteRemotePath(remoteParent)}`
+          ],
+          { timeout: 15000, maxBuffer: 512 * 1024 }
+        );
+        await execFileAsync(
+          resolveExecutable("rsync"),
+          [
+            "-az",
+            "--partial",
+            "--timeout=20",
+            "-e", rsyncSshCommand(workspace.remote),
+            destination.path,
+            `${remoteTarget(workspace.remote)}:${shellQuoteRemotePath(remoteParent)}/`
+          ],
+          { timeout: 120000, maxBuffer: 12 * 1024 * 1024 }
+        );
+      }
+    } catch (error) {
+      await fsp.rm(destination.path, { force: true });
+      throw error;
+    }
+
+    imported.push({
+      name: destination.name,
+      relativePath,
+      type: "file",
+      mimeType,
+      size: data.length
+    });
+  }
+
+  sendToRenderer("workspace:changed", {
+    workspaceId: workspace.id,
+    relativePath: parentPath,
+    imported: imported.map((item) => item.relativePath)
+  });
+  return imported;
+}
+
 async function renameWorkspaceEntry(_event, payload = {}) {
   const workspace = await getWorkspace(payload.workspaceId);
   const relativePath = String(payload.relativePath || "").replace(/\\/g, "/").replace(/^\/+/, "");
@@ -877,6 +1037,7 @@ async function collectArtifacts(root, current = root, depth = 0, results = []) {
         relativePath: normalizedRelativePath(root, absolutePath),
         extension,
         size: stat.size,
+        createdAt: stat.birthtime.toISOString(),
         modifiedAt: stat.mtime.toISOString(),
         fileUrl: pathToFileURL(absolutePath).href,
         kind: IMAGE_EXTENSIONS.has(extension) ? "image" : extension === ".pdf" ? "pdf" : "file"
@@ -889,9 +1050,18 @@ async function collectArtifacts(root, current = root, depth = 0, results = []) {
 
 async function listArtifacts(_event, workspaceId) {
   const workspace = await getWorkspace(workspaceId);
+  const sessionStartedAt = workspaceOutputSessionStarts.get(workspace.id);
+  if (!Number.isFinite(sessionStartedAt)) return [];
+  const baseline = workspaceOutputSessionBaselines.get(workspace.id) || new Set();
   const artifacts = await collectArtifacts(workspace.root);
   const attributions = await collectArtifactAttributions(workspace.id);
   return artifacts
+    .filter((artifact) => {
+      const modifiedAt = Date.parse(artifact.modifiedAt || 0);
+      const createdAt = Date.parse(artifact.createdAt || 0);
+      return !baseline.has(artifact.relativePath)
+        && Math.max(modifiedAt, createdAt) >= sessionStartedAt - 1500;
+    })
     .map((artifact) => {
       const owner = attributions.get(artifact.relativePath);
       return {
@@ -954,18 +1124,13 @@ function mimeTypeFor(extension) {
   }[extension] || "application/octet-stream";
 }
 
-async function readArtifact(_event, payload = {}) {
-  const workspace = await getWorkspace(payload.workspaceId);
-  if (workspace.type === "ssh" && workspace.remote) {
-    await mirrorRemoteFile(workspace, payload.relativePath);
-  }
-  const absolutePath = safeWorkspacePath(workspace.root, payload.relativePath);
+async function describePreviewFile(absolutePath, relativePath = "") {
   const stat = await fsp.stat(absolutePath);
-  if (!stat.isFile()) throw new Error("Artifact is not a file.");
+  if (!stat.isFile()) throw new Error("Preview path is not a file.");
   const extension = path.extname(absolutePath).toLowerCase();
   const base = {
     name: path.basename(absolutePath),
-    relativePath: normalizedRelativePath(workspace.root, absolutePath),
+    relativePath: relativePath || absolutePath,
     extension,
     fileUrl: pathToFileURL(absolutePath).href,
     size: stat.size
@@ -980,6 +1145,91 @@ async function readArtifact(_event, payload = {}) {
   }
   if (extension === ".pdf") return { ...base, kind: "pdf" };
   return { ...base, kind: "file" };
+}
+
+async function readArtifact(_event, payload = {}) {
+  const workspace = await getWorkspace(payload.workspaceId);
+  if (workspace.type === "ssh" && workspace.remote) {
+    await mirrorRemoteFile(workspace, payload.relativePath);
+  }
+  const absolutePath = safeWorkspacePath(workspace.root, payload.relativePath);
+  return describePreviewFile(absolutePath, normalizedRelativePath(workspace.root, absolutePath));
+}
+
+function normalizedPreviewInput(value) {
+  const trimmed = String(value || "").trim();
+  if (
+    trimmed.length >= 2
+    && ((trimmed.startsWith("\"") && trimmed.endsWith("\""))
+      || (trimmed.startsWith("'") && trimmed.endsWith("'")))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+async function readPreviewPath(_event, payload = {}) {
+  const workspace = await getWorkspace(payload.workspaceId);
+  const requestedPath = normalizedPreviewInput(payload.path);
+  if (!requestedPath) throw new Error("Paste a file path to preview it.");
+
+  if (workspace.type !== "ssh" || !workspace.remote) {
+    const expandedPath = requestedPath === "~"
+      ? os.homedir()
+      : requestedPath.startsWith("~/")
+        ? path.join(os.homedir(), requestedPath.slice(2))
+        : requestedPath;
+    const absolutePath = path.isAbsolute(expandedPath)
+      ? path.normalize(expandedPath)
+      : safeWorkspacePath(workspace.root, expandedPath);
+    return describePreviewFile(absolutePath, requestedPath);
+  }
+
+  const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+  const remoteRequestedPath = requestedPath.startsWith("/") || requestedPath.startsWith("~")
+    ? requestedPath
+    : remoteChildPath(remoteRoot, requestedPath);
+  const script = [
+    "import json, os, sys",
+    "p = os.path.abspath(os.path.expanduser(sys.argv[1]))",
+    "assert os.path.isfile(p), f'Not a remote file: {p}'",
+    "print(json.dumps({'path': p, 'name': os.path.basename(p)}))"
+  ].join("\n");
+  const { stdout } = await execFileAsync(
+    resolveExecutable("ssh"),
+    [
+      ...sshConnectionArgs(workspace.remote),
+      remoteTarget(workspace.remote),
+      ["python3", "-c", script, remoteRequestedPath].map(shellQuote).join(" ")
+    ],
+    { timeout: 20000, maxBuffer: 1024 * 1024 }
+  );
+  const remoteFile = JSON.parse(String(stdout || "{}"));
+  if (!remoteFile.path) throw new Error("The remote file could not be resolved.");
+
+  const cacheDirectory = path.join(app.getPath("userData"), "preview-cache", workspace.id);
+  await fsp.mkdir(cacheDirectory, { recursive: true });
+  const safeName = String(remoteFile.name || "preview")
+    .replace(/[^A-Za-z0-9._-]+/g, "-")
+    .slice(-120) || "preview";
+  const cacheKey = crypto.createHash("sha1").update(remoteFile.path).digest("hex").slice(0, 12);
+  const localPath = path.join(cacheDirectory, `${cacheKey}-${safeName}`);
+  await execFileAsync(
+    resolveExecutable("rsync"),
+    [
+      "-az",
+      "--partial",
+      "--timeout=20",
+      "-e", rsyncSshCommand(workspace.remote),
+      `${remoteTarget(workspace.remote)}:${shellQuoteRemotePath(remoteFile.path)}`,
+      localPath
+    ],
+    { timeout: 120000, maxBuffer: 12 * 1024 * 1024 }
+  );
+  return {
+    ...(await describePreviewFile(localPath, remoteFile.path)),
+    remotePath: remoteFile.path
+  };
 }
 
 async function openWorkspaceFile(_event, payload = {}) {
@@ -1011,14 +1261,7 @@ async function showWorkspaceFileMenu(event, payload = {}) {
       });
     }
   };
-  const openInCode = () => {
-    const { spawn } = require("node:child_process");
-    const child = spawn("/usr/bin/open", ["-a", "Visual Studio Code", absolutePath], {
-      detached: true,
-      stdio: "ignore"
-    });
-    child.unref();
-  };
+  const openInCode = () => openPathInCode(absolutePath);
   const parentPath = isDirectory
     ? relativePath
     : path.posix.dirname(relativePath) === "."
@@ -1034,7 +1277,11 @@ async function showWorkspaceFileMenu(event, payload = {}) {
       click: openInCode
     },
     {
-      label: "Reveal in Finder",
+      label: process.platform === "darwin"
+        ? "Reveal in Finder"
+        : process.platform === "win32"
+          ? "Show in Explorer"
+          : "Show in File Manager",
       click: () => shell.showItemInFolder(absolutePath)
     },
     { type: "separator" },
@@ -1078,20 +1325,42 @@ async function showWorkspaceFileMenu(event, payload = {}) {
 
 async function openWorkspaceInCode(_event, workspaceId) {
   const workspace = await getWorkspace(workspaceId);
-  if (process.platform === "darwin") {
-    const { spawn } = require("node:child_process");
-    const child = spawn("/usr/bin/open", ["-a", "Visual Studio Code", workspace.root], {
+  return openPathInCode(workspace.root);
+}
+
+function openPathInCode(targetPath) {
+  const { spawn } = require("node:child_process");
+  const command = process.platform === "darwin"
+    ? "/usr/bin/open"
+    : resolveExecutable("code");
+  const args = process.platform === "darwin"
+    ? ["-a", "Visual Studio Code", targetPath]
+    : [targetPath];
+  try {
+    const child = spawn(command, args, {
       detached: true,
-      stdio: "ignore"
+      stdio: "ignore",
+      shell: process.platform === "win32"
     });
+    child.once("error", () => shell.openPath(targetPath));
     child.unref();
     return true;
+  } catch (error) {
+    return shell.openPath(targetPath);
   }
-  return shell.openPath(workspace.root);
 }
 
 function resolveExecutable(name) {
+  const windowsCandidates = process.platform === "win32"
+    ? [
+        path.join(process.env.LOCALAPPDATA || "", "Programs", "Microsoft VS Code", "bin", `${name}.cmd`),
+        path.join(process.env.ProgramFiles || "", "Microsoft VS Code", "bin", `${name}.cmd`),
+        `${name}.cmd`,
+        `${name}.exe`
+      ]
+    : [];
   const candidates = [
+    ...windowsCandidates,
     path.join("/opt/homebrew/bin", name),
     path.join("/usr/local/bin", name),
     path.join(os.homedir(), ".local", "bin", name),
@@ -1109,22 +1378,25 @@ function resolveExecutable(name) {
 }
 
 function terminalEnvironment(cwd) {
-  const pathParts = [
-    "/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/local/bin",
-    process.env.PATH || "", "/usr/bin", "/bin", "/usr/sbin", "/sbin"
-  ].join(path.delimiter);
+  const pathParts = process.platform === "win32"
+    ? [process.env.PATH || process.env.Path || ""]
+    : [
+        "/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/local/bin",
+        process.env.PATH || "", "/usr/bin", "/bin", "/usr/sbin", "/sbin"
+      ];
   return {
     ...process.env,
     COLORTERM: "truecolor",
     FORCE_COLOR: "1",
-    PATH: pathParts,
+    PATH: pathParts.filter(Boolean).join(path.delimiter),
     PWD: cwd,
     TERM: "xterm-256color"
   };
 }
 
 function ensurePtyHelperExecutable() {
-  const architecture = process.arch === "arm64" ? "darwin-arm64" : "darwin-x64";
+  if (process.platform !== "darwin") return;
+  const architecture = `darwin-${process.arch === "arm64" ? "arm64" : "x64"}`;
   const helperPath = path
     .join(__dirname, "node_modules", "node-pty", "prebuilds", architecture, "spawn-helper")
     .replace("app.asar", "app.asar.unpacked")
@@ -1135,6 +1407,19 @@ function ensurePtyHelperExecutable() {
   }
 }
 
+function localShellCommand() {
+  if (process.platform === "win32") {
+    return {
+      command: process.env.ComSpec || "cmd.exe",
+      args: []
+    };
+  }
+  return {
+    command: process.env.SHELL || (process.platform === "darwin" ? "/bin/zsh" : "/bin/bash"),
+    args: ["-l"]
+  };
+}
+
 function agentProtocol(metadataPath, workspaceRoot) {
   return [
     "You are running inside BsCode.",
@@ -1142,11 +1427,13 @@ function agentProtocol(metadataPath, workspaceRoot) {
     `Maintain your session metadata at ${metadataPath}.`,
     "Immediately, and whenever your task or progress changes, write valid JSON to that file.",
     'Use exactly these fields: {"name":"short task-specific name","tldr":"one sentence under 140 characters","status":"working|waiting|done|error","state":"planning|coding|waiting|failed|complete","model":"exact model name and effort","currentTask":"short current step","etaSeconds":number|null,"etaMinutes":number|null,"progressPercent":number,"checklist":[{"text":"short concrete step","status":"pending|working|done|blocked","etaSeconds":number|null}],"inputTokens":number|null,"outputTokens":number|null,"costUsd":number|null,"testsPassed":number|null,"testsFailed":number|null,"relevantFiles":["workspace-relative/path"],"previewFile":"workspace-relative/path"|null}.',
-    "Choose your own short name based on what you are doing. Keep relevantFiles current, ordered most useful first, with only files the user is likely to want to open. Use workspace-relative paths and omit incidental implementation files.",
+    "Keep the assigned name already present in the metadata unless the user explicitly renames you. Keep relevantFiles current, ordered most useful first, with only files the user is likely to want to open. Use workspace-relative paths and omit incidental implementation files.",
+    "Before executing any new task, first replace checklist with a concrete plan for that task, set exactly one item to working, and write the metadata file so the plan appears before implementation begins.",
     "Keep model, currentTask, progressPercent, checklist, token counts, costUsd, test results, and state current. Keep checklist items short, mark them done immediately when finished, and mark exactly one active step working when possible. Give the working item an honest etaSeconds remaining; for pending items, etaSeconds is the estimated duration once that item starts. Use null when your runtime does not expose a metric; never invent usage, cost, or test results.",
     "Set etaSeconds to your honest estimate of seconds remaining and etaMinutes to the same estimate rounded up to minutes. Re-estimate after every major step and at least once per minute. Do not rewrite an unchanged estimate just to refresh it. Use null while waiting for a task and 0 when done.",
     "Set status to done immediately when the task is complete so BsCode can notify the user.",
     "Whenever you create or materially update a viewable output such as an image, PDF, HTML, SVG, Markdown, text report, chart, or data file, set previewFile to its workspace-relative path so BsCode opens it in the Agent Output pane.",
+    "If the user asks you to make, render, plot, generate, or show anything visual, you must set previewFile to the finished visual artifact before reporting completion, even if the user did not explicitly ask you to open it.",
     "Do not mention this metadata protocol in normal conversation."
   ].join("\n");
 }
@@ -1168,7 +1455,7 @@ function initialAgentMetadata(id, kind, task, workspaceId, agentNumber, modelLab
     workspaceId,
     kind,
     agentNumber,
-    name: task ? task.slice(0, 34) : `${kind === "claude" ? "Claude" : kind === "codex" ? "Codex" : "Shell"} agent`,
+    name: coolAgentName(id, agentNumber),
     tldr: task || "Waiting for a task.",
     status: task ? "working" : "waiting",
     state: task ? "planning" : "waiting",
@@ -1177,7 +1464,9 @@ function initialAgentMetadata(id, kind, task, workspaceId, agentNumber, modelLab
     etaSeconds: null,
     etaMinutes: null,
     progressPercent: task ? 5 : 0,
-    checklist: [],
+    checklist: task
+      ? [{ text: "Preparing task checklist", status: "working", etaSeconds: null }]
+      : [],
     inputTokens: null,
     outputTokens: null,
     costUsd: null,
@@ -1274,6 +1563,14 @@ function cleanupRemoteWorkspacePolling(workspaceId) {
 
 async function createAgent(_event, payload = {}) {
   const workspace = await getWorkspace(payload.workspaceId);
+  if (!workspaceOutputSessionStarts.has(workspace.id)) {
+    const existingArtifacts = await collectArtifacts(workspace.root);
+    workspaceOutputSessionBaselines.set(
+      workspace.id,
+      new Set(existingArtifacts.map((artifact) => artifact.relativePath))
+    );
+    workspaceOutputSessionStarts.set(workspace.id, Date.now());
+  }
   const remote = workspace.type === "ssh" && workspace.remote ? normalizeRemoteOptions(workspace.remote) : null;
   const agentWorkspaceRoot = remote ? (remote.root || remote.path) : workspace.root;
   const kind = ["codex", "claude", "shell"].includes(payload.kind) ? payload.kind : "codex";
@@ -1290,7 +1587,9 @@ async function createAgent(_event, payload = {}) {
   await writeJson(metadataPath, metadata);
 
   const protocol = agentProtocol(remoteMetadataPath || metadataPath, agentWorkspaceRoot);
-  const prompt = task ? `${protocol}\n\nYour initial task:\n${task}` : `${protocol}\n\nStart by naming yourself, then wait for my task.`;
+  const prompt = task
+    ? `${protocol}\n\nYour assigned name is ${metadata.name}.\n\nYour initial task:\n${task}`
+    : `${protocol}\n\nYour assigned name is ${metadata.name}. Report that you are ready, then wait for my task.`;
   let command;
   let args;
   let commandLabel;
@@ -1337,8 +1636,9 @@ async function createAgent(_event, payload = {}) {
     ];
     commandLabel = "Claude · full workspace access";
   } else {
-    command = process.env.SHELL || "/bin/zsh";
-    args = ["-l"];
+    const localShell = localShellCommand();
+    command = localShell.command;
+    args = localShell.args;
     commandLabel = path.basename(command);
   }
 
@@ -1393,6 +1693,7 @@ async function createAgent(_event, payload = {}) {
     workspaceId: workspace.id,
     cwd: agentWorkspaceRoot,
     commandLabel,
+    remote: Boolean(remote),
     metadata
   };
 }
@@ -1548,7 +1849,10 @@ async function localSystemMetrics() {
 async function remoteSystemMetrics(workspace) {
   const remote = validateRemote(workspace.remote);
   const script = [
-    "import json, subprocess, time",
+    "import json, os, pwd, subprocess, time",
+    "def number(value):",
+    "  try: return float(value)",
+    "  except Exception: return None",
     "def cpu():",
     "  values=list(map(int,open('/proc/stat').readline().split()[1:]))",
     "  return sum(values), values[3] + (values[4] if len(values)>4 else 0)",
@@ -1558,12 +1862,28 @@ async function remoteSystemMetrics(workspace) {
     "  key,value=line.split(':',1); mem[key]=int(value.strip().split()[0])*1024",
     "gpus=[]; gpu_error=None",
     "try:",
-    "  result=subprocess.run(['nvidia-smi','--query-gpu=index,name,utilization.gpu,memory.used,memory.total','--format=csv,noheader,nounits'],text=True,capture_output=True,timeout=5)",
+    "  result=subprocess.run(['nvidia-smi','--query-gpu=index,uuid,name,utilization.gpu,memory.used,memory.total','--format=csv,noheader,nounits'],text=True,capture_output=True,timeout=5)",
     "  if result.returncode != 0: raise RuntimeError((result.stderr or result.stdout or 'nvidia-smi failed').strip())",
     "  out=result.stdout",
     "  for row in out.strip().splitlines():",
     "    p=[x.strip() for x in row.split(',')]",
-    "    if len(p)>=5: gpus.append({'index':int(p[0]),'name':p[1],'utilizationPercent':float(p[2]),'memoryUsedMiB':float(p[3]),'memoryTotalMiB':float(p[4]),'metricsAvailable':True})",
+    "    if len(p)>=6: gpus.append({'index':int(p[0]),'uuid':p[1],'name':p[2],'utilizationPercent':number(p[3]),'memoryUsedMiB':number(p[4]),'memoryTotalMiB':number(p[5]),'metricsAvailable':True,'users':[],'processes':[]})",
+    "  try:",
+    "    apps=subprocess.run(['nvidia-smi','--query-compute-apps=gpu_uuid,pid,process_name,used_gpu_memory','--format=csv,noheader,nounits'],text=True,capture_output=True,timeout=5)",
+    "    if apps.returncode == 0:",
+    "      by_uuid={gpu['uuid']:gpu for gpu in gpus}",
+    "      for row in apps.stdout.strip().splitlines():",
+    "        p=[x.strip() for x in row.split(',',3)]",
+    "        if len(p)<4 or p[0] not in by_uuid: continue",
+    "        try: pid=int(p[1])",
+    "        except Exception: continue",
+    "        try: username=pwd.getpwuid(os.stat('/proc/%d'%pid).st_uid).pw_name",
+    "        except Exception: username='unknown'",
+    "        process={'pid':pid,'name':p[2],'memoryUsedMiB':number(p[3]),'user':username}",
+    "        by_uuid[p[0]]['processes'].append(process)",
+    "        if username not in by_uuid[p[0]]['users']: by_uuid[p[0]]['users'].append(username)",
+    "      for gpu in gpus: gpu['users'].sort()",
+    "  except Exception: pass",
     "except Exception as error:",
     "  gpu_error=str(error)",
     "  try:",
@@ -1574,7 +1894,7 @@ async function remoteSystemMetrics(workspace) {
     "        if ':' in line:",
     "          key,value=line.split(':',1); info[key.strip()]=value.strip()",
     "      index=int(info.get('Device Minor',len(gpus)))",
-    "      gpus.append({'index':index,'name':info.get('Model','NVIDIA GPU'),'utilizationPercent':None,'memoryUsedMiB':None,'memoryTotalMiB':None,'metricsAvailable':False})",
+    "      gpus.append({'index':index,'name':info.get('Model','NVIDIA GPU'),'utilizationPercent':None,'memoryUsedMiB':None,'memoryTotalMiB':None,'metricsAvailable':False,'users':[],'processes':[]})",
     "    gpus.sort(key=lambda gpu:gpu['index'])",
     "  except Exception: pass",
     "total=mem.get('MemTotal',0); available=mem.get('MemAvailable',mem.get('MemFree',0))",
@@ -1827,9 +2147,9 @@ function createWindow() {
     height: 1000,
     minWidth: 1180,
     minHeight: 720,
-    title: "BsCode",
-    backgroundColor: "#00000000",
-    transparent: true,
+    title: process.env.AGENT_WORKBENCH_USER_DATA_DIR ? "BsCode Test" : "BsCode",
+    backgroundColor: process.platform === "darwin" ? "#00000000" : "#15181f",
+    transparent: process.platform === "darwin",
     ...(process.platform === "darwin"
       ? {
           titleBarStyle: "hiddenInset",
@@ -1884,10 +2204,12 @@ app.whenReady().then(() => {
   ipcMain.handle("workspace:rename", renameWorkspace);
   ipcMain.handle("workspace:create-entry", createWorkspaceEntry);
   ipcMain.handle("workspace:import-paths", importWorkspacePaths);
+  ipcMain.handle("workspace:import-data", importWorkspaceData);
   ipcMain.handle("workspace:rename-entry", renameWorkspaceEntry);
   ipcMain.handle("workspace:files", listWorkspaceFiles);
   ipcMain.handle("workspace:artifacts", listArtifacts);
   ipcMain.handle("workspace:read-artifact", readArtifact);
+  ipcMain.handle("workspace:read-preview-path", readPreviewPath);
   ipcMain.handle("workspace:open-file", openWorkspaceFile);
   ipcMain.handle("workspace:show-file-menu", showWorkspaceFileMenu);
   ipcMain.handle("workspace:open-code", openWorkspaceInCode);

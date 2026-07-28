@@ -28,6 +28,11 @@ const sidebarViews = Array.from(document.querySelectorAll("[data-sidebar-view]")
 const agentSidebarList = document.getElementById("agentSidebarList");
 const artifactSidebarList = document.getElementById("artifactSidebarList");
 const activeWorkspaceName = document.getElementById("activeWorkspaceName");
+const mainLayout = document.getElementById("mainLayout");
+const sidebarViewTitle = document.getElementById("sidebarViewTitle");
+const sidebarViewToggleButton = document.getElementById("sidebarViewToggleButton");
+const fileViewActions = Array.from(document.querySelectorAll(".file-view-action"));
+const workspaceViewActions = Array.from(document.querySelectorAll(".workspace-view-action"));
 const fileTree = document.getElementById("fileTree");
 const fileEmpty = document.getElementById("fileEmpty");
 const collapseFolderTreeButton = document.getElementById("collapseFolderTreeButton");
@@ -68,6 +73,8 @@ const refreshArtifactsButton = document.getElementById("refreshArtifactsButton")
 const toggleOutputButton = document.getElementById("toggleOutputButton");
 const toggleArtifactListButton = document.getElementById("toggleArtifactListButton");
 const closeOutputPanelButton = document.getElementById("closeOutputPanelButton");
+const outputPathForm = document.getElementById("outputPathForm");
+const outputPathInput = document.getElementById("outputPathInput");
 const codexUsageText = document.getElementById("codexUsageText");
 const codexUsageMeter = document.getElementById("codexUsageMeter");
 const footerStatus = document.getElementById("footerStatus");
@@ -76,6 +83,10 @@ const fileResizeHandle = document.getElementById("fileResizeHandle");
 const artifactResizeHandle = document.getElementById("artifactResizeHandle");
 const workspaceEditorTabs = document.getElementById("workspaceEditorTabs");
 const toggleFilesButton = document.getElementById("toggleFilesButton");
+const homeButton = document.getElementById("homeButton");
+const homeView = document.getElementById("homeView");
+const homeWorkspaceGrid = document.getElementById("homeWorkspaceGrid");
+const homeAddWorkspaceButton = document.getElementById("homeAddWorkspaceButton");
 const openSettingsButton = document.getElementById("openSettingsButton");
 const notificationButton = document.getElementById("notificationButton");
 const notificationBadge = document.getElementById("notificationBadge");
@@ -94,11 +105,18 @@ const settingsWorkspacePath = document.getElementById("settingsWorkspacePath");
 const settingsCodexUsage = document.getElementById("settingsCodexUsage");
 const settingsDefaultLayout = document.getElementById("settingsDefaultLayout");
 const settingsRememberWidths = document.getElementById("settingsRememberWidths");
+const settingsAutoCollapsePanes = document.getElementById("settingsAutoCollapsePanes");
 const settingsDefaultAgent = document.getElementById("settingsDefaultAgent");
+const settingsDefaultZen = document.getElementById("settingsDefaultZen");
 const settingsAutoPreview = document.getElementById("settingsAutoPreview");
+const settingsAgentNotifications = document.getElementById("settingsAgentNotifications");
 const settingsRecentFilesLimit = document.getElementById("settingsRecentFilesLimit");
+const settingsPixelPets = document.getElementById("settingsPixelPets");
+const settingsPixelPetChoice = document.getElementById("settingsPixelPetChoice");
 const settingsTerminalFontSize = document.getElementById("settingsTerminalFontSize");
 const settingsTerminalFontSizeValue = document.getElementById("settingsTerminalFontSizeValue");
+const settingsTerminalLineHeight = document.getElementById("settingsTerminalLineHeight");
+const settingsTerminalLineHeightValue = document.getElementById("settingsTerminalLineHeightValue");
 const settingsTerminalScrollback = document.getElementById("settingsTerminalScrollback");
 const settingsTerminalCursorBlink = document.getElementById("settingsTerminalCursorBlink");
 const settingsAutoOpenOutput = document.getElementById("settingsAutoOpenOutput");
@@ -177,6 +195,7 @@ let pixelFloorCount = Math.max(
 let pixelBaseLayout = null;
 let pixelPreviewGenerationBusy = false;
 let pixelPreviewRefreshNeeded = true;
+const pixelRoomStates = new Map();
 let globalCleanMode = localStorage.getItem("agentWorkbenchGlobalCleanMode") === "1";
 let selectedAgentId = null;
 let agentsPaused = false;
@@ -311,7 +330,8 @@ const THEME_CATEGORY_DEFAULTS = {
   Transparent: "glass-dark",
   Gradient: "sunset-gradient",
   Dark: "dark-plus",
-  "Dark Contrast": "abyss"
+  "Dark Contrast": "abyss",
+  Pixelized: "pixel-night"
 };
 
 function hydrateOpenleafThemes() {
@@ -412,6 +432,35 @@ function interruptAgentSession(session, { send = true, announce = true } = {}) {
   return true;
 }
 
+function beginAgentTask(session, task) {
+  if (!session) return;
+  const nextTask = String(task || "").trim().slice(0, 180);
+  session.checklistEtaState.clear();
+  session.etaPaused = false;
+  session.etaPausedSeconds = null;
+  session.etaDeadline = null;
+  session.lastReportedEtaSeconds = null;
+  session.finishNotified = false;
+  session.lastPreviewFile = "";
+  updateAgentMetadata(session, {
+    status: "working",
+    state: "planning",
+    currentTask: nextTask || "Planning the next task",
+    tldr: nextTask || "Preparing a new checklist.",
+    etaSeconds: null,
+    etaMinutes: null,
+    progressPercent: 0,
+    checklist: [{ text: "Preparing task checklist", status: "working", etaSeconds: null }],
+    relevantFiles: [],
+    previewFile: null
+  });
+  if (session.cleanMode) {
+    clearTimeout(session.cleanRenderTimer);
+    session.cleanRenderTimer = null;
+    renderAgentCleanView(session);
+  }
+}
+
 function reportedEtaSeconds(metadata) {
   const exact = metadata?.etaSeconds;
   if (exact !== null && exact !== undefined && exact !== "") {
@@ -436,9 +485,20 @@ function etaDeadlineFromMetadata(metadata, now = Date.now()) {
 
 function formatEtaClock(seconds) {
   const value = Math.max(0, Math.ceil(Number(seconds) || 0));
+  const days = Math.floor(value / 86400);
+  const hours = Math.floor((value % 86400) / 3600);
   const minutes = Math.floor(value / 60);
   const remainder = value % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+  if (days) {
+    return `${days}d ${String(hours).padStart(2, "0")}h ${String(minutes % 60).padStart(2, "0")}m ${String(remainder).padStart(2, "0")}s`;
+  }
+  if (hours) {
+    return `${hours}h ${String(minutes % 60).padStart(2, "0")}m ${String(remainder).padStart(2, "0")}s`;
+  }
+  if (minutes) {
+    return `${minutes}m ${String(remainder).padStart(2, "0")}s`;
+  }
+  return `${remainder}s`;
 }
 
 function updateCommandCenterStatus() {
@@ -586,12 +646,14 @@ function notifyAgentFinished(session) {
   );
   showToast(`Agent ${session.slotIndex + 1} finished`);
   const workspace = workspaces.find((item) => item.id === session.workspaceId);
-  api.notifyAgentFinished({
-    agentNumber: String(session.slotIndex + 1),
-    name: session.metadata.name || `${session.kind} agent`,
-    tldr: session.metadata.tldr || "Task finished.",
-    workspaceName: workspace?.name || ""
-  }).catch(() => {});
+  if (booleanPreference("agentWorkbenchAgentNotifications", true)) {
+    api.notifyAgentFinished({
+      agentNumber: String(session.slotIndex + 1),
+      name: session.metadata.name || `${session.kind} agent`,
+      tldr: session.metadata.tldr || "Task finished.",
+      workspaceName: workspace?.name || ""
+    }).catch(() => {});
+  }
 }
 
 function booleanPreference(key, fallback = true) {
@@ -733,6 +795,18 @@ function waitForPixelPreview(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+function refreshPixelFloorPreviewsForWorkspaceSwitch() {
+  pixelPreviewRefreshNeeded = true;
+  pixelRoomStates.clear();
+  for (let floor = 1; floor <= pixelFloorCount; floor += 1) {
+    localStorage.removeItem(pixelFloorPreviewKey(floor));
+  }
+  pixelFloorButtons.forEach(decoratePixelFloorButton);
+  if (pixelModeEnabled && pixelFrameReady) {
+    setTimeout(refreshPixelFloorPreviews, 180);
+  }
+}
+
 async function refreshPixelFloorPreviews() {
   if (!pixelModeEnabled || !pixelFrameReady || pixelPreviewGenerationBusy) return;
   pixelPreviewGenerationBusy = true;
@@ -741,11 +815,7 @@ async function refreshPixelFloorPreviews() {
   const originalFloor = activePixelFloor;
   const previewSessions = activePixelSessions();
   try {
-    for (const session of previewSessions) {
-      const pixelAgentId = session.slotIndex + 1;
-      postPixelMessage({ type: "agentClosed", id: pixelAgentId });
-      pixelKnownAgentIds.delete(pixelAgentId);
-    }
+    postPixelMessage({ type: "previewCycle", active: true });
     for (let floor = pixelFloorCount; floor >= 1; floor -= 1) {
       const layout = await pixelLayoutForFloor(floor);
       postPixelMessage({ type: "layoutLoaded", layout });
@@ -760,9 +830,13 @@ async function refreshPixelFloorPreviews() {
     await waitForPixelPreview(90);
   } catch (error) {
   } finally {
+    postPixelMessage({ type: "previewCycle", active: false });
     for (const session of previewSessions) syncPixelSession(session);
     pixelModeView.classList.remove("refreshing-floor-previews");
     pixelPreviewGenerationBusy = false;
+    if (pixelPreviewRefreshNeeded && pixelModeEnabled && pixelFrameReady) {
+      setTimeout(refreshPixelFloorPreviews, 180);
+    }
   }
 }
 
@@ -770,8 +844,14 @@ function decoratePixelFloorButton(button) {
   const floor = Number(button.dataset.pixelFloor);
   const room = button.querySelector(".pixel-floor-room");
   const preview = room?.querySelector("img");
-  button.title = `Open floor ${floor}`;
-  button.setAttribute("aria-label", `Open floor ${floor}`);
+  const roomState = pixelRoomStates.get(floor);
+  const agentCount = Array.isArray(roomState?.agents) ? roomState.agents.length : 0;
+  const petCount = Array.isArray(roomState?.pets) ? roomState.pets.length : 0;
+  const detail = roomState
+    ? ` · ${agentCount} ${agentCount === 1 ? "agent" : "agents"} · ${petCount} ${petCount === 1 ? "pet" : "pets"}`
+    : "";
+  button.title = `Open floor ${floor}${detail}`;
+  button.setAttribute("aria-label", button.title);
   if (room) room.style.setProperty("--pixel-floor-texture", pixelFloorTexture(floor));
   if (preview) preview.src = pixelFloorPreview(floor) || "pixel-agents-mode/office.png";
 }
@@ -848,6 +928,15 @@ function deletePixelFloor() {
   }
   localStorage.removeItem(`agentWorkbenchPixelLayout:${pixelFloorCount}`);
   localStorage.removeItem(pixelFloorPreviewKey(pixelFloorCount));
+  const shiftedRoomStates = new Map();
+  for (const [stateFloor, state] of pixelRoomStates) {
+    if (stateFloor < floor) shiftedRoomStates.set(stateFloor, state);
+    else if (stateFloor > floor) shiftedRoomStates.set(stateFloor - 1, state);
+  }
+  pixelRoomStates.clear();
+  for (const [stateFloor, state] of shiftedRoomStates) {
+    pixelRoomStates.set(stateFloor, state);
+  }
   pixelFloorCount -= 1;
   localStorage.setItem("agentWorkbenchPixelFloorCount", String(pixelFloorCount));
   activePixelFloor = Math.min(floor, pixelFloorCount);
@@ -866,7 +955,9 @@ async function pixelLayoutForFloor(floor) {
   const saved = localStorage.getItem(`agentWorkbenchPixelLayout:${floor}`);
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const savedLayout = JSON.parse(saved);
+      savedLayout.workbenchFloor = floor;
+      return savedLayout;
     } catch (error) {
     }
   }
@@ -875,6 +966,7 @@ async function pixelLayoutForFloor(floor) {
     pixelBaseLayout = await response.json();
   }
   const layout = JSON.parse(JSON.stringify(pixelBaseLayout));
+  layout.workbenchFloor = floor;
   if (floor === 2) {
     layout.tiles = Array(layout.cols * layout.rows).fill(255);
     for (let row = 10; row <= 20; row += 1) {
@@ -1022,7 +1114,9 @@ function syncPixelMode(reset = false) {
   postPixelMessage({
     type: "houseConfig",
     floors: pixelFloorCount,
-    slots: workspace ? workspaceLayoutFor(workspace.id) : 4
+    slots: workspace ? workspaceLayoutFor(workspace.id) : 4,
+    petsEnabled: booleanPreference("agentWorkbenchPixelPets", true),
+    pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat"
   });
   postPixelMessage({
     type: "existingAgents",
@@ -1175,15 +1269,21 @@ function flushTerminalOutput(session) {
   session.terminalWriteScheduled = true;
   requestAnimationFrame(() => {
     session.terminalWriteScheduled = false;
-    const chunk = String(session.pendingTerminalOutput || "").slice(0, 65536);
-    session.pendingTerminalOutput = String(session.pendingTerminalOutput || "").slice(chunk.length);
+    const chunk = session.pendingTerminalOutput.shift() || "";
+    session.pendingTerminalOutputBytes = Math.max(0, session.pendingTerminalOutputBytes - chunk.length);
     if (chunk) session.term.write(chunk);
-    if (session.pendingTerminalOutput) flushTerminalOutput(session);
+    if (session.pendingTerminalOutput.length) flushTerminalOutput(session);
   });
 }
 
 function queueTerminalOutput(session, data) {
-  session.pendingTerminalOutput = `${session.pendingTerminalOutput || ""}${data}`;
+  const chunk = String(data || "");
+  if (!chunk) return;
+  session.pendingTerminalOutput.push(chunk);
+  session.pendingTerminalOutputBytes += chunk.length;
+  while (session.pendingTerminalOutputBytes > 4 * 1024 * 1024 && session.pendingTerminalOutput.length > 1) {
+    session.pendingTerminalOutputBytes -= session.pendingTerminalOutput.shift().length;
+  }
   flushTerminalOutput(session);
 }
 
@@ -1341,6 +1441,17 @@ function renderAgentCleanView(session, now = Date.now()) {
   }
 }
 
+function scheduleAgentCleanRender(session) {
+  if (!session?.cleanMode) return;
+  clearTimeout(session.cleanRenderTimer);
+  const elapsed = Date.now() - lastTerminalInputAt;
+  const delay = elapsed < 220 ? 220 - elapsed : 0;
+  session.cleanRenderTimer = setTimeout(() => {
+    session.cleanRenderTimer = null;
+    renderAgentCleanView(session);
+  }, delay);
+}
+
 function setAgentCleanMode(session, enabled, { focus = true } = {}) {
   if (!session?.slot) return;
   const next = Boolean(enabled);
@@ -1462,14 +1573,8 @@ function askAgentsForStatus(targetSession = null) {
 function reassignAgentTask(session) {
   const task = window.prompt("Reassign task", session.metadata.currentTask || session.metadata.tldr || "");
   if (!task?.trim()) return;
+  beginAgentTask(session, task.trim());
   api.writeAgent(session.id, `${task.trim()}\\r`);
-  updateAgentMetadata(session, {
-    currentTask: task.trim(),
-    tldr: task.trim(),
-    status: "working",
-    state: "planning",
-    progressPercent: 0
-  });
 }
 
 async function duplicateAgent(session) {
@@ -1636,6 +1741,11 @@ function runPaletteCommand(index = commandPaletteSelection) {
 function setWorkspaceAddMenu(open) {
   workspaceAddMenu.hidden = !open;
   addWorkspaceButton.classList.toggle("active", open);
+  const tabAddButton = workspaceEditorTabs.querySelector(".workspace-tab-add");
+  if (tabAddButton) {
+    tabAddButton.classList.toggle("active", open);
+    tabAddButton.setAttribute("aria-expanded", String(Boolean(open)));
+  }
 }
 
 function workspaceLayoutMap() {
@@ -1709,6 +1819,22 @@ function renderWorkspaceEditorTabs() {
     tab.addEventListener("contextmenu", (event) => beginEditorTabRename(event, tab, workspace));
     workspaceEditorTabs.appendChild(tab);
   }
+
+  const addTabButton = document.createElement("button");
+  addTabButton.className = "workspace-tab-add";
+  addTabButton.type = "button";
+  addTabButton.textContent = "+";
+  addTabButton.title = "Add workspace";
+  addTabButton.setAttribute("aria-label", "Add workspace");
+  addTabButton.setAttribute("aria-expanded", String(!workspaceAddMenu.hidden));
+  addTabButton.classList.toggle("active", !workspaceAddMenu.hidden);
+  addTabButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    openWorkspaceSetup();
+  });
+  workspaceEditorTabs.appendChild(addTabButton);
+
   updateAgentEta();
 }
 
@@ -1795,16 +1921,34 @@ function finishWorkspaceSetup() {
 }
 
 function setSidebarView(view) {
-  currentSidebarView = view;
-  activityButtons.forEach((button) => button.classList.toggle("active", button.dataset.activity === view));
+  currentSidebarView = view === "workspaces" ? "workspaces" : "files";
+  const showingWorkspaces = currentSidebarView === "workspaces";
+  activityButtons.forEach((button) => button.classList.toggle("active", button.dataset.activity === currentSidebarView));
   sidebarViews.forEach((panel) => {
-    panel.hidden = panel.dataset.sidebarView !== view;
+    panel.hidden = panel.dataset.sidebarView !== currentSidebarView;
   });
-  if (view === "workspaces") setWorkspaceAddMenu(true);
-  else setWorkspaceAddMenu(false);
-  if (view === "agents") renderAgentSidebar();
-  if (view === "outputs") renderArtifactSidebar();
-  document.querySelector(".output-panel").classList.toggle("attention", view === "outputs");
+  workspaceList.hidden = !showingWorkspaces;
+  fileTree.hidden = showingWorkspaces;
+  sidebarViewTitle.textContent = showingWorkspaces ? "Workspaces" : "Files";
+  sidebarViewToggleButton.title = showingWorkspaces ? "Show files" : "Show workspaces";
+  sidebarViewToggleButton.setAttribute("aria-label", sidebarViewToggleButton.title);
+  sidebarViewToggleButton.setAttribute("aria-pressed", String(showingWorkspaces));
+  fileViewActions.forEach((button) => {
+    button.hidden = showingWorkspaces;
+  });
+  workspaceViewActions.forEach((button) => {
+    button.hidden = !showingWorkspaces;
+  });
+  fileEmpty.hidden = showingWorkspaces ? workspaces.length > 0 : Boolean(activeWorkspace());
+  if (!fileEmpty.hidden) {
+    fileEmpty.textContent = showingWorkspaces
+      ? "Add a workspace to start."
+      : "Add a workspace to browse its files.";
+  }
+  setWorkspaceAddMenu(false);
+  document.body.classList.toggle("sidebar-workspaces-view", showingWorkspaces);
+  localStorage.setItem("agentWorkbenchSidebarView", currentSidebarView);
+  document.querySelector(".output-panel").classList.remove("attention");
 }
 
 const FILES_CLOSE_ICON = '<svg class="pane-toggle-icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="1.7"/><path d="M12.5 3v14M8.8 7 5.8 10l3 3"/><path class="pane-toggle-dots" d="M15 6.5h.01M15 10h.01M15 13.5h.01"/></svg>';
@@ -1886,9 +2030,10 @@ function applyPalette(palette, mode) {
   for (const [key, value] of Object.entries(palette)) {
     root.style.setProperty(`--theme-${key}`, value);
   }
-  root.style.setProperty("--theme-background", palette.bg);
-  root.style.setProperty("--theme-terminal", palette.bg);
+  root.style.setProperty("--theme-background", palette.background || palette.bg);
+  root.style.setProperty("--theme-terminal", palette.terminal || palette.bg);
   root.dataset.appearanceMode = mode.toLowerCase().replace(/\s+/g, "-");
+  root.style.colorScheme = mode.toLowerCase().startsWith("light") ? "light" : "dark";
   const terminalTheme = terminalThemeFromPalette(palette);
   for (const session of sessions.values()) {
     session.term.options.theme = terminalTheme;
@@ -1973,11 +2118,14 @@ function initializeSettings() {
 
 function applyTerminalPreferences() {
   const fontSize = numericPreference("agentWorkbenchTerminalFontSize", 9, 8, 16);
+  const lineHeight = numericPreference("agentWorkbenchTerminalLineHeight", 1.15, 1, 1.5);
   const scrollback = numericPreference("agentWorkbenchTerminalScrollback", 6000, 1000, 10000);
   const cursorBlink = booleanPreference("agentWorkbenchTerminalCursorBlink", true);
   settingsTerminalFontSizeValue.textContent = `${fontSize} px`;
+  settingsTerminalLineHeightValue.textContent = `${lineHeight.toFixed(2)}×`;
   for (const session of sessions.values()) {
     session.term.options.fontSize = fontSize;
+    session.term.options.lineHeight = lineHeight;
     session.term.options.scrollback = scrollback;
     session.term.options.cursorBlink = cursorBlink;
     try {
@@ -2003,10 +2151,17 @@ function restartSystemMetricsTimer() {
 function initializeWorkbenchSettings() {
   settingsDefaultLayout.value = String(numericPreference("agentWorkbenchDefaultLayout", 4, 1, 4));
   settingsRememberWidths.checked = booleanPreference("agentWorkbenchRememberWidths", true);
+  settingsAutoCollapsePanes.checked = booleanPreference("agentWorkbenchAutoCollapsePanes", true);
   settingsDefaultAgent.value = localStorage.getItem("agentWorkbenchDefaultAgent") || "codex";
+  settingsDefaultZen.checked = globalCleanMode;
   settingsAutoPreview.checked = booleanPreference("agentWorkbenchAutoPreview", true);
+  settingsAgentNotifications.checked = booleanPreference("agentWorkbenchAgentNotifications", true);
   settingsRecentFilesLimit.value = String(numericPreference("agentWorkbenchRecentFilesLimit", 40, 8, 40));
+  settingsPixelPets.checked = booleanPreference("agentWorkbenchPixelPets", true);
+  settingsPixelPetChoice.value = localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat";
+  settingsPixelPetChoice.disabled = !settingsPixelPets.checked;
   settingsTerminalFontSize.value = String(numericPreference("agentWorkbenchTerminalFontSize", 9, 8, 16));
+  settingsTerminalLineHeight.value = String(numericPreference("agentWorkbenchTerminalLineHeight", 1.15, 1, 1.5));
   settingsTerminalScrollback.value = String(numericPreference("agentWorkbenchTerminalScrollback", 6000, 1000, 10000));
   settingsTerminalCursorBlink.checked = booleanPreference("agentWorkbenchTerminalCursorBlink", true);
   settingsAutoOpenOutput.checked = booleanPreference("agentWorkbenchAutoOpenOutput", true);
@@ -2092,7 +2247,7 @@ function terminalThemeFromPalette(palette = null) {
     accent: styles.getPropertyValue("--theme-accent").trim(),
     active: styles.getPropertyValue("--theme-active").trim()
   };
-  const background = terminalBackgroundColor(colors.bg || colors.terminal, "#090b0e");
+  const background = terminalBackgroundColor(colors.terminal || colors.bg, "#090b0e");
   const foreground = normalizeTerminalColor(colors.text, "#c7ced7");
   const accent = normalizeTerminalColor(colors.accent, "#79d7a7");
   const muted = normalizeTerminalColor(colors.muted, "#7e8794");
@@ -2445,7 +2600,61 @@ function renderWorkspaces() {
   newFolderButton.disabled = !workspace;
   settingsWorkspacePath.textContent = workspace ? remoteWorkspaceLabel(workspace) : "No workspace selected";
   renderWorkspaceEditorTabs();
+  renderHomeView();
   setFooter("No workspace");
+}
+
+function renderHomeView() {
+  homeWorkspaceGrid.replaceChildren();
+  const recent = [...workspaces]
+    .sort((left, right) => String(right.lastOpenedAt || "").localeCompare(String(left.lastOpenedAt || "")))
+    .slice(0, 12);
+  if (!recent.length) {
+    const empty = document.createElement("div");
+    empty.className = "home-empty";
+    empty.textContent = "Add a workspace to start.";
+    homeWorkspaceGrid.appendChild(empty);
+    return;
+  }
+  for (const workspace of recent) {
+    const card = document.createElement("button");
+    card.className = "home-workspace-card";
+    card.classList.toggle("active", workspace.id === activeWorkspaceId);
+    card.type = "button";
+    card.title = `Open ${workspace.name}`;
+    const icon = document.createElement("span");
+    icon.className = "home-workspace-icon";
+    icon.innerHTML = workspace.type === "ssh"
+      ? '<svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="3" width="13" height="9" rx="1.5"/><path d="M6 15h6M9 12v3M5.5 7h7"/></svg>'
+      : '<svg viewBox="0 0 18 18" aria-hidden="true"><path d="M2.5 4.5h5l1.4 1.7h6.6v8.3h-13z"/></svg>';
+    const copy = document.createElement("span");
+    copy.className = "home-workspace-copy";
+    const name = document.createElement("strong");
+    name.textContent = workspace.name;
+    const root = document.createElement("span");
+    root.textContent = remoteWorkspaceLabel(workspace);
+    const meta = document.createElement("small");
+    meta.textContent = workspace.type === "ssh" ? "Remote workspace" : "Local workspace";
+    copy.append(name, root, meta);
+    card.append(icon, copy);
+    makeInteractive(card, () => selectWorkspace(workspace.id));
+    homeWorkspaceGrid.appendChild(card);
+  }
+}
+
+function setHomeView(open) {
+  const next = Boolean(open);
+  homeView.hidden = !next;
+  homeButton.classList.toggle("active", next);
+  homeButton.setAttribute("aria-pressed", String(next));
+  mainLayout.inert = next;
+  mainLayout.setAttribute("aria-hidden", String(next));
+  if (next) {
+    closeOutputViewer();
+    closeCommandPalette();
+    setWorkspaceAddMenu(false);
+    renderHomeView();
+  }
 }
 
 function beginWorkspaceRename(event, item, workspace) {
@@ -2612,6 +2821,7 @@ async function confirmWorkspaceRemoval() {
 }
 
 async function selectWorkspace(workspaceId) {
+  setHomeView(false);
   if (workspaceId === activeWorkspaceId) return;
   closeOutputViewer();
   expandedFilePaths.clear();
@@ -2626,6 +2836,7 @@ async function selectWorkspace(workspaceId) {
   await refreshWorkspacePanels();
   refreshSystemMetrics();
   syncPixelMode(true);
+  refreshPixelFloorPreviewsForWorkspaceSwitch();
 }
 
 async function addWorkspace() {
@@ -2732,6 +2943,82 @@ function agentFileReference(relativePath) {
     : `@${value}`;
 }
 
+function insertTextAtCursor(input, text) {
+  const value = String(text || "");
+  if (!input || !value) return false;
+  const start = Number.isInteger(input.selectionStart) ? input.selectionStart : input.value.length;
+  const end = Number.isInteger(input.selectionEnd) ? input.selectionEnd : start;
+  const prefix = start > 0 && !/\s$/.test(input.value.slice(0, start)) ? " " : "";
+  const suffix = end < input.value.length && !/^\s/.test(input.value.slice(end)) ? " " : "";
+  input.setRangeText(`${prefix}${value}${suffix}`, start, end, "end");
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus();
+  return true;
+}
+
+function insertAgentFileReferences(slot, slotIndex, imported) {
+  const references = imported.map((item) => agentFileReference(item.relativePath)).join(" ");
+  if (!references) return;
+  const sessionId = slots[slotIndex];
+  const session = sessionId ? sessions.get(sessionId) : null;
+  if (session?.cleanMode && insertTextAtCursor(session.cleanComposeInput, references)) return;
+  if (!session && insertTextAtCursor(slot.querySelector(".agent-task-input"), references)) return;
+  if (session) {
+    api.writeAgent(session.id, ` ${references}`);
+    session.term.focus();
+  }
+}
+
+function pastedImageFiles(event) {
+  const clipboard = event.clipboardData;
+  if (!clipboard) return [];
+  const files = Array.from(clipboard.files || []).filter((file) => String(file.type || "").startsWith("image/"));
+  if (files.length) return files.slice(0, 8);
+  return Array.from(clipboard.items || [])
+    .filter((item) => item.kind === "file" && String(item.type || "").startsWith("image/"))
+    .map((item) => item.getAsFile())
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function pastedImageName(file, index) {
+  const supplied = String(file.name || "").trim();
+  if (supplied && !/^image\.(?:png|jpe?g|gif|webp|svg)$/i.test(supplied)) return supplied;
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return `pasted-image-${timestamp}${index ? `-${index + 1}` : ""}`;
+}
+
+async function importPastedImagesToAgent(event, slotIndex) {
+  const files = pastedImageFiles(event);
+  if (!files.length || !activeWorkspaceId) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const slot = event.currentTarget;
+  slot.classList.add("agent-paste-target");
+  const workspace = activeWorkspace();
+  setFooter(`${workspace?.type === "ssh" ? "Uploading" : "Attaching"} ${files.length} pasted image${files.length === 1 ? "" : "s"}…`);
+  try {
+    const items = await Promise.all(files.map(async (file, index) => ({
+      name: pastedImageName(file, index),
+      type: file.type,
+      data: new Uint8Array(await file.arrayBuffer())
+    })));
+    const imported = await api.importWorkspaceData(activeWorkspaceId, "", items);
+    insertAgentFileReferences(slot, slotIndex, imported);
+    if (imported[0]) {
+      selectedFilePath = imported[0].relativePath;
+      selectedFileKind = imported[0].type;
+    }
+    await refreshWorkspacePanels();
+    showToast(`${imported.length} image${imported.length === 1 ? "" : "s"} attached to Agent ${slotIndex + 1}`);
+  } catch (error) {
+    showToast(error.message || String(error));
+    setFooter("Image paste failed");
+  } finally {
+    slot.classList.remove("agent-paste-target");
+  }
+}
+
 async function importDroppedFilesToAgent(event, slotIndex) {
   event.preventDefault();
   event.stopPropagation();
@@ -2743,21 +3030,7 @@ async function importDroppedFilesToAgent(event, slotIndex) {
   setFooter(`${workspace?.type === "ssh" ? "Uploading" : "Importing"} for Agent ${slotIndex + 1}…`);
   try {
     const imported = await api.importWorkspacePaths(activeWorkspaceId, "", paths);
-    const references = imported.map((item) => agentFileReference(item.relativePath)).join(" ");
-    const sessionId = slots[slotIndex];
-    const session = sessionId ? sessions.get(sessionId) : null;
-    if (session && references) {
-      api.writeAgent(session.id, ` ${references}`);
-      session.term.focus();
-    } else {
-      const taskInput = slot.querySelector(".agent-task-input");
-      if (taskInput && references) {
-        const separator = taskInput.value && !/\s$/.test(taskInput.value) ? " " : "";
-        taskInput.value = `${taskInput.value}${separator}${references}`;
-        taskInput.dispatchEvent(new Event("input", { bubbles: true }));
-        taskInput.focus();
-      }
-    }
+    insertAgentFileReferences(slot, slotIndex, imported);
     if (imported[0]) {
       selectedFilePath = imported[0].relativePath;
       selectedFileKind = imported[0].type;
@@ -2793,6 +3066,10 @@ function enableAgentFileDrop(slot, slotIndex) {
     const currentSlotIndex = Number(slot.dataset.slot);
     importDroppedFilesToAgent(event, Number.isInteger(currentSlotIndex) ? currentSlotIndex : slotIndex);
   });
+  slot.addEventListener("paste", (event) => {
+    const currentSlotIndex = Number(slot.dataset.slot);
+    importPastedImagesToAgent(event, Number.isInteger(currentSlotIndex) ? currentSlotIndex : slotIndex);
+  }, true);
 }
 
 function beginCreateWorkspaceEntry(kind) {
@@ -2942,6 +3219,7 @@ function folderIconName(node) {
 function renderArtifacts() {
   artifactList.innerHTML = "";
   if (!artifacts.length) {
+    artifactList.innerHTML = '<div class="artifact-session-empty">No files created in this session yet.</div>';
     renderArtifactSidebar();
     return;
   }
@@ -3013,7 +3291,7 @@ function renderArtifactSidebar() {
   if (!artifactSidebarList) return;
   artifactSidebarList.innerHTML = "";
   if (!artifacts.length) {
-    artifactSidebarList.innerHTML = '<div class="sidebar-note">No generated files yet.</div>';
+    artifactSidebarList.innerHTML = '<div class="sidebar-note">No session files yet.</div>';
     return;
   }
   artifacts.forEach((artifact) => artifactSidebarList.appendChild(createArtifactItem(artifact, { compact: true })));
@@ -3137,51 +3415,82 @@ async function previewWorkspaceFile(workspaceId, relativePath) {
     renderWorkspaces();
     renderWorkspaceAgentGrid();
     await refreshWorkspacePanels();
+    syncPixelMode(true);
+    refreshPixelFloorPreviewsForWorkspaceSwitch();
   }
 
   try {
     const artifact = await api.readArtifact(workspaceId, relativePath);
-    activeArtifactPath = relativePath;
-    renderArtifacts();
-    artifactPreview.innerHTML = "";
-
-    const shellNode = document.createElement("div");
-    shellNode.className = "artifact-preview-media";
-    const toolbar = document.createElement("div");
-    toolbar.className = "preview-toolbar";
-    const title = document.createElement("strong");
-    title.textContent = artifact.name;
-    const openButton = document.createElement("button");
-    openButton.type = "button";
-    openButton.className = "output-expand-button";
-    openButton.innerHTML = `
-      <svg class="output-expand-icon" viewBox="0 0 16 16" aria-hidden="true">
-        <path d="M6 6 1.5 1.5M1.5 5V1.5H5M10 10l4.5 4.5M11 14.5h3.5V11"/>
-      </svg>
-    `;
-    openButton.title = "Expand output";
-    openButton.setAttribute("aria-label", "Expand output");
-    openButton.addEventListener("click", () => openOutputViewer(artifact, workspaceId));
-    const closeButton = document.createElement("button");
-    closeButton.type = "button";
-    closeButton.className = "output-preview-close";
-    closeButton.textContent = "×";
-    closeButton.title = "Close output";
-    closeButton.setAttribute("aria-label", "Close output");
-    closeButton.addEventListener("click", resetArtifactPreview);
-    const actions = document.createElement("div");
-    actions.className = "preview-toolbar-actions";
-    actions.append(openButton, closeButton);
-    toolbar.append(title, actions);
-    shellNode.appendChild(toolbar);
-
-    const previewContent = document.createElement("div");
-    previewContent.className = "artifact-preview-content";
-    renderOutputContent(previewContent, artifact);
-    shellNode.appendChild(previewContent);
-    artifactPreview.appendChild(shellNode);
+    renderArtifactPreview(artifact, workspaceId, relativePath);
   } catch (error) {
     showToast(error.message || String(error));
+  }
+}
+
+function renderArtifactPreview(artifact, workspaceId, activePath = "") {
+  activeArtifactPath = activePath;
+  renderArtifacts();
+  artifactPreview.replaceChildren();
+
+  const shellNode = document.createElement("div");
+  shellNode.className = "artifact-preview-media";
+  const toolbar = document.createElement("div");
+  toolbar.className = "preview-toolbar";
+  const title = document.createElement("strong");
+  title.textContent = artifact.name;
+  title.title = artifact.remotePath || artifact.relativePath || artifact.name;
+  const openButton = document.createElement("button");
+  openButton.type = "button";
+  openButton.className = "output-expand-button";
+  openButton.innerHTML = `
+    <svg class="output-expand-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M6 6 1.5 1.5M1.5 5V1.5H5M10 10l4.5 4.5M11 14.5h3.5V11"/>
+    </svg>
+  `;
+  openButton.title = "Expand output";
+  openButton.setAttribute("aria-label", "Expand output");
+  openButton.addEventListener("click", () => openOutputViewer(artifact, workspaceId));
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "output-preview-close";
+  closeButton.textContent = "×";
+  closeButton.title = "Close output";
+  closeButton.setAttribute("aria-label", "Close output");
+  closeButton.addEventListener("click", resetArtifactPreview);
+  const actions = document.createElement("div");
+  actions.className = "preview-toolbar-actions";
+  actions.append(openButton, closeButton);
+  toolbar.append(title, actions);
+  shellNode.appendChild(toolbar);
+
+  const previewContent = document.createElement("div");
+  previewContent.className = "artifact-preview-content";
+  renderOutputContent(previewContent, artifact);
+  shellNode.appendChild(previewContent);
+  artifactPreview.appendChild(shellNode);
+}
+
+async function previewPastedOutputPath() {
+  const workspace = activeWorkspace();
+  const filePath = outputPathInput.value.trim();
+  if (!workspace) {
+    showToast("Select a workspace first.");
+    return;
+  }
+  if (!filePath) return;
+  outputPathForm.classList.add("loading");
+  outputPathInput.disabled = true;
+  try {
+    const artifact = await api.readPreviewPath(workspace.id, filePath);
+    setOutputCollapsed(false);
+    renderArtifactPreview(artifact, workspace.id);
+    outputPathInput.value = artifact.remotePath || artifact.relativePath || filePath;
+  } catch (error) {
+    showToast(error.message || String(error));
+  } finally {
+    outputPathForm.classList.remove("loading");
+    outputPathInput.disabled = false;
+    outputPathInput.focus();
   }
 }
 
@@ -3282,7 +3591,10 @@ function renderEmptySlot(slot, index) {
     input.style.height = "auto";
     input.style.height = `${Math.min(96, Math.max(58, input.scrollHeight))}px`;
   };
-  input.addEventListener("input", resizeTaskInput);
+  input.addEventListener("input", () => {
+    lastTerminalInputAt = Date.now();
+    resizeTaskInput();
+  });
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
@@ -3309,6 +3621,10 @@ async function startAgent(slotIndex, kind, task = "") {
 
   try {
     const descriptor = await api.createAgent(workspace.id, kind, task, slotIndex, { cols: 90, rows: 20 });
+    artifacts = [];
+    activeArtifactPath = "";
+    renderArtifacts();
+    resetArtifactPreview();
     slots[slotIndex] = descriptor.id;
     renderAgentCard(slot, slotIndex, descriptor);
     selectAgentSession(sessions.get(descriptor.id));
@@ -3373,6 +3689,12 @@ function renderAgentCard(slot, slotIndex, descriptor) {
           </button>
         </div>
       </section>
+      <div class="agent-reconnect-banner" hidden>
+        <span>Remote connection closed</span>
+        <button type="button" title="Reconnect agent" aria-label="Reconnect agent">
+          <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M14.5 5.5V2.8l-2 2A5.5 5.5 0 1 0 14 12.5"/><path d="M10.5 5h4v-4"/></svg>
+        </button>
+      </div>
       <div class="terminal-host"></div>
       <footer class="agent-recent-footer" hidden>
         <div class="recent-files" aria-label="Relevant files reported by this agent"></div>
@@ -3405,6 +3727,8 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   const cleanFileList = slot.querySelector(".agent-clean-file-list");
   const cleanComposeInput = slot.querySelector(".agent-clean-compose textarea");
   const cleanInterruptButton = slot.querySelector(".agent-clean-interrupt");
+  const reconnectBanner = slot.querySelector(".agent-reconnect-banner");
+  const reconnectButton = reconnectBanner.querySelector("button");
 
   const term = new Terminal({
     allowProposedApi: false,
@@ -3413,7 +3737,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     cursorBlink: booleanPreference("agentWorkbenchTerminalCursorBlink", true),
     fontFamily: '"SFMono-Regular", "SF Mono", Menlo, Consolas, monospace',
     fontSize: numericPreference("agentWorkbenchTerminalFontSize", 9, 8, 16),
-    lineHeight: 1.15,
+    lineHeight: numericPreference("agentWorkbenchTerminalLineHeight", 1.15, 1, 1.5),
     scrollback: numericPreference("agentWorkbenchTerminalScrollback", 6000, 1000, 10000),
     theme: terminalThemeFromPalette()
   });
@@ -3422,6 +3746,20 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   term.open(terminalHost);
   term.onData((data) => {
     lastTerminalInputAt = Date.now();
+    if (data.includes("\r") || data.includes("\n")) {
+      const task = session.terminalInputBuffer.trim();
+      session.terminalInputBuffer = "";
+      if (
+        task
+        && ["done", "waiting", "error"].includes(String(session.metadata.status || "").toLowerCase())
+      ) {
+        beginAgentTask(session, task);
+      }
+    } else if (data === "\u007f") {
+      session.terminalInputBuffer = session.terminalInputBuffer.slice(0, -1);
+    } else if (!/[\u0000-\u001f]/.test(data)) {
+      session.terminalInputBuffer = `${session.terminalInputBuffer}${data}`.slice(-2000);
+    }
     if (data === "\u001b" || data.includes("\u0003")) {
       interruptAgentSession(session, { send: false, announce: false });
     } else if ((data.includes("\r") || data.includes("\n")) && session.etaPaused) {
@@ -3441,11 +3779,17 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   });
   term.onResize(({ cols, rows }) => api.resizeAgent(descriptor.id, cols, rows));
 
+  let terminalFitScheduled = false;
   const observer = new ResizeObserver(() => {
-    try {
-      fitAddon.fit();
-    } catch (error) {
-    }
+    if (terminalFitScheduled) return;
+    terminalFitScheduled = true;
+    requestAnimationFrame(() => {
+      terminalFitScheduled = false;
+      try {
+        fitAddon.fit();
+      } catch (error) {
+      }
+    });
   });
   observer.observe(terminalHost);
 
@@ -3470,6 +3814,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     cleanFileList,
     cleanComposeInput,
     cleanInterruptButton,
+    reconnectBanner,
     checklistEtaState: new Map(),
     etaPaused: false,
     etaPausedSeconds: null,
@@ -3483,8 +3828,10 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     notifiedApproval: false,
     finishNotified: descriptor.metadata.status === "done",
     modelDetectionBuffer: "",
-    pendingTerminalOutput: "",
-    terminalWriteScheduled: false
+    pendingTerminalOutput: [],
+    pendingTerminalOutputBytes: 0,
+    terminalWriteScheduled: false,
+    terminalInputBuffer: ""
   };
   session.runtimeModel = descriptor.metadata.model && !/^(codex|claude|shell)$/i.test(descriptor.metadata.model)
     ? descriptor.metadata.model
@@ -3508,6 +3855,9 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   slot.querySelector(".agent-clean-toggle").addEventListener("click", () => {
     setAgentCleanMode(session, !session.cleanMode);
   });
+  cleanComposeInput.addEventListener("input", () => {
+    lastTerminalInputAt = Date.now();
+  });
   cleanComposeInput.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
     event.preventDefault();
@@ -3516,12 +3866,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     lastTerminalInputAt = Date.now();
     resumeSessionEta(session);
     session.pausedByUser = false;
-    session.metadata = {
-      ...session.metadata,
-      status: "working",
-      state: "coding",
-      currentTask: message.slice(0, 120)
-    };
+    beginAgentTask(session, message);
     updateRuntimeStatus();
     api.writeAgent(descriptor.id, `${message}\r`);
     cleanComposeInput.value = "";
@@ -3530,6 +3875,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   cleanInterruptButton.addEventListener("click", () => {
     interruptAgentSession(session);
   });
+  reconnectButton.addEventListener("click", () => reconnectAgent(session));
   slot.querySelector(".agent-close").addEventListener("click", () => stopAgent(descriptor.id));
   slot.addEventListener("pointerdown", (event) => {
     if (event.target.closest("button, input, textarea, [role='menuitem']")) return;
@@ -3688,6 +4034,7 @@ function renderAgentSidebar() {
 
 function updateAgentEta() {
   const now = Date.now();
+  const typingRecently = now - lastTerminalInputAt < 180;
   for (const workspace of workspaces) {
     const etaGroup = workspaceEtaNodes.get(workspace.id);
     if (!etaGroup) continue;
@@ -3740,7 +4087,7 @@ function updateAgentEta() {
   }
   for (const session of sessions.values()) {
     updateAgentStatusCard(session, now);
-    renderAgentCleanView(session, now);
+    if (session.cleanMode && !typingRecently) renderAgentCleanView(session, now);
   }
   updateCommandCenterStatus();
   updateRuntimeStatus(now);
@@ -3804,7 +4151,7 @@ function updateAgentMetadata(session, metadata) {
   }
   session.metadata = nextMetadata;
   updateAgentStatusCard(session);
-  renderAgentCleanView(session);
+  scheduleAgentCleanRender(session);
   const agentState = normalizedAgentState(session.metadata);
   if (agentState === "failed" && !session.notifiedFailure) {
     session.notifiedFailure = true;
@@ -3899,6 +4246,21 @@ async function stopAgent(id) {
   renderPixelAgentRoster();
 }
 
+async function reconnectAgent(session) {
+  if (!session?.exited || !session.descriptor?.remote) return;
+  const { slotIndex, kind } = session;
+  const unfinishedTask = ["complete", "waiting"].includes(normalizedAgentState(session.metadata))
+    ? ""
+    : String(session.metadata.currentTask || session.metadata.tldr || "").trim();
+  session.reconnectBanner.hidden = true;
+  setFooter(`Reconnecting Agent ${slotIndex + 1}…`);
+  await stopAgent(session.id);
+  const reconnectTask = unfinishedTask
+    ? `The remote connection was interrupted. Inspect the workspace and resume this task: ${unfinishedTask}`
+    : "";
+  await startAgent(slotIndex, kind, reconnectTask);
+}
+
 function firstEmptySlot() {
   return slots.slice(0, activeWorkspaceLayout()).findIndex((value) => !value);
 }
@@ -3950,8 +4312,18 @@ async function refreshSystemMetrics() {
     for (const gpu of metrics.gpus || []) {
       const item = document.createElement("span");
       item.className = "gpu-metric";
+      const users = Array.isArray(gpu.users) ? gpu.users.filter(Boolean) : [];
+      const processes = Array.isArray(gpu.processes) ? gpu.processes : [];
+      const processLines = processes.slice(0, 12).map((process) => {
+        const memory = Number.isFinite(process.memoryUsedMiB)
+          ? ` · ${formatMiB(process.memoryUsedMiB)}`
+          : "";
+        return `${process.user || "unknown"} · ${process.name || `PID ${process.pid}`}${memory}`;
+      });
       item.title = [
         gpu.name || `GPU ${gpu.index}`,
+        users.length ? `Users: ${users.join(", ")}` : "No active compute users",
+        ...processLines,
         metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : ""
       ].filter(Boolean).join("\n");
       const utilization = Number.isFinite(gpu.utilizationPercent)
@@ -3986,8 +4358,16 @@ async function refreshSpotifyStatus() {
     const hasTrack = Boolean(status.running && status.name);
     spotifyNowPlaying.hidden = !hasTrack;
     if (!hasTrack) return;
-    spotifyTrackName.textContent = status.name;
+    if (spotifyTrackName.textContent !== status.name) spotifyTrackName.textContent = status.name;
     spotifyTrackName.title = status.name;
+    requestAnimationFrame(() => {
+      const clip = spotifyTrackName.closest(".spotify-track-name-clip");
+      if (!clip) return;
+      const overflow = Math.max(0, spotifyTrackName.scrollWidth - clip.clientWidth);
+      clip.classList.toggle("scrolling", overflow > 6);
+      spotifyTrackName.style.setProperty("--spotify-scroll-distance", `${Math.ceil(overflow)}px`);
+      spotifyTrackName.style.setProperty("--spotify-scroll-duration", `${Math.min(16, Math.max(7, 6 + overflow / 24))}s`);
+    });
     const rawDuration = Number(status.duration);
     const durationSeconds = rawDuration > 10000 ? rawDuration / 1000 : rawDuration;
     const positionSeconds = Number(status.position);
@@ -4096,12 +4476,20 @@ function setupPanelResizing() {
       const current = Number.parseFloat(getComputedStyle(root).getPropertyValue(property));
       const collapseThreshold = min - 30;
       let rawNext = current;
+      let liveCollapsed = false;
       document.body.classList.add("is-resizing");
 
       const move = (moveEvent) => {
         rawNext = current + (moveEvent.clientX - startX) * direction;
-        handle.classList.toggle("collapse-ready", rawNext <= collapseThreshold);
-        if (rawNext <= collapseThreshold) return;
+        const shouldCollapse = booleanPreference("agentWorkbenchAutoCollapsePanes", true)
+          && rawNext <= collapseThreshold;
+        handle.classList.toggle("collapse-ready", shouldCollapse);
+        if (shouldCollapse !== liveCollapsed) {
+          liveCollapsed = shouldCollapse;
+          setCollapsed(liveCollapsed);
+          document.body.classList.add("is-resizing");
+        }
+        if (shouldCollapse) return;
         const next = Math.max(min, Math.min(max, rawNext));
         root.style.setProperty(property, `${next}px`);
       };
@@ -4110,11 +4498,14 @@ function setupPanelResizing() {
         window.removeEventListener("pointerup", up);
         document.body.classList.remove("is-resizing");
         handle.classList.remove("collapse-ready");
-        if (rawNext <= collapseThreshold) {
-          setCollapsed(true);
+        if (
+          booleanPreference("agentWorkbenchAutoCollapsePanes", true)
+          && rawNext <= collapseThreshold
+        ) {
+          if (!liveCollapsed) setCollapsed(true);
           return;
         }
-        setCollapsed(false);
+        if (liveCollapsed) setCollapsed(false);
         const value = Number.parseFloat(getComputedStyle(root).getPropertyValue(property));
         if (booleanPreference("agentWorkbenchRememberWidths", true)) {
           localStorage.setItem(storageKey, String(Math.round(value)));
@@ -4241,11 +4632,18 @@ commandPaletteBackdrop.addEventListener("click", (event) => {
   if (event.target === commandPaletteBackdrop) closeCommandPalette();
 });
 refreshArtifactsButton.addEventListener("click", () => refreshWorkspacePanels());
+outputPathForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  previewPastedOutputPath();
+});
 toggleOutputButton.addEventListener("click", () => setOutputCollapsed(!document.body.classList.contains("output-collapsed")));
 toggleArtifactListButton.addEventListener("click", () => setArtifactListCollapsed(!document.body.classList.contains("output-files-collapsed")));
 closeOutputPanelButton.addEventListener("click", () => setOutputCollapsed(true));
 closeOutputViewerButton.addEventListener("click", closeOutputViewer);
 toggleFilesButton.addEventListener("click", () => setFilesCollapsed(!document.body.classList.contains("files-collapsed")));
+sidebarViewToggleButton.addEventListener("click", () => {
+  setSidebarView(currentSidebarView === "workspaces" ? "files" : "workspaces");
+});
 collapseFolderTreeButton.addEventListener("click", () => {
   expandedFilePaths.clear();
   renderFileTree();
@@ -4308,6 +4706,11 @@ notificationButton.addEventListener("contextmenu", (event) => {
   setNotificationPanel(false);
 });
 openSettingsButton.addEventListener("click", openSettings);
+homeButton.addEventListener("click", () => setHomeView(homeView.hidden));
+homeAddWorkspaceButton.addEventListener("click", () => {
+  setHomeView(false);
+  setWorkspaceAddMenu(true);
+});
 closeSettingsButton.addEventListener("click", closeSettings);
 settingsOverlay.addEventListener("click", (event) => {
   if (event.target === settingsOverlay) closeSettings();
@@ -4325,18 +4728,40 @@ settingsDefaultLayout.addEventListener("change", () => {
 settingsRememberWidths.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchRememberWidths", settingsRememberWidths.checked ? "1" : "0");
 });
+settingsAutoCollapsePanes.addEventListener("change", () => {
+  localStorage.setItem("agentWorkbenchAutoCollapsePanes", settingsAutoCollapsePanes.checked ? "1" : "0");
+});
 settingsDefaultAgent.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchDefaultAgent", settingsDefaultAgent.value);
 });
+settingsDefaultZen.addEventListener("change", () => {
+  setGlobalCleanMode(settingsDefaultZen.checked);
+});
 settingsAutoPreview.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchAutoPreview", settingsAutoPreview.checked ? "1" : "0");
+});
+settingsAgentNotifications.addEventListener("change", () => {
+  localStorage.setItem("agentWorkbenchAgentNotifications", settingsAgentNotifications.checked ? "1" : "0");
 });
 settingsRecentFilesLimit.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchRecentFilesLimit", settingsRecentFilesLimit.value);
   applyWorkbenchPreferences();
 });
+settingsPixelPets.addEventListener("change", () => {
+  localStorage.setItem("agentWorkbenchPixelPets", settingsPixelPets.checked ? "1" : "0");
+  settingsPixelPetChoice.disabled = !settingsPixelPets.checked;
+  syncPixelMode(true);
+});
+settingsPixelPetChoice.addEventListener("change", () => {
+  localStorage.setItem("agentWorkbenchPixelPetChoice", settingsPixelPetChoice.value);
+  syncPixelMode(true);
+});
 settingsTerminalFontSize.addEventListener("input", () => {
   localStorage.setItem("agentWorkbenchTerminalFontSize", settingsTerminalFontSize.value);
+  applyTerminalPreferences();
+});
+settingsTerminalLineHeight.addEventListener("input", () => {
+  localStorage.setItem("agentWorkbenchTerminalLineHeight", settingsTerminalLineHeight.value);
   applyTerminalPreferences();
 });
 settingsTerminalScrollback.addEventListener("change", () => {
@@ -4426,6 +4851,16 @@ window.addEventListener("message", (event) => {
     setPixelFloorPreview(message.floor, message.image);
     return;
   }
+  if (message.type === "pixelRoomState") {
+    const floor = Math.max(1, Math.min(pixelFloorCount, Number(message.floor) || activePixelFloor));
+    pixelRoomStates.set(floor, {
+      agents: Array.isArray(message.agents) ? message.agents : [],
+      pets: Array.isArray(message.pets) ? message.pets : []
+    });
+    const button = pixelFloorButtons.find((candidate) => Number(candidate.dataset.pixelFloor) === floor);
+    if (button) decoratePixelFloorButton(button);
+    return;
+  }
   if (message.type === "launchAgent") {
     const kind = localStorage.getItem("agentWorkbenchDefaultAgent") || "codex";
     startFromToolbar(["codex", "claude", "shell"].includes(kind) ? kind : "codex");
@@ -4489,6 +4924,7 @@ api.onAgentExit(({ id, code, signal }) => {
   session.etaDeadline = null;
   session.term.writeln("");
   session.term.writeln(`\x1b[38;5;244m[process exited: ${signal || code || 0}]\x1b[0m`);
+  session.reconnectBanner.hidden = !(session.descriptor?.remote && finalStatus === "error");
   updateAgentStatusCard(session);
   if (finalStatus === "error" && !session.notifiedFailure) {
     session.notifiedFailure = true;
@@ -4669,9 +5105,10 @@ async function initialize() {
   setOutputCollapsed(localStorage.getItem("agentWorkbenchOutputCollapsed") === "1");
   setArtifactListCollapsed(localStorage.getItem("agentWorkbenchOutputFilesCollapsed") === "1");
   setupPanelResizing();
-  setSidebarView("explorer");
+  setSidebarView(localStorage.getItem("agentWorkbenchSidebarView") === "workspaces" ? "workspaces" : "files");
   renderNotificationBell();
   await loadWorkspaces();
+  if (!workspaces.length) setHomeView(true);
   setPixelMode(localStorage.getItem("agentWorkbenchPixelMode") === "1", { persist: false });
   await refreshUsage();
   await refreshSystemMetrics();

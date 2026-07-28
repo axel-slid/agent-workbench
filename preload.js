@@ -23,6 +23,11 @@ contextBridge.exposeInMainWorld("agentWorkbench", {
     parentPath,
     paths
   }),
+  importWorkspaceData: (workspaceId, parentPath, items) => ipcRenderer.invoke("workspace:import-data", {
+    workspaceId,
+    parentPath,
+    items
+  }),
   renameWorkspaceEntry: (workspaceId, relativePath, name) => ipcRenderer.invoke("workspace:rename-entry", {
     workspaceId,
     relativePath,
@@ -32,6 +37,10 @@ contextBridge.exposeInMainWorld("agentWorkbench", {
   listFiles: (workspaceId) => ipcRenderer.invoke("workspace:files", workspaceId),
   listArtifacts: (workspaceId) => ipcRenderer.invoke("workspace:artifacts", workspaceId),
   readArtifact: (workspaceId, relativePath) => ipcRenderer.invoke("workspace:read-artifact", { workspaceId, relativePath }),
+  readPreviewPath: (workspaceId, filePath) => ipcRenderer.invoke("workspace:read-preview-path", {
+    workspaceId,
+    path: filePath
+  }),
   openFile: (workspaceId, relativePath) => ipcRenderer.invoke("workspace:open-file", { workspaceId, relativePath }),
   showFileMenu: (workspaceId, relativePath) => ipcRenderer.invoke("workspace:show-file-menu", { workspaceId, relativePath }),
   openInCode: (workspaceId) => ipcRenderer.invoke("workspace:open-code", workspaceId),

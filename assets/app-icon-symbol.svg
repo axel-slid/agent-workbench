@@ -1,42 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
   <defs>
-    <linearGradient id="bg" x1="142" y1="116" x2="874" y2="908" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#17263d"/>
-      <stop offset="1" stop-color="#080d18"/>
+    <linearGradient id="background" x1="156" y1="124" x2="868" y2="914" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172840"/>
+      <stop offset="1" stop-color="#070c16"/>
     </linearGradient>
-    <linearGradient id="rim" x1="168" y1="118" x2="856" y2="904" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7ccaff"/>
-      <stop offset=".52" stop-color="#248cff"/>
-      <stop offset="1" stop-color="#596cff"/>
+    <linearGradient id="rim" x1="144" y1="116" x2="878" y2="910" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8DD7FF"/>
+      <stop offset=".48" stop-color="#269BFF"/>
+      <stop offset="1" stop-color="#656CFF"/>
     </linearGradient>
-    <linearGradient id="blue" x1="300" y1="192" x2="764" y2="836" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#36b8ff"/>
-      <stop offset=".52" stop-color="#087fd4"/>
-      <stop offset="1" stop-color="#3267e6"/>
+    <linearGradient id="ribbon" x1="300" y1="220" x2="752" y2="802" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4AC6FF"/>
+      <stop offset=".48" stop-color="#1097ED"/>
+      <stop offset="1" stop-color="#4169EF"/>
     </linearGradient>
-    <path id="b-shape" fill-rule="evenodd" d="M270 170h238c183 0 286 69 286 194 0 69-39 119-113 148 87 28 133 82 133 162 0 128-110 204-306 204H270V170Zm166 139v138h76c77 0 115-22 115-70 0-46-38-68-115-68h-76Zm0 274v145h93c79 0 119-24 119-74 0-48-41-71-124-71h-88Z"/>
-    <clipPath id="b-clip">
-      <use href="#b-shape"/>
-    </clipPath>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="11" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <linearGradient id="fold" x1="300" y1="300" x2="494" y2="736" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#16A2F2"/>
+      <stop offset="1" stop-color="#075EAF"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="478" y1="240" x2="734" y2="792" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F79C8"/>
+      <stop offset="1" stop-color="#2449C2"/>
+    </linearGradient>
+    <filter id="symbol-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="22" stdDeviation="20" flood-color="#02050B" flood-opacity=".62"/>
     </filter>
   </defs>
-  <rect x="70" y="70" width="884" height="884" rx="220" fill="#05070d"/>
-  <rect x="84" y="84" width="856" height="856" rx="206" fill="url(#bg)" stroke="url(#rim)" stroke-width="16"/>
-  <g filter="url(#glow)" transform="translate(92 92) scale(.82)">
-    <use href="#b-shape" fill="url(#blue)"/>
-    <g clip-path="url(#b-clip)">
-      <path d="m270 170 166 139v419L270 878Z" fill="#40bdff" opacity=".88"/>
-      <path d="m436 309 302-80 76 130-187 88-191-68Z" fill="#1598e9" opacity=".72"/>
-      <path d="m436 447 245 65-245 71Z" fill="#056eae" opacity=".72"/>
-      <path d="m436 583 252-56 126 145-202 95-176-39Z" fill="#2c70e8" opacity=".76"/>
-      <path d="M270 170 436 309v419L270 878" fill="none" stroke="#8bddff" stroke-opacity=".42" stroke-width="12"/>
-      <path d="m436 447 245 65-245 71" fill="none" stroke="#073d72" stroke-opacity=".45" stroke-width="10"/>
-    </g>
+
+  <rect x="70" y="70" width="884" height="884" rx="220" fill="#04070D"/>
+  <rect x="84" y="84" width="856" height="856" rx="206" fill="url(#background)" stroke="url(#rim)" stroke-width="16"/>
+  <path d="M210 181C302 123 420 100 512 100c182 0 334 88 412 220" stroke="#B6E8FF" stroke-opacity=".08" stroke-width="18" stroke-linecap="round"/>
+
+  <g filter="url(#symbol-shadow)">
+    <!-- Rear edge: one compact folded body shared by both bowls. -->
+    <path d="M458 220 626 260c78 19 126 71 126 139 0 49-27 88-81 117 61 29 93 73 93 132 0 75-55 130-146 152l-160 38V220Z" fill="url(#edge)"/>
+
+    <!-- Upper and lower ribbon bowls. Their angular folds stay readable at toolbar size. -->
+    <path d="M452 220 617 260c75 18 119 68 119 136 0 60-38 105-112 135l-172-72v-82l142 48c31-13 47-32 47-57 0-31-22-52-66-63l-123-29v-96Z" fill="url(#ribbon)"/>
+    <path d="m452 448 182 68c76 29 114 73 114 133 0 72-51 122-153 147l-143 34v-97l119-27c54-12 81-35 81-67 0-27-19-47-57-60l-143-47v-88Z" fill="url(#ribbon)"/>
+
+    <!-- VS Code-like folded spine: a small, continuous ribbon rather than a literal letterform. -->
+    <path d="m286 353 166-133v96l-82 65 82 67v88l-82 76 82 66v152L286 688v-83l103-105-103-83v-64Z" fill="url(#fold)"/>
+    <path d="m286 353 84 28 82-65v-96L286 353Z" fill="#62D0FF" fill-opacity=".72"/>
+    <path d="m286 605 84 7 82-76v-88l-63 52-103 105Z" fill="#0875C3" fill-opacity=".86"/>
+    <path d="m370 612 82 66v152L286 688l84-76Z" fill="#2859D9" fill-opacity=".88"/>
+
+    <!-- Crisp fold seams survive 16–32 px rasterization. -->
+    <path d="m452 220-82 161 82 67-63 52 63 36-82 76 82 66" stroke="#A7E5FF" stroke-opacity=".34" stroke-width="10" stroke-linejoin="round"/>
+    <path d="m452 448 172 83M452 536l143 43" stroke="#063F7B" stroke-opacity=".5" stroke-width="10"/>
   </g>
 </svg>

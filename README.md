@@ -1,7 +1,7 @@
 # BsCode
 
-A macOS Electron workspace for running and organizing Codex, Claude, and shell
-agents in a VS Code-inspired 2×2 interface.
+A desktop Electron workspace for running and organizing Codex, Claude, and
+shell agents in a VS Code-inspired 2×2 interface.
 
 ![BsCode agent grid](docs/screenshots/agent-grid.jpg)
 
@@ -23,20 +23,42 @@ agents in a VS Code-inspired 2×2 interface.
 
 ## Run locally
 
-Requirements: macOS, Node.js, and at least one supported CLI (`codex`,
-`claude`, or a shell).
+Requirements: Node.js 22.12 or newer, npm 10 or newer, and at least one
+supported CLI (`codex`, `claude`, or a shell).
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Build the macOS application:
+Validate the source and packaging configuration:
+
+```bash
+npm run check
+```
+
+Build a native application directory for the current operating system:
+
+```bash
+npm run package:current
+```
+
+Platform-specific commands are also available:
 
 ```bash
 npm run package:mac
-open "dist/mac/BsCode.app"
+npm run package:windows
+npm run package:linux
 ```
+
+Build Windows on Windows and Linux on Linux. This is required because Electron
+and `node-pty` contain host-native binaries. The existing macOS build remains
+at `dist/mac/BsCode.app`; Windows and Linux builds are written under `dist/win`
+and `dist/linux`.
+
+See [Cross-platform builds](docs/cross-platform.md) for prerequisites, output
+paths, feature availability, signing guidance, and a release smoke-test
+checklist.
 
 BsCode launches Codex with its approvals and sandbox bypass flag.
 Review the launch configuration in `main.js` before using untrusted
