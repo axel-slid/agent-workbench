@@ -33,8 +33,17 @@ contextBridge.exposeInMainWorld("agentWorkbench", {
     relativePath,
     name
   }),
+  readWorkspaceNotes: (workspaceId) => ipcRenderer.invoke("workspace:read-notes", workspaceId),
+  writeWorkspaceNotes: (workspaceId, payload) => ipcRenderer.invoke("workspace:write-notes", {
+    workspaceId,
+    ...payload
+  }),
   pathForDroppedFile: (file) => webUtils.getPathForFile(file),
   listFiles: (workspaceId) => ipcRenderer.invoke("workspace:files", workspaceId),
+  listDirectory: (workspaceId, relativePath) => ipcRenderer.invoke("workspace:list-directory", {
+    workspaceId,
+    relativePath
+  }),
   listArtifacts: (workspaceId) => ipcRenderer.invoke("workspace:artifacts", workspaceId),
   readArtifact: (workspaceId, relativePath) => ipcRenderer.invoke("workspace:read-artifact", { workspaceId, relativePath }),
   readPreviewPath: (workspaceId, filePath) => ipcRenderer.invoke("workspace:read-preview-path", {
@@ -42,8 +51,14 @@ contextBridge.exposeInMainWorld("agentWorkbench", {
     path: filePath
   }),
   openFile: (workspaceId, relativePath) => ipcRenderer.invoke("workspace:open-file", { workspaceId, relativePath }),
-  showFileMenu: (workspaceId, relativePath) => ipcRenderer.invoke("workspace:show-file-menu", { workspaceId, relativePath }),
+  showFileMenu: (workspaceId, relativePath, entryType) => ipcRenderer.invoke("workspace:show-file-menu", {
+    workspaceId,
+    relativePath,
+    entryType
+  }),
   openInCode: (workspaceId) => ipcRenderer.invoke("workspace:open-code", workspaceId),
+  openApplication: (application) => ipcRenderer.invoke("application:open", application),
+  writeClipboardText: (value) => ipcRenderer.invoke("clipboard:write-text", value),
 
   createAgent: (workspaceId, kind, task, slotIndex, dimensions = {}) => ipcRenderer.invoke("agent:create", {
     workspaceId,
@@ -64,6 +79,7 @@ contextBridge.exposeInMainWorld("agentWorkbench", {
   controlSpotify: (action) => ipcRenderer.invoke("spotify:control", action),
   notifyAgentFinished: (payload) => ipcRenderer.invoke("notification:agent-finished", payload),
   getWindowFullScreen: () => ipcRenderer.invoke("window:is-full-screen"),
+  setWindowCinematicFullScreen: (active) => ipcRenderer.invoke("window:set-cinematic-full-screen", Boolean(active)),
 
   onAgentData: (callback) => ipcRenderer.on("agent:data", (_event, payload) => callback(payload)),
   onAgentExit: (callback) => ipcRenderer.on("agent:exit", (_event, payload) => callback(payload)),

@@ -43,8 +43,12 @@ The primary application surfaces are:
 2. **Terminal view** for direct interaction with every agent.
 3. **Zen view** for checklist-first progress monitoring and follow-up prompts.
 4. **Pixel Mode** for a visual office representation of the same live agents.
-5. **Files** for workspace browsing and file operations.
-6. **Outputs** for generated artifact discovery and preview.
+5. **Cinematic Mode** for a distraction-free, full-screen agent wall over
+   credited artist-made animated landscapes.
+6. **Files** for workspace browsing and file operations.
+7. **Outputs** for generated artifact discovery and preview.
+8. **Workspace Notes** for shared notes, todos, and sketches that agents can
+   read from `.bscode-notes.md`.
 
 All views share the same workspace, terminal sessions, agent metadata, files,
 and generated outputs. Switching views does not start another agent.
@@ -76,6 +80,7 @@ authentication when SSH requires it.
 - Every open workspace has a persistent editor tab.
 - The active tab is merged into the editor baseline.
 - Running-agent portraits appear on a tab only while those agents exist.
+- Portraits display live ETA text when the corresponding agent is working.
 - The add button opens the workspace wizard.
 - Right-click a tab to rename the workspace.
 - Closing a tab opens a removal confirmation.
@@ -315,28 +320,67 @@ runtime under its MIT license.
 
 ### Tower and floors
 
-- The floor count grows up to 12.
+- The floor count grows up to 20.
 - Each active agent is assigned a distinct floor.
 - Each floor button shows a captured room preview.
+- The active floor is captured first (roughly one render frame after its room
+  settles); remaining tower thumbnails refresh in the background. Changing
+  floors cancels the stale sweep so it cannot restore the wrong room.
 - The active room opens beside the tower.
 - Floors can be added, deleted when safe, selected, and refreshed.
 - Floor layouts persist per workspace.
 - Floor previews are cached per workspace.
 - The visual iframe remains laid out invisibly in Terminal view so switching
   back to Pixel Mode can be immediate.
-- Initial warmup uses an animated self-building BsCode `B`.
+- Initial visual warmup uses the bundled BsCode assembly animation as a
+  borderless, silent part of the loading surface. The optimized local clip is
+  alpha-keyed so only the assembling B appears over the already-warmed room;
+  it has no controls or audio and stops decoding as soon as the room is ready.
+
+The first 20 floors use distinct occupied silhouettes, room dimensions,
+architecture, flooring materials, color transforms, workstation placement,
+and decor rather than recoloring one repeated plan.
+The generator takes cues from the
+[official compact layout](https://github.com/pixel-agents-hq/pixel-agents/blob/main/webview-ui/public/assets/default-layout-1.json),
+the larger community-office proportions, and the corporate, cozy-library,
+garden-office, and startup layouts in
+[Orseni's Pixel Agents fork](https://github.com/orseni/pixel-agents/tree/main/webview-ui/public/assets).
+
+1. Code Library
+2. Indie Studio
+3. Sunken Lounge
+4. Glass Greenhouse
+5. Strategy War Room
+6. Night Owl Café
+7. Lunar Observatory
+8. Maker Garage
+9. Digital Gallery
+10. Recording Loft
+11. Retro Arcade
+12. Zen Garden
+13. Breaking Newsroom
+14. Wellness Suite
+15. Robotics Lab
+16. Creative Loft
+17. Deep Archive
+18. Command Bridge
+19. Golden Sunroom
+20. Rooftop Lookout
 
 ### Time-aware exterior
 
 The tower exterior follows the computer’s local time:
 
-- Dawn sky.
+- Sunrise sky.
 - Day sky with a pixel sun.
-- Dusk sky.
+- Sunset sky.
 - Night sky with stars and a pixel moon.
 
 The exterior, tower shell, elevator shaft, rooftop, lobby, and structural
-divider are rendered with hard-edged pixel geometry.
+divider are rendered with hard-edged pixel geometry. A sun/moon button cycles
+manually through sunrise, day, sunset, and night; until it is used, those four
+phases are selected from local time. Double-clicking the control returns it to
+local time.
 
 ### Live agents
 
@@ -368,13 +412,20 @@ species so adjacent rooms remain recognizable:
 
 The first-floor species is selectable in Settings.
 
+Clicking a pet in the room bypasses Pixel Agents' speech bubble and opens its
+character sheet directly with its name, species, floor, HP, energy, level,
+mood, favorite food, hobbies, trait, and talent.
+Pet wandering uses short nearby paths, a slower step speed, and path updates
+only between steps to avoid sliding or snapping.
+
 ### Room interaction
 
 - Left-drag the room to pan.
 - Use the mouse wheel to zoom.
 - Use the room `+` and `−` controls as an alternative.
 - Use the tower refresh control to regenerate live floor previews.
-- Use the clipboard control to browse active agents and open their details.
+- Use the clipboard control to browse active agents. Clicking a clipboard
+  entry switches to that agent's assigned floor before opening their details.
 
 ## Navigation and command palette
 
@@ -455,6 +506,69 @@ Theme categories include:
 The catalog includes built-in themes and imported Openleaf palettes. Theme
 search filters the catalog by name and category.
 
+### Cinematic Mode and living backgrounds
+
+The yin-yang Cinematic Mode button recreates the agent grid as floating,
+translucent panes over a full-window scene. The button stays visually stable;
+music-reactive effects are applied to the scene only when the user enables
+them in Settings. Cinematic Mode hides the complete
+top bar, Files, Outputs, workspace tabs, status chrome, and each terminal's
+model/usage strip. It also enters the operating system's native fullscreen
+state, covering the macOS menu/notch strip, and restores the prior window state
+on exit. A small exit button remains in the top-right. A single command box
+remains centered below the grid; `Command/Ctrl+K` opens the mode and places the
+cursor in that box from anywhere:
+
+- If a live agent is selected, the command is sent to that agent.
+- Otherwise an idle agent is preferred.
+- If no agent is available, the default runtime starts in the next empty slot.
+- If every slot is occupied, the command is sent to the first live agent.
+- Type `@` for a keyboard-navigable routing menu.
+- `@codex`, `@claude`, and `@shell` address that provider, starting it in an
+  empty pane when necessary.
+- `@1` through `@4` address a pane, while `@AgentName` addresses a named live
+  agent.
+
+The four panes remain visible with generous outer margins and gutters even
+when the workspace layout is smaller or no agents are running. The floating
+landscape button in the bottom-right advances directly to the next animated
+scene; the floating close button remains in the top-right. Dragging the resize
+grip on any pane changes the width and height of all four panes together with a
+mirrored spring animation.
+
+Appearance settings provide 20 bundled 1080p animated backgrounds:
+
+| Scene | Artist |
+| --- | --- |
+| Aurora Peak | bellergy |
+| Desert Dunes | bellergy |
+| Infinity Pool | dan25000 |
+| Fog Forest | Phile-Rain |
+| Ocean Moon | cgepic |
+| Ocean Sunrise | cgepic |
+| Starry Room | Dantegráfico |
+| Storm Lighthouse | mariamargarit1998 |
+| River Sunset | Monoar_CGI_Artist |
+| Astronaut Night | spacetrip |
+| Powerline Desert | carl_watermark |
+| Abandoned House | Yashobanta |
+| Winter Cabin | Joe_hackney |
+| Underwater Wreck | mdherren |
+| Mountain Galaxy | bellergy |
+| Winter Mountain | bellergy |
+| Wind-Carved Desert | bellergy |
+| Open Ocean | telza |
+| Solar Desert | bellergy |
+| Japan Lake | Qika_Nugroho |
+
+These are credited, artist-made CGI and Blender animations—not AI-generated
+images, photographic footage, or artificial pans across still pictures.
+BsCode decodes only the selected local video and keeps the other 19 dormant.
+Reduce Motion pauses scene playback. Optional Spotify-reactive mode changes
+the atmosphere without moving or bouncing the yin-yang control. Complete
+source URLs and license details are recorded in
+[`assets/scenes/README.md`](../assets/scenes/README.md).
+
 PDF rendering has three independent modes:
 
 - **Adaptive** — darkens document surfaces while attempting to preserve
@@ -469,16 +583,17 @@ vibrancy. Other platforms use an opaque application background.
 
 ### Workspace
 
-- Current workspace path.
-- Default layout for new workspaces.
 - Remember Files and Outputs pane widths.
 - Snap panes closed when dragged beyond the edge.
+- Compact workspace tabs.
+- Show live agent ETAs in tabs.
 
 ### Appearance
 
 - Theme category.
 - Theme.
 - Theme search.
+- Living background.
 - PDF rendering mode.
 
 ### Agents
@@ -490,6 +605,7 @@ vibrancy. Other platforms use an opaque application background.
 - Recent-file history limit.
 - Pixel pets.
 - First-floor pet species.
+- Colored Pixel status labels.
 
 ### Terminal
 
@@ -497,26 +613,27 @@ vibrancy. Other platforms use an opaque application background.
 - Line spacing.
 - Scrollback limit.
 - Blinking cursor.
-- Platform login shell display.
 
 ### Outputs
 
 - Open the pane automatically for previews.
 - Compact generated-file rows.
-- File attribution description.
-- Preview capability summary.
 
 ### Performance
 
 - System metrics interval: 2, 5, or 10 seconds.
 - Reduce Motion.
-- Remote workspace polling description.
-- Terminal renderer information.
+- Music-reactive Cinematic effects.
+- Cinematic effect strength.
+- Cinematic pane opacity.
+- Living-scene frame-rate cap.
 
 ### Profile
 
-- Codex usage state.
-- System-metrics availability.
+- Pixel avatar.
+- Display name.
+- Role.
+- Current focus message.
 
 Settings are searchable and most visual/terminal changes apply immediately.
 
@@ -533,11 +650,11 @@ Use `Command` on macOS and `Ctrl` on Windows/Linux.
 | `Command/Ctrl+Shift+A` | Ask all agents for status |
 | `Command/Ctrl+Shift+F` | Toggle Focus Mode |
 | `Command/Ctrl+Alt+Z` | Toggle global Zen view |
-| `Command/Ctrl+K` | Clear the focused terminal |
+| `Command/Ctrl+K` | Open Cinematic Mode and focus its command dock |
 | `Enter` in an empty task field | Start the default runtime |
 | `Shift+Enter` in a prompt | Insert a newline |
 | `Enter` in a follow-up prompt | Send the instruction |
-| `Escape` | Close the topmost open panel, preview, palette, or dialog |
+| `Escape` | Close the topmost open panel, preview, palette, dialog, or Cinematic Mode |
 | Arrow keys in command palette | Move selection |
 
 ## Local data and persistence
@@ -679,8 +796,9 @@ BsCode uses several live surfaces that can consume CPU/GPU time:
 - Per-second ETA updates.
 - System metrics polling.
 - Remote workspace and metadata polling.
-- Floor preview capture.
+- Static premade tower preview compositing.
 - Transparent/vibrant macOS window compositing.
+- One local 1080p scene video when Cinematic Mode is active.
 
 Controls that reduce load:
 
@@ -688,10 +806,11 @@ Controls that reduce load:
    needed. Pixel Mode remains prepared in the background, but its visible
    animation and live preview loop are reduced.
 2. Enable **Reduce Motion**.
-3. Set **System metrics refresh** to 10 seconds.
-4. Reduce terminal scrollback.
-5. Collapse previews that contain animated pages or video.
-6. Close unused agents, workspaces, browser tabs, and other Electron apps.
+3. Leave Cinematic Mode when its scene is not needed.
+4. Set **System metrics refresh** to 10 seconds.
+5. Reduce terminal scrollback.
+6. Collapse previews that contain animated pages or video.
+7. Close unused agents, workspaces, browser tabs, and other Electron apps.
 
 macOS WindowServer usage reflects the combined cost of every visible,
 transparent, animated, or frequently repainted window, so it may be high even
@@ -700,8 +819,9 @@ when no single application owns all of the reported CPU usage.
 ## Current limitations
 
 - A workspace supports up to four simultaneous agent slots.
-- Pixel Mode supports up to 12 floors.
-- Pixel floor preview generation uses the live room canvas and is sequential.
+- Pixel Mode supports up to 20 floors.
+- Tower preview PNGs are generated ahead of the release; the live Pixel iframe
+  never cycles through hidden floors to update the tower.
 - Remote files may need to be cached locally before external applications can
   open them.
 - Remote metrics depend on commands available on the remote host.

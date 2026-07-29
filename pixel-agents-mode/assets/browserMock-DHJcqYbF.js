@@ -162,35 +162,9 @@ function petFrames(png) {
   return frames;
 }
 
-function tintPetPixel(pixel, tint, strength) {
-  if (!pixel || pixel.length < 7) return pixel;
-  const red = Number.parseInt(pixel.slice(1, 3), 16);
-  const green = Number.parseInt(pixel.slice(3, 5), 16);
-  const blue = Number.parseInt(pixel.slice(5, 7), 16);
-  if (![red, green, blue].every(Number.isFinite)) return pixel;
-  const light = red + green + blue;
-  if (light < 96) return pixel;
-  const amount = Math.max(0, Math.min(0.52, strength));
-  const mix = (source, target) => Math.round(source * (1 - amount) + target * amount);
-  const alpha = pixel.length >= 9 ? pixel.slice(7, 9) : "";
-  return `#${mix(red, tint[0]).toString(16).padStart(2, "0")}${mix(green, tint[1])
-    .toString(16)
-    .padStart(2, "0")}${mix(blue, tint[2]).toString(16).padStart(2, "0")}${alpha}`.toUpperCase();
-}
-
-function tintPetFrames(frames, tint, strength) {
-  return Object.fromEntries(
-    Object.entries(frames).map(([direction, sprites]) => [
-      direction,
-      sprites.map((sprite) => sprite.map(
-        (row) => row.map((pixel) => tintPetPixel(pixel, tint, strength)),
-      )),
-    ]),
-  );
-}
-
 async function decodePets(index) {
-  const basePets = [];
+  const pets = [];
+  const petNames = [];
   for (const descriptor of index.pets || []) {
     const base = `./assets/pets/${descriptor.id}`;
     const [manifest, png] = await Promise.all([
@@ -198,30 +172,8 @@ async function decodePets(index) {
       decodePng(`${base}/pet.png`),
     ]);
     if (png.width !== 96 || png.height !== 96) continue;
-    basePets.push({
-      frames: petFrames(png),
-      name: manifest.name || descriptor.name || descriptor.id,
-    });
-  }
-  const variants = [
-    { suffix: "", tint: null, strength: 0 },
-    { suffix: " Mint", tint: [99, 214, 174], strength: 0.34 },
-    { suffix: " Amber", tint: [232, 180, 92], strength: 0.36 },
-    { suffix: " Violet", tint: [189, 147, 249], strength: 0.38 },
-    { suffix: " Sky", tint: [101, 184, 232], strength: 0.36 },
-    { suffix: " Rose", tint: [232, 138, 174], strength: 0.34 },
-  ];
-  const pets = [];
-  const petNames = [];
-  for (const variant of variants) {
-    for (const pet of basePets) {
-      pets.push(
-        variant.tint
-          ? tintPetFrames(pet.frames, variant.tint, variant.strength)
-          : pet.frames,
-      );
-      petNames.push(`${pet.name}${variant.suffix}`);
-    }
+    pets.push(petFrames(png));
+    petNames.push(manifest.name || descriptor.name || descriptor.id);
   }
   return { pets, petNames };
 }

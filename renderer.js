@@ -4,6 +4,8 @@ const commandPaletteBackdrop = document.getElementById("commandPaletteBackdrop")
 const commandPaletteInput = document.getElementById("commandPaletteInput");
 const commandPaletteResults = document.getElementById("commandPaletteResults");
 const commandCenter = document.getElementById("commandCenter");
+const workspaceBackButton = document.getElementById("workspaceBackButton");
+const workspaceForwardButton = document.getElementById("workspaceForwardButton");
 const workspaceList = document.getElementById("workspaceList");
 const addWorkspaceButton = document.getElementById("addWorkspaceButton");
 const workspaceAddMenu = document.getElementById("workspaceAddMenu");
@@ -39,20 +41,62 @@ const collapseFolderTreeButton = document.getElementById("collapseFolderTreeButt
 const newFileButton = document.getElementById("newFileButton");
 const newFolderButton = document.getElementById("newFolderButton");
 const agentGrid = document.getElementById("agentGrid");
-const newCodexButton = document.getElementById("newCodexButton");
-const newClaudeButton = document.getElementById("newClaudeButton");
+const openChromeButton = document.getElementById("openChromeButton");
+const openOpenleafButton = document.getElementById("openOpenleafButton");
 const openCodeButton = document.getElementById("openCodeButton");
+const openNotepadButton = document.getElementById("openNotepadButton");
 const globalZenButton = document.getElementById("globalZenButton");
+const cinematicModeButton = document.getElementById("cinematicModeButton");
+const cinematicExitButton = document.getElementById("cinematicExitButton");
+const cinematicNextSceneButton = document.getElementById("cinematicNextSceneButton");
 const pixelModeButton = document.getElementById("pixelModeButton");
 const pixelModeView = document.getElementById("pixelModeView");
 const pixelModeFrame = document.getElementById("pixelModeFrame");
+const pixelViewLoader = document.getElementById("pixelViewLoader");
+const pixelLoaderAnimation = document.getElementById("pixelLoaderAnimation");
+const pixelViewLoaderStatus = document.getElementById("pixelViewLoaderStatus");
+const pixelFloorLauncher = document.getElementById("pixelFloorLauncher");
+const pixelFloorLauncherNumber = document.getElementById("pixelFloorLauncherNumber");
+const pixelFloorTaskInput = document.getElementById("pixelFloorTaskInput");
+const pixelFloorLauncherButtons = Array.from(document.querySelectorAll(".pixel-floor-launcher-buttons [data-agent-kind]"));
 const pixelAgentRosterCount = document.getElementById("pixelAgentRosterCount");
 const pixelAgentRosterList = document.getElementById("pixelAgentRosterList");
 const pixelAgentClipboard = document.getElementById("pixelAgentClipboard");
 const pixelAgentClipboardButton = document.getElementById("pixelAgentClipboardButton");
 const pixelAgentClipboardCount = document.getElementById("pixelAgentClipboardCount");
 const closePixelAgentClipboardButton = document.getElementById("closePixelAgentClipboardButton");
+const pixelAgentDetail = document.getElementById("pixelAgentDetail");
+const pixelAgentDetailAvatar = document.getElementById("pixelAgentDetailAvatar");
+const pixelAgentDetailName = document.getElementById("pixelAgentDetailName");
+const pixelAgentDetailMeta = document.getElementById("pixelAgentDetailMeta");
+const pixelAgentDetailTask = document.getElementById("pixelAgentDetailTask");
+const pixelAgentDetailChecklist = document.getElementById("pixelAgentDetailChecklist");
+const pixelAgentDetailFiles = document.getElementById("pixelAgentDetailFiles");
+const closePixelAgentDetailButton = document.getElementById("closePixelAgentDetailButton");
+const pixelAgentDetailPrompt = document.getElementById("pixelAgentDetailPrompt");
+const pixelAgentDetailSendButton = document.getElementById("pixelAgentDetailSendButton");
+const pixelAgentDetailStatusButton = document.getElementById("pixelAgentDetailStatusButton");
+const pixelAgentDetailInterruptButton = document.getElementById("pixelAgentDetailInterruptButton");
+const pixelAgentDetailTerminalButton = document.getElementById("pixelAgentDetailTerminalButton");
+const pixelPetDetail = document.getElementById("pixelPetDetail");
+const pixelPetDetailAvatar = document.getElementById("pixelPetDetailAvatar");
+const pixelPetDetailName = document.getElementById("pixelPetDetailName");
+const pixelPetDetailMeta = document.getElementById("pixelPetDetailMeta");
+const pixelPetHpFill = document.getElementById("pixelPetHpFill");
+const pixelPetHpText = document.getElementById("pixelPetHpText");
+const pixelPetEnergyFill = document.getElementById("pixelPetEnergyFill");
+const pixelPetEnergyText = document.getElementById("pixelPetEnergyText");
+const pixelPetLevel = document.getElementById("pixelPetLevel");
+const pixelPetMood = document.getElementById("pixelPetMood");
+const pixelPetSnack = document.getElementById("pixelPetSnack");
+const pixelPetHobbies = document.getElementById("pixelPetHobbies");
+const pixelPetTrait = document.getElementById("pixelPetTrait");
+const pixelPetTalent = document.getElementById("pixelPetTalent");
+const closePixelPetDetailButton = document.getElementById("closePixelPetDetailButton");
 const pixelFloorList = document.getElementById("pixelFloorList");
+const pixelSkyToggleButton = document.getElementById("pixelSkyToggleButton");
+const pixelRefreshButton = document.getElementById("pixelRefreshButton");
+const pixelExitButton = document.getElementById("pixelExitButton");
 const pixelAddFloorButton = document.getElementById("pixelAddFloorButton");
 const pixelDeleteFloorButton = document.getElementById("pixelDeleteFloorButton");
 let pixelFloorButtons = [];
@@ -69,6 +113,13 @@ const outputViewer = document.getElementById("outputViewer");
 const outputViewerTitle = document.getElementById("outputViewerTitle");
 const outputViewerContent = document.getElementById("outputViewerContent");
 const closeOutputViewerButton = document.getElementById("closeOutputViewerButton");
+const cinematicPromptDock = document.getElementById("cinematicPromptDock");
+const cinematicPromptInput = document.getElementById("cinematicPromptInput");
+const cinematicPromptSendButton = document.getElementById("cinematicPromptSendButton");
+const cinematicMentionMenu = document.getElementById("cinematicMentionMenu");
+const cinematicMentionButton = document.getElementById("cinematicMentionButton");
+const cinematicResultsButton = document.getElementById("cinematicResultsButton");
+const cinematicResizeReadout = document.getElementById("cinematicResizeReadout");
 const refreshArtifactsButton = document.getElementById("refreshArtifactsButton");
 const toggleOutputButton = document.getElementById("toggleOutputButton");
 const toggleArtifactListButton = document.getElementById("toggleArtifactListButton");
@@ -78,6 +129,7 @@ const outputPathInput = document.getElementById("outputPathInput");
 const codexUsageText = document.getElementById("codexUsageText");
 const codexUsageMeter = document.getElementById("codexUsageMeter");
 const remoteStatusButton = document.getElementById("remoteStatusButton");
+const remoteStatusLabel = document.getElementById("remoteStatusLabel");
 const footerStatus = document.getElementById("footerStatus");
 const toast = document.getElementById("toast");
 const fileResizeHandle = document.getElementById("fileResizeHandle");
@@ -94,6 +146,10 @@ const notificationBadge = document.getElementById("notificationBadge");
 const notificationPanel = document.getElementById("notificationPanel");
 const notificationList = document.getElementById("notificationList");
 const titlebarTime = document.getElementById("titlebarTime");
+const calendarPopover = document.getElementById("calendarPopover");
+const calendarMonth = document.getElementById("calendarMonth");
+const calendarFullDate = document.getElementById("calendarFullDate");
+const calendarGrid = document.getElementById("calendarGrid");
 const titlebarBattery = document.getElementById("titlebarBattery");
 const titlebarBatteryFill = document.getElementById("titlebarBatteryFill");
 const titlebarBatteryCharge = document.getElementById("titlebarBatteryCharge");
@@ -102,11 +158,10 @@ const settingsOverlay = document.getElementById("settingsOverlay");
 const closeSettingsButton = document.getElementById("closeSettingsButton");
 const settingsTitle = document.getElementById("settingsTitle");
 const settingsSearchInput = document.getElementById("settingsSearchInput");
-const settingsWorkspacePath = document.getElementById("settingsWorkspacePath");
-const settingsCodexUsage = document.getElementById("settingsCodexUsage");
-const settingsDefaultLayout = document.getElementById("settingsDefaultLayout");
 const settingsRememberWidths = document.getElementById("settingsRememberWidths");
 const settingsAutoCollapsePanes = document.getElementById("settingsAutoCollapsePanes");
+const settingsCompactTabs = document.getElementById("settingsCompactTabs");
+const settingsShowTabEtas = document.getElementById("settingsShowTabEtas");
 const settingsDefaultAgent = document.getElementById("settingsDefaultAgent");
 const settingsDefaultZen = document.getElementById("settingsDefaultZen");
 const settingsAutoPreview = document.getElementById("settingsAutoPreview");
@@ -114,6 +169,7 @@ const settingsAgentNotifications = document.getElementById("settingsAgentNotific
 const settingsRecentFilesLimit = document.getElementById("settingsRecentFilesLimit");
 const settingsPixelPets = document.getElementById("settingsPixelPets");
 const settingsPixelPetChoice = document.getElementById("settingsPixelPetChoice");
+const settingsPixelStatusLabels = document.getElementById("settingsPixelStatusLabels");
 const settingsTerminalFontSize = document.getElementById("settingsTerminalFontSize");
 const settingsTerminalFontSizeValue = document.getElementById("settingsTerminalFontSizeValue");
 const settingsTerminalLineHeight = document.getElementById("settingsTerminalLineHeight");
@@ -124,6 +180,21 @@ const settingsAutoOpenOutput = document.getElementById("settingsAutoOpenOutput")
 const settingsCompactOutputs = document.getElementById("settingsCompactOutputs");
 const settingsMetricsInterval = document.getElementById("settingsMetricsInterval");
 const settingsReduceMotion = document.getElementById("settingsReduceMotion");
+const settingsMusicReactive = document.getElementById("settingsMusicReactive");
+const settingsCinematicEffectStrength = document.getElementById("settingsCinematicEffectStrength");
+const settingsCinematicEffectStrengthValue = document.getElementById("settingsCinematicEffectStrengthValue");
+const settingsCinematicPanelOpacity = document.getElementById("settingsCinematicPanelOpacity");
+const settingsCinematicPanelOpacityValue = document.getElementById("settingsCinematicPanelOpacityValue");
+const settingsSceneFrameRate = document.getElementById("settingsSceneFrameRate");
+const settingsProfileAvatar = document.getElementById("settingsProfileAvatar");
+const settingsProfileName = document.getElementById("settingsProfileName");
+const settingsProfileNameInput = document.getElementById("settingsProfileNameInput");
+const settingsProfileRoleInput = document.getElementById("settingsProfileRoleInput");
+const settingsProfileFocusInput = document.getElementById("settingsProfileFocusInput");
+const settingsCycleProfileAvatar = document.getElementById("settingsCycleProfileAvatar");
+const sceneBackground = document.getElementById("sceneBackground");
+const sceneBackgroundCanvas = document.getElementById("sceneBackgroundCanvas");
+const sceneThemeOptions = Array.from(document.querySelectorAll("[data-scene-theme]"));
 const settingsNavItems = Array.from(document.querySelectorAll("[data-settings-target]"));
 const settingsPages = Array.from(document.querySelectorAll("[data-settings-page]"));
 const appearanceCategories = Array.from(document.querySelectorAll(".appearance-category"));
@@ -153,22 +224,51 @@ const sshAuthTerminal = document.getElementById("sshAuthTerminal");
 const metricSource = document.getElementById("metricSource");
 const cpuUsageText = document.getElementById("cpuUsageText");
 const memoryUsageText = document.getElementById("memoryUsageText");
+const storageUsageText = document.getElementById("storageUsageText");
 const gpuMetrics = document.getElementById("gpuMetrics");
 const spotifyNowPlaying = document.getElementById("spotifyNowPlaying");
 const spotifyArtwork = document.getElementById("spotifyArtwork");
 const spotifyPreviousButton = document.getElementById("spotifyPreviousButton");
 const spotifyPlayPauseButton = document.getElementById("spotifyPlayPauseButton");
 const spotifyNextButton = document.getElementById("spotifyNextButton");
+const spotifyShuffleButton = document.getElementById("spotifyShuffleButton");
+const spotifyOpenButton = document.getElementById("spotifyOpenButton");
 const spotifyTrackName = document.getElementById("spotifyTrackName");
 const spotifyTrackDetail = document.getElementById("spotifyTrackDetail");
+const notepadBackdrop = document.getElementById("notepadBackdrop");
+const closeNotepadButton = document.getElementById("closeNotepadButton");
+const notepadSaveState = document.getElementById("notepadSaveState");
+const notepadText = document.getElementById("notepadText");
+const notepadTodoForm = document.getElementById("notepadTodoForm");
+const notepadTodoInput = document.getElementById("notepadTodoInput");
+const notepadTodoList = document.getElementById("notepadTodoList");
+const notepadSketchCanvas = document.getElementById("notepadSketchCanvas");
+const notepadSketchColor = document.getElementById("notepadSketchColor");
+const notepadSketchSize = document.getElementById("notepadSketchSize");
+const notepadSketchClear = document.getElementById("notepadSketchClear");
+const notepadSectionButtons = Array.from(document.querySelectorAll("[data-notepad-section]"));
+const notepadSections = {
+  notes: document.getElementById("notepadNotesSection"),
+  todos: document.getElementById("notepadTodosSection"),
+  sketch: document.getElementById("notepadSketchSection")
+};
 
 let workspaces = [];
 let activeWorkspaceId = null;
+const remoteConnectionStates = new Map();
 let fileNodes = [];
 const expandedFilePaths = new Set();
 let artifacts = [];
 let activeArtifactPath = "";
 let activeOutputArtifact = null;
+let openedOutputPaths = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem("agentWorkbenchOpenedOutputs") || "[]");
+    return Array.isArray(saved) ? saved.slice(0, 20) : [];
+  } catch (error) {
+    return [];
+  }
+})();
 let selectedFilePath = "";
 let selectedFileKind = "directory";
 let refreshTimer = null;
@@ -183,25 +283,579 @@ let sshConnectionHistory = [];
 let systemMetricsTimer = null;
 let spotifyTimer = null;
 let titlebarClockTimer = null;
+let sceneAnimationFrame = 0;
+let sceneLastFrameAt = 0;
+let latestSpotifyStatus = null;
+let notepadSaveTimer = null;
+let notepadSketchDrawing = false;
+let notepadSketchLastPoint = null;
+let notepadTodos = [];
 let powerStatusTimer = null;
 let etaTimer = null;
 let spotifyRefreshBusy = false;
 let pixelModeEnabled = false;
+let cinematicModeEnabled = false;
+let cinematicMentionIndex = 0;
+let cinematicMentionChoicesState = [];
+let cinematicPaneSize = { width: 600, height: 285 };
+let cinematicResizeState = null;
+let cinematicResizeFrame = 0;
+let cinematicResizeSettleTimer = 0;
 let pixelFrameReady = false;
+let pixelViewReady = false;
+let pixelWarmupPromise = null;
 let activePixelFloor = Number(localStorage.getItem("agentWorkbenchPixelFloor")) || 1;
 let pixelFloorCount = Math.max(
   1,
-  Math.min(12, Number(localStorage.getItem("agentWorkbenchPixelFloorCount")) || 3)
+  Math.min(20, Number(localStorage.getItem("agentWorkbenchPixelFloorCount")) || 3)
 );
+let pixelSkyManualPhase = null;
 let pixelBaseLayout = null;
 let pixelPreviewGenerationBusy = false;
 let pixelPreviewRefreshNeeded = true;
 let pixelPreviewRefreshTimer = null;
+let pixelPreviewRefreshAll = false;
+let lastPixelAutoSyncAt = 0;
+let pixelLoaderHideTimer = null;
 const pixelRoomStates = new Map();
 const pixelDirtyPreviewFloors = new Set();
 const pixelSessionPreviewSignatures = new Map();
+const pendingPixelPreviewRequests = new Map();
 let globalCleanMode = localStorage.getItem("agentWorkbenchGlobalCleanMode") === "1";
 let selectedAgentId = null;
+let selectedPixelDetailAgentId = null;
+const pixelPetProfiles = [
+  {
+    id: "claudio",
+    species: "Cat",
+    hp: 92,
+    energy: 68,
+    mood: "Curious",
+    snack: "Tuna bites",
+    hobbies: "Keyboard naps · Window watching",
+    trait: "Independent",
+    talent: "Bug detection"
+  },
+  {
+    id: "hamster",
+    species: "Hamster",
+    hp: 76,
+    energy: 94,
+    mood: "Excited",
+    snack: "Sunflower seeds",
+    hobbies: "Wheel sprints · Cable tunnels",
+    trait: "Resourceful",
+    talent: "Cache cleanup"
+  },
+  {
+    id: "dog",
+    species: "Dog",
+    hp: 100,
+    energy: 88,
+    mood: "Loyal",
+    snack: "Peanut-butter biscuit",
+    hobbies: "Walk breaks · Pair debugging",
+    trait: "Brave",
+    talent: "Regression sniffing"
+  },
+  {
+    id: "lizard",
+    species: "Lizard",
+    hp: 84,
+    energy: 61,
+    mood: "Focused",
+    snack: "Mealworms",
+    hobbies: "Lamp basking · Edge-case spotting",
+    trait: "Patient",
+    talent: "Thermal monitoring"
+  },
+  {
+    id: "rabbit",
+    species: "Rabbit",
+    hp: 82,
+    energy: 97,
+    mood: "Bouncy",
+    snack: "Carrot chips",
+    hobbies: "Speed runs · Garden hopping",
+    trait: "Optimistic",
+    talent: "Rapid iteration"
+  },
+  {
+    id: "tortoise",
+    species: "Tortoise",
+    hp: 120,
+    energy: 52,
+    mood: "Steady",
+    snack: "Dandelion greens",
+    hobbies: "Slow walks · Test planning",
+    trait: "Unshakable",
+    talent: "Long builds"
+  },
+  {
+    id: "frog",
+    species: "Frog",
+    hp: 78,
+    energy: 86,
+    mood: "Alert",
+    snack: "Fruit flies",
+    hobbies: "Puddle jumps · Bug hunting",
+    trait: "Adaptable",
+    talent: "Bug catching"
+  },
+  {
+    id: "cockatiel",
+    species: "Cockatiel",
+    hp: 74,
+    energy: 91,
+    mood: "Chatty",
+    snack: "Millet",
+    hobbies: "Status calls · Melody loops",
+    trait: "Social",
+    talent: "Release announcements"
+  },
+  {
+    id: "hedgehog",
+    species: "Hedgehog",
+    hp: 88,
+    energy: 72,
+    mood: "Thoughtful",
+    snack: "Apple cubes",
+    hobbies: "Night reviews · Blanket burrows",
+    trait: "Thorough",
+    talent: "Sharp code review"
+  },
+  {
+    id: "raccoon",
+    species: "Raccoon",
+    hp: 90,
+    energy: 83,
+    mood: "Mischievous",
+    snack: "Berry mix",
+    hobbies: "Cache raids · Log searching",
+    trait: "Clever",
+    talent: "Artifact recovery"
+  },
+  {
+    id: "penguin",
+    species: "Penguin",
+    hp: 96,
+    energy: 67,
+    mood: "Cool",
+    snack: "Silverfish",
+    hobbies: "Ice slides · Package bundling",
+    trait: "Calm",
+    talent: "Cold starts"
+  },
+  {
+    id: "red-panda",
+    species: "Red panda",
+    hp: 86,
+    energy: 79,
+    mood: "Cozy",
+    snack: "Bamboo shoots",
+    hobbies: "Branch climbing · Dusk deploys",
+    trait: "Gentle",
+    talent: "Branch inspection"
+  }
+];
+const PIXEL_ROOM_DESIGN_VERSION = 3;
+const PIXEL_ROOM_THEMES = [
+  {
+    name: "Code Library",
+    topology: "library-aisles",
+    palette: [2, 6],
+    workstations: "north-row",
+    decor: [
+      ["DOUBLE_BOOKSHELF", 11, 10], ["DOUBLE_BOOKSHELF", 15, 10],
+      ["BOOKSHELF", 18, 10], ["CLOCK", 9, 10], ["SMALL_TABLE_FRONT", 13, 17],
+      ["CUSHIONED_CHAIR_FRONT", 14, 18], ["PLANT", 18, 18]
+    ]
+  },
+  {
+    name: "Indie Studio",
+    topology: "studio-split",
+    palette: [4, 5],
+    workstations: "north-row",
+    decor: [
+      ["WHITEBOARD", 11, 10], ["LARGE_PAINTING", 15, 10], ["TABLE_FRONT", 13, 14],
+      ["WOODEN_CHAIR_SIDE", 12, 15], ["WOODEN_CHAIR_SIDE:left", 16, 15],
+      ["PLANT_2", 18, 18], ["BIN", 1, 20]
+    ]
+  },
+  {
+    name: "Sunken Lounge",
+    topology: "lounge-bay",
+    palette: [3, 8],
+    workstations: "side-pods",
+    decor: [
+      ["SOFA_FRONT", 6, 12], ["SOFA_SIDE", 5, 13], ["SOFA_SIDE:left", 9, 13],
+      ["COFFEE_TABLE", 6, 14], ["COFFEE", 7, 14], ["LARGE_PLANT", 17, 11],
+      ["SMALL_PAINTING_2", 15, 10]
+    ]
+  },
+  {
+    name: "Glass Greenhouse",
+    topology: "greenhouse",
+    palette: [7, 3],
+    workstations: "side-pods",
+    decor: [
+      ["LARGE_PLANT", 5, 11], ["PLANT", 8, 13], ["PLANT_2", 11, 11],
+      ["CACTUS", 15, 12], ["HANGING_PLANT", 18, 10], ["WOODEN_BENCH", 8, 17],
+      ["POT", 17, 18]
+    ]
+  },
+  {
+    name: "Strategy War Room",
+    topology: "war-room",
+    palette: [1, 5],
+    workstations: "command-wall",
+    decor: [
+      ["WHITEBOARD", 2, 10], ["LARGE_PAINTING", 15, 10], ["TABLE_FRONT", 8, 14],
+      ["WOODEN_CHAIR_SIDE", 7, 15], ["WOODEN_CHAIR_SIDE:left", 12, 15],
+      ["CLOCK", 13, 10], ["BIN", 18, 19]
+    ]
+  },
+  {
+    name: "Night Owl Café",
+    topology: "cafe-counter",
+    palette: [6, 3],
+    workstations: "window-desks",
+    decor: [
+      ["TABLE_FRONT", 4, 16], ["WOODEN_CHAIR_SIDE", 3, 17],
+      ["WOODEN_CHAIR_SIDE:left", 8, 17], ["SMALL_TABLE_FRONT", 12, 16],
+      ["COFFEE", 13, 15], ["COFFEE", 17, 12], ["PLANT_2", 18, 18]
+    ]
+  },
+  {
+    name: "Lunar Observatory",
+    topology: "observatory",
+    palette: [8, 1],
+    workstations: "center-island",
+    decor: [
+      ["LARGE_PAINTING", 8, 10], ["SMALL_PAINTING", 12, 10], ["CLOCK", 16, 10],
+      ["TABLE_FRONT", 8, 16], ["CUSHIONED_CHAIR_FRONT", 9, 18],
+      ["CACTUS", 2, 18], ["LARGE_PLANT", 18, 18]
+    ]
+  },
+  {
+    name: "Maker Garage",
+    topology: "maker-lanes",
+    palette: [4, 1],
+    workstations: "workshop-benches",
+    decor: [
+      ["WHITEBOARD", 1, 10], ["TABLE_FRONT", 13, 13], ["SMALL_TABLE_SIDE", 17, 14],
+      ["BIN", 18, 18], ["POT", 12, 18], ["CLOCK", 16, 10], ["CACTUS", 8, 18]
+    ]
+  },
+  {
+    name: "Digital Gallery",
+    topology: "gallery-wings",
+    palette: [5, 8],
+    workstations: "gallery-desk",
+    decor: [
+      ["LARGE_PAINTING", 2, 10], ["SMALL_PAINTING", 6, 10],
+      ["LARGE_PAINTING", 11, 10], ["SMALL_PAINTING_2", 16, 10],
+      ["CUSHIONED_BENCH", 8, 16], ["PLANT", 1, 18], ["PLANT_2", 18, 18]
+    ]
+  },
+  {
+    name: "Recording Loft",
+    topology: "recording-booth",
+    palette: [3, 6],
+    workstations: "north-row",
+    decor: [
+      ["SOFA_FRONT", 3, 15], ["COFFEE_TABLE", 3, 17], ["SMALL_TABLE_SIDE", 14, 14],
+      ["CUSHIONED_CHAIR_SIDE:left", 17, 14], ["LARGE_PAINTING", 14, 10],
+      ["HANGING_PLANT", 18, 10], ["COFFEE", 5, 17]
+    ]
+  },
+  {
+    name: "Retro Arcade",
+    topology: "arcade-grid",
+    palette: [8, 4],
+    workstations: "arcade-banks",
+    decor: [
+      ["SMALL_PAINTING", 2, 10], ["SMALL_PAINTING_2", 5, 10],
+      ["SMALL_PAINTING", 14, 10], ["SMALL_PAINTING_2", 17, 10],
+      ["CUSHIONED_BENCH", 8, 18], ["COFFEE", 10, 18], ["BIN", 18, 19]
+    ]
+  },
+  {
+    name: "Zen Garden",
+    topology: "zen-courtyard",
+    palette: [7, 2],
+    workstations: "quiet-corners",
+    decor: [
+      ["WOODEN_BENCH", 8, 14], ["LARGE_PLANT", 5, 12], ["PLANT", 14, 12],
+      ["PLANT_2", 16, 17], ["POT", 10, 18], ["SMALL_PAINTING", 9, 10],
+      ["HANGING_PLANT", 18, 10]
+    ]
+  },
+  {
+    name: "Breaking Newsroom",
+    topology: "newsroom",
+    palette: [1, 4],
+    workstations: "news-desk",
+    decor: [
+      ["WHITEBOARD", 1, 10], ["CLOCK", 6, 10], ["LARGE_PAINTING", 14, 10],
+      ["TABLE_FRONT", 7, 17], ["WOODEN_CHAIR_SIDE", 6, 18],
+      ["WOODEN_CHAIR_SIDE:left", 11, 18], ["PLANT_2", 18, 18]
+    ]
+  },
+  {
+    name: "Wellness Suite",
+    topology: "wellness-suites",
+    palette: [5, 7],
+    workstations: "quiet-corners",
+    decor: [
+      ["SOFA_BACK", 3, 15], ["CUSHIONED_BENCH", 14, 15], ["SMALL_TABLE_FRONT", 9, 16],
+      ["PLANT", 1, 11], ["LARGE_PLANT", 17, 11], ["POT", 7, 18],
+      ["SMALL_PAINTING_2", 9, 10]
+    ]
+  },
+  {
+    name: "Robotics Lab",
+    topology: "research-cross",
+    palette: [4, 8],
+    workstations: "workshop-benches",
+    decor: [
+      ["WHITEBOARD", 11, 10], ["TABLE_FRONT", 12, 15], ["SMALL_TABLE_SIDE", 17, 13],
+      ["BIN", 18, 18], ["CACTUS", 1, 18], ["CLOCK", 16, 10],
+      ["CUSHIONED_CHAIR_SIDE", 11, 18]
+    ]
+  },
+  {
+    name: "Creative Loft",
+    topology: "open-loft",
+    palette: [6, 5],
+    workstations: "center-island",
+    decor: [
+      ["SOFA_FRONT", 2, 16], ["COFFEE_TABLE", 4, 17], ["LARGE_PAINTING", 13, 10],
+      ["DOUBLE_BOOKSHELF", 17, 10], ["HANGING_PLANT", 10, 10],
+      ["LARGE_PLANT", 18, 18], ["COFFEE", 5, 17]
+    ]
+  },
+  {
+    name: "Deep Archive",
+    topology: "archive-stacks",
+    palette: [2, 1],
+    workstations: "archive-desk",
+    decor: [
+      ["DOUBLE_BOOKSHELF", 1, 10], ["DOUBLE_BOOKSHELF", 6, 10],
+      ["DOUBLE_BOOKSHELF", 11, 10], ["DOUBLE_BOOKSHELF", 16, 10],
+      ["BOOKSHELF", 18, 15], ["SMALL_TABLE_FRONT", 13, 18], ["CLOCK", 9, 10]
+    ]
+  },
+  {
+    name: "Command Bridge",
+    topology: "command-bridge",
+    palette: [8, 5],
+    workstations: "command-wall",
+    decor: [
+      ["WHITEBOARD", 8, 10], ["LARGE_PAINTING", 13, 10], ["TABLE_FRONT", 7, 16],
+      ["CUSHIONED_CHAIR_SIDE", 6, 17], ["CUSHIONED_CHAIR_SIDE:left", 12, 17],
+      ["CLOCK", 18, 10], ["PLANT_2", 1, 18]
+    ]
+  },
+  {
+    name: "Golden Sunroom",
+    topology: "sunroom",
+    palette: [7, 6],
+    workstations: "side-pods",
+    decor: [
+      ["HANGING_PLANT", 2, 10], ["HANGING_PLANT", 10, 10], ["HANGING_PLANT", 18, 10],
+      ["SOFA_FRONT", 7, 16], ["COFFEE_TABLE", 8, 18], ["LARGE_PLANT", 17, 16],
+      ["SMALL_PAINTING", 14, 10]
+    ]
+  },
+  {
+    name: "Rooftop Lookout",
+    topology: "rooftop",
+    palette: [5, 3],
+    workstations: "corner-pods",
+    decor: [
+      ["WOODEN_BENCH", 7, 17], ["CACTUS", 1, 17], ["LARGE_PLANT", 17, 16],
+      ["SMALL_TABLE_FRONT", 13, 16], ["COFFEE", 14, 17],
+      ["SMALL_PAINTING_2", 4, 10], ["CLOCK", 15, 10]
+    ]
+  }
+];
+// The plans intentionally vary both their occupied footprint and their color
+// treatment. The compact official Pixel Agents office, the wider community
+// layouts, and Orseni's themed office set are the visual starting points; each
+// BsCode floor then gets its own silhouette instead of sharing one shell.
+const PIXEL_ROOM_PLANS = [
+  {
+    key: "compact-library",
+    bounds: [2, 18, 6, 20],
+    silhouette: "compact-rectangle",
+    colors: [{ h: 20, s: 35, b: -100, c: -50 }, { h: 25, s: 48, b: -43, c: -88 }, { h: 33, s: 34, b: -24, c: -62 }]
+  },
+  {
+    key: "offset-studio",
+    bounds: [0, 20, 8, 20],
+    silhouette: "east-studio-notch",
+    colors: [{ h: 214, s: 30, b: -100, c: -55 }, { h: 175, s: 35, b: -30, c: -70 }, { h: 260, s: 30, b: -25, c: -70 }]
+  },
+  {
+    key: "sunken-lounge",
+    bounds: [1, 19, 5, 20],
+    silhouette: "graduated-bay",
+    colors: [{ h: 338, s: 24, b: -82, c: -52 }, { h: 346, s: 42, b: -32, c: -70 }, { h: 188, s: 28, b: -24, c: -62 }]
+  },
+  {
+    key: "greenhouse-wings",
+    bounds: [0, 20, 6, 20],
+    silhouette: "twin-greenhouse-wings",
+    colors: [{ h: 140, s: 30, b: -90, c: -55 }, { h: 80, s: 30, b: -30, c: -70 }, { h: 110, s: 25, b: -20, c: -65 }]
+  },
+  {
+    key: "command-bunker",
+    bounds: [2, 18, 7, 20],
+    silhouette: "stepped-bunker",
+    colors: [{ h: 210, s: 25, b: -100, c: -50 }, { h: 215, s: 20, b: -40, c: -75 }, { h: 30, s: 20, b: -25, c: -60 }]
+  },
+  {
+    key: "corner-cafe",
+    bounds: [1, 20, 6, 20],
+    silhouette: "cafe-l",
+    colors: [{ h: 18, s: 38, b: -88, c: -55 }, { h: 30, s: 44, b: -28, c: -67 }, { h: 195, s: 22, b: -18, c: -54 }]
+  },
+  {
+    key: "lunar-dome",
+    bounds: [1, 19, 4, 20],
+    silhouette: "observatory-dome",
+    colors: [{ h: 235, s: 30, b: -96, c: -58 }, { h: 225, s: 44, b: -34, c: -78 }, { h: 282, s: 32, b: -26, c: -68 }]
+  },
+  {
+    key: "maker-offset",
+    bounds: [0, 18, 7, 20],
+    silhouette: "offset-workshop",
+    colors: [{ h: 205, s: 18, b: -94, c: -48 }, { h: 205, s: 30, b: -32, c: -68 }, { h: 24, s: 48, b: -24, c: -64 }]
+  },
+  {
+    key: "gallery-wings",
+    bounds: [1, 19, 5, 20],
+    silhouette: "gallery-u",
+    colors: [{ h: 284, s: 18, b: -88, c: -50 }, { h: 310, s: 25, b: -25, c: -60 }, { h: 40, s: 20, b: -16, c: -48 }]
+  },
+  {
+    key: "recording-suite",
+    bounds: [0, 19, 8, 20],
+    silhouette: "recording-j",
+    colors: [{ h: 220, s: 26, b: -94, c: -54 }, { h: 208, s: 34, b: -32, c: -72 }, { h: 20, s: 30, b: -22, c: -60 }]
+  },
+  {
+    key: "arcade-t",
+    bounds: [2, 18, 5, 20],
+    silhouette: "arcade-t",
+    colors: [{ h: 282, s: 42, b: -96, c: -60 }, { h: 306, s: 52, b: -28, c: -74 }, { h: 184, s: 46, b: -22, c: -70 }]
+  },
+  {
+    key: "zen-courtyard",
+    bounds: [1, 19, 6, 20],
+    silhouette: "courtyard-ring",
+    colors: [{ h: 86, s: 20, b: -84, c: -45 }, { h: 98, s: 28, b: -22, c: -58 }, { h: 42, s: 32, b: -16, c: -52 }]
+  },
+  {
+    key: "newsroom-wide",
+    bounds: [0, 20, 10, 20],
+    silhouette: "broadcast-desk",
+    colors: [{ h: 210, s: 16, b: -92, c: -48 }, { h: 210, s: 24, b: -28, c: -62 }, { h: 354, s: 42, b: -24, c: -66 }]
+  },
+  {
+    key: "wellness-zigzag",
+    bounds: [2, 19, 5, 20],
+    silhouette: "wellness-zigzag",
+    colors: [{ h: 154, s: 18, b: -84, c: -42 }, { h: 158, s: 25, b: -18, c: -54 }, { h: 332, s: 24, b: -14, c: -48 }]
+  },
+  {
+    key: "robotics-cross",
+    bounds: [0, 20, 5, 20],
+    silhouette: "research-cross",
+    colors: [{ h: 214, s: 28, b: -100, c: -58 }, { h: 202, s: 44, b: -30, c: -72 }, { h: 36, s: 40, b: -22, c: -65 }]
+  },
+  {
+    key: "creative-loft",
+    bounds: [1, 20, 7, 20],
+    silhouette: "creative-l",
+    colors: [{ h: 14, s: 32, b: -90, c: -52 }, { h: 27, s: 44, b: -24, c: -62 }, { h: 190, s: 30, b: -18, c: -56 }]
+  },
+  {
+    key: "deep-archive",
+    bounds: [3, 17, 4, 20],
+    silhouette: "archive-vault",
+    colors: [{ h: 22, s: 35, b: -100, c: -58 }, { h: 28, s: 48, b: -42, c: -84 }, { h: 205, s: 20, b: -28, c: -66 }]
+  },
+  {
+    key: "command-bridge",
+    bounds: [0, 20, 6, 20],
+    silhouette: "bridge-chevron",
+    colors: [{ h: 218, s: 32, b: -100, c: -62 }, { h: 214, s: 46, b: -34, c: -78 }, { h: 174, s: 34, b: -26, c: -67 }]
+  },
+  {
+    key: "sunroom-pavilion",
+    bounds: [1, 19, 5, 20],
+    silhouette: "sunroom-pavilion",
+    colors: [{ h: 42, s: 30, b: -82, c: -45 }, { h: 48, s: 46, b: -16, c: -50 }, { h: 188, s: 28, b: -12, c: -46 }]
+  },
+  {
+    key: "rooftop-terraces",
+    bounds: [0, 20, 7, 20],
+    silhouette: "rooftop-terraces",
+    colors: [{ h: 230, s: 24, b: -96, c: -58 }, { h: 220, s: 34, b: -30, c: -70 }, { h: 16, s: 46, b: -20, c: -62 }]
+  }
+];
+const PIXEL_WORKSTATION_KITS = {
+  "north-row": [
+    ["DESK_FRONT", 1, 12], ["PC_FRONT_OFF", 2, 12], ["CUSHIONED_BENCH", 2, 14],
+    ["DESK_FRONT", 5, 12], ["PC_FRONT_OFF", 6, 12], ["CUSHIONED_BENCH", 6, 14]
+  ],
+  "side-pods": [
+    ["DESK_FRONT", 1, 12], ["PC_FRONT_OFF", 2, 12], ["CUSHIONED_BENCH", 2, 14],
+    ["DESK_FRONT", 15, 17], ["PC_FRONT_OFF", 16, 17], ["CUSHIONED_BENCH", 16, 19]
+  ],
+  "corner-pods": [
+    ["DESK_FRONT", 1, 12], ["PC_FRONT_OFF", 2, 12], ["CUSHIONED_BENCH", 2, 14],
+    ["DESK_FRONT", 14, 12], ["PC_FRONT_OFF", 15, 12], ["CUSHIONED_BENCH", 15, 14]
+  ],
+  "command-wall": [
+    ["DESK_FRONT", 4, 12], ["PC_FRONT_OFF", 5, 12], ["CUSHIONED_BENCH", 5, 14],
+    ["DESK_FRONT", 10, 12], ["PC_FRONT_OFF", 11, 12], ["CUSHIONED_BENCH", 11, 14]
+  ],
+  "window-desks": [
+    ["DESK_FRONT", 1, 12], ["PC_FRONT_OFF", 2, 12], ["CUSHIONED_BENCH", 2, 14],
+    ["DESK_FRONT", 14, 12], ["PC_FRONT_OFF", 15, 12], ["CUSHIONED_BENCH", 15, 14]
+  ],
+  "center-island": [
+    ["TABLE_FRONT", 7, 13], ["PC_SIDE", 7, 13], ["WOODEN_CHAIR_SIDE", 6, 14],
+    ["TABLE_FRONT", 7, 17], ["PC_SIDE:left", 9, 17], ["WOODEN_CHAIR_SIDE:left", 11, 18]
+  ],
+  "workshop-benches": [
+    ["DESK_FRONT", 2, 12], ["PC_FRONT_OFF", 3, 12], ["CUSHIONED_BENCH", 3, 14],
+    ["TABLE_FRONT", 12, 17], ["PC_SIDE", 12, 17], ["WOODEN_CHAIR_SIDE", 11, 18]
+  ],
+  "gallery-desk": [
+    ["DESK_FRONT", 7, 12], ["PC_FRONT_OFF", 8, 12], ["CUSHIONED_BENCH", 8, 14],
+    ["SMALL_TABLE_FRONT", 14, 17], ["PC_SIDE:left", 15, 17], ["CUSHIONED_CHAIR_FRONT", 15, 19]
+  ],
+  "arcade-banks": [
+    ["DESK_FRONT", 2, 13], ["PC_FRONT_OFF", 3, 13], ["CUSHIONED_BENCH", 3, 15],
+    ["DESK_FRONT", 14, 13], ["PC_FRONT_OFF", 15, 13], ["CUSHIONED_BENCH", 15, 15]
+  ],
+  "quiet-corners": [
+    ["SMALL_TABLE_FRONT", 2, 12], ["PC_SIDE", 2, 12], ["CUSHIONED_CHAIR_FRONT", 3, 14],
+    ["SMALL_TABLE_FRONT", 15, 18], ["PC_SIDE:left", 16, 18], ["CUSHIONED_CHAIR_FRONT", 16, 20]
+  ],
+  "news-desk": [
+    ["DESK_FRONT", 2, 12], ["PC_FRONT_OFF", 3, 12], ["CUSHIONED_BENCH", 3, 14],
+    ["DESK_FRONT", 8, 12], ["PC_FRONT_OFF", 9, 12], ["CUSHIONED_BENCH", 9, 14]
+  ],
+  "archive-desk": [
+    ["DESK_FRONT", 2, 16], ["PC_FRONT_OFF", 3, 16], ["CUSHIONED_BENCH", 3, 18],
+    ["DESK_FRONT", 14, 16], ["PC_FRONT_OFF", 15, 16], ["CUSHIONED_BENCH", 15, 18]
+  ]
+};
 let agentsPaused = false;
 let agentNotifications = (() => {
   try {
@@ -337,6 +991,60 @@ const THEME_CATEGORY_DEFAULTS = {
   "Dark Contrast": "abyss",
   Pixelized: "pixel-night"
 };
+const SCENE_THEMES = {
+  none: null,
+  "aurora-peak": { label: "Aurora Peak", detail: "bellergy · artist-made CGI", src: "assets/scenes/aurora-peak.mp4", poster: "assets/scenes/aurora-peak.jpg", source: "https://pixabay.com/videos/mountain-mount-cliff-night-cloud-105285/", artist: "bellergy", license: "Pixabay Content License", colors: ["#07111d", "#24506a", "#89d8c9"] },
+  "desert-dunes": { label: "Desert Dunes", detail: "bellergy · artist-made CGI", src: "assets/scenes/desert-dunes.mp4", poster: "assets/scenes/desert-dunes.jpg", source: "https://pixabay.com/videos/desert-sand-dune-landscape-loop-108420/", artist: "bellergy", license: "Pixabay Content License", colors: ["#28170f", "#a85d32", "#f1c27b"] },
+  "infinity-pool": { label: "Infinity Pool", detail: "dan25000 · artist-made CGI", src: "assets/scenes/infinity-pool.mp4", poster: "assets/scenes/infinity-pool.jpg", source: "https://pixabay.com/videos/pool-water-calm-quiet-sky-render-110962/", artist: "dan25000", license: "Pixabay Content License", colors: ["#0d2736", "#4b87a0", "#e9cfa4"] },
+  "fog-forest": { label: "Fog Forest", detail: "Phile-Rain · artist-made CGI", src: "assets/scenes/fog-forest.mp4", poster: "assets/scenes/fog-forest.jpg", source: "https://pixabay.com/videos/house-building-fog-forest-wild-123855/", artist: "Phile-Rain", license: "Pixabay Content License", colors: ["#101d18", "#3f5e47", "#a8b79b"] },
+  "ocean-moon": { label: "Ocean Moon", detail: "cgepic · artist-made CGI", src: "assets/scenes/ocean-moon.mp4", poster: "assets/scenes/ocean-moon.jpg", source: "https://pixabay.com/videos/ocean-waves-sea-sunrise-sun-3d-129673/", artist: "cgepic", license: "Pixabay Content License", colors: ["#071725", "#315e7c", "#f2d2a4"] },
+  "ocean-sunrise": { label: "Ocean Sunrise", detail: "cgepic · artist-made CGI", src: "assets/scenes/ocean-sunrise.mp4", poster: "assets/scenes/ocean-sunrise.jpg", source: "https://pixabay.com/videos/ocean-waves-sea-sunrise-sun-3d-129788/", artist: "cgepic", license: "Pixabay Content License", colors: ["#13273a", "#497aa0", "#ffbd72"] },
+  "starry-room": { label: "Starry Room", detail: "Dantegráfico · artist-made CGI", src: "assets/scenes/starry-room.mp4", poster: "assets/scenes/starry-room.jpg", source: "https://pixabay.com/videos/starry-night-bedroom-room-131539/", artist: "Dantegráfico", license: "Pixabay Content License", colors: ["#07101e", "#233858", "#9cb7d7"] },
+  "storm-lighthouse": { label: "Storm Lighthouse", detail: "mariamargarit1998 · artist-made CGI", src: "assets/scenes/storm-lighthouse.mp4", poster: "assets/scenes/storm-lighthouse.jpg", source: "https://pixabay.com/videos/ocean-sea-waves-storm-blender-147972/", artist: "mariamargarit1998", license: "Pixabay Content License", colors: ["#05111c", "#25435e", "#e55d4d"] },
+  "river-sunset": { label: "River Sunset", detail: "Monoar_CGI_Artist · artist-made CGI", src: "assets/scenes/river-sunset.mp4", poster: "assets/scenes/river-sunset.jpg", source: "https://pixabay.com/videos/boat-river-sunset-3d-cgi-blender-168195/", artist: "Monoar_CGI_Artist", license: "Pixabay Content License", colors: ["#211113", "#98532e", "#ffd17e"] },
+  "astronaut-night": { label: "Astronaut Night", detail: "spacetrip · artist-made CGI", src: "assets/scenes/astronaut-night.mp4", poster: "assets/scenes/astronaut-night.jpg", source: "https://pixabay.com/videos/astronaut-walking-night-landscape-171365/", artist: "spacetrip", license: "Pixabay Content License", colors: ["#090811", "#34233f", "#bd7b95"] },
+  "powerline-desert": { label: "Powerline Desert", detail: "carl_watermark · artist-made CGI", src: "assets/scenes/powerline-desert.mp4", poster: "assets/scenes/powerline-desert.jpg", source: "https://pixabay.com/videos/desert-power-lines-3d-2392/", artist: "carl_watermark", license: "CC0", colors: ["#3c3028", "#b99d7c", "#f5e6ca"] },
+  "abandoned-house": { label: "Abandoned House", detail: "Yashobanta · artist-made CGI", src: "assets/scenes/abandoned-house.mp4", poster: "assets/scenes/abandoned-house.jpg", source: "https://pixabay.com/videos/house-home-scene-landscape-render-246255/", artist: "Yashobanta", license: "Pixabay Content License", colors: ["#111513", "#4b5042", "#a69b79"] },
+  "winter-cabin": { label: "Winter Cabin", detail: "Joe_hackney · artist-made CGI", src: "assets/scenes/winter-cabin.mp4", poster: "assets/scenes/winter-cabin.jpg", source: "https://pixabay.com/videos/nature-winter-landscape-cabin-104116/", artist: "Joe_hackney", license: "Pixabay Content License", colors: ["#101823", "#425265", "#e8eef4"] },
+  "underwater-wreck": { label: "Underwater Wreck", detail: "mdherren · artist-made CGI", src: "assets/scenes/underwater-wreck.mp4", poster: "assets/scenes/underwater-wreck.jpg", source: "https://pixabay.com/videos/water-ocean-ship-wreck-sea-nature-38861/", artist: "mdherren", license: "Pixabay Content License", colors: ["#04141b", "#175364", "#6ab7ae"] },
+  "mountain-galaxy": { label: "Mountain Galaxy", detail: "bellergy · artist-made CGI", src: "assets/scenes/mountain-galaxy.mp4", poster: "assets/scenes/mountain-galaxy.jpg", source: "https://pixabay.com/videos/mountain-fog-galaxy-milkyway-night-91757/", artist: "bellergy", license: "Pixabay Content License", colors: ["#050b18", "#273553", "#c6b2d9"] },
+  "winter-mountain": { label: "Winter Mountain", detail: "bellergy · artist-made CGI", src: "assets/scenes/winter-mountain.mp4", poster: "assets/scenes/winter-mountain.jpg", source: "https://pixabay.com/videos/mountain-fog-morning-camping-93848/", artist: "bellergy", license: "Pixabay Content License", colors: ["#0b1521", "#526b7f", "#efcf9b"] },
+  "wind-carved-desert": { label: "Wind-Carved Desert", detail: "bellergy · artist-made CGI", src: "assets/scenes/wind-carved-desert.mp4", poster: "assets/scenes/wind-carved-desert.jpg", source: "https://pixabay.com/videos/desert-sand-wind-nature-landscape-94399/", artist: "bellergy", license: "Pixabay Content License", colors: ["#24130d", "#9b4f2c", "#f3bb73"] },
+  "open-ocean": { label: "Open Ocean", detail: "telza · artist-made CGI", src: "assets/scenes/open-ocean.mp4", poster: "assets/scenes/open-ocean.jpg", source: "https://pixabay.com/videos/ocean-sea-waves-clouds-horizon-85523/", artist: "telza", license: "Pixabay Content License", colors: ["#061a2a", "#24738f", "#d7eff2"] },
+  "solar-desert": { label: "Solar Desert", detail: "bellergy · artist-made CGI", src: "assets/scenes/solar-desert.mp4", poster: "assets/scenes/solar-desert.jpg", source: "https://pixabay.com/videos/sun-desert-sand-energy-99464/", artist: "bellergy", license: "Pixabay Content License", colors: ["#2a1208", "#9c3f1e", "#ffbc45"] },
+  "japan-lake": { label: "Japan Lake", detail: "Qika_Nugroho · artist-made CGI", src: "assets/scenes/japan-lake.mp4", poster: "assets/scenes/japan-lake.jpg", source: "https://pixabay.com/videos/lake-sunset-trees-leaves-japan-91562/", artist: "Qika_Nugroho", license: "Pixabay Content License", colors: ["#130b18", "#793848", "#ffc06a"] }
+};
+
+function hydrateSceneThemes() {
+  const grid = document.querySelector(".scene-theme-grid");
+  if (!grid) return;
+  grid.replaceChildren();
+  sceneThemeOptions.length = 0;
+  for (const [id, scene] of Object.entries(SCENE_THEMES)) {
+    const option = document.createElement("button");
+    option.className = "scene-theme-option";
+    option.type = "button";
+    option.dataset.sceneTheme = id;
+    option.setAttribute("role", "radio");
+    option.setAttribute("aria-checked", "false");
+    if (scene) {
+      option.style.setProperty("--scene-a", scene.colors[0]);
+      option.style.setProperty("--scene-b", scene.colors[1]);
+      option.style.setProperty("--scene-c", scene.colors[2]);
+      option.style.setProperty("--scene-preview", `url("${scene.poster}")`);
+      option.title = `${scene.label} — ${scene.artist}; ${scene.license}`;
+    }
+    option.innerHTML = `
+      <span class="scene-theme-preview ${scene ? "" : "scene-theme-none"}" aria-hidden="true"></span>
+      <strong>${scene?.label || "None"}<small>${scene?.detail || "Theme color"}</small></strong>
+      <b aria-hidden="true">✓</b>
+    `;
+    grid.appendChild(option);
+    sceneThemeOptions.push(option);
+  }
+}
+
+hydrateSceneThemes();
 
 function hydrateOpenleafThemes() {
   const catalog = Array.isArray(window.OPENLEAF_THEME_CATALOG) ? window.OPENLEAF_THEME_CATALOG : [];
@@ -508,7 +1216,7 @@ function formatEtaClock(seconds) {
 function updateCommandCenterStatus() {
   const workspace = activeWorkspace();
   if (!workspace) {
-    activeWorkspaceName.textContent = "Choose a workspace · ⌘P";
+    activeWorkspaceName.textContent = "Choose a workspace";
     commandCenter.title = "Open Command Palette (⌘P)";
     return;
   }
@@ -522,11 +1230,10 @@ function updateCommandCenterStatus() {
     .map((session) => remainingEtaSeconds(session))
     .filter((seconds) => Number.isFinite(seconds));
   const workspacePath = remoteWorkspaceLabel(workspace);
-  const parts = [
-    workspace.name,
-    workspacePath,
-    `${workspaceSessions.length}/${workspaceLayoutFor(workspace.id)} agents active`
-  ];
+  const locationLabel = workspace.type === "ssh"
+    ? `${String(workspace.remote?.root || workspace.remote?.path || workspace.name).split("/").filter(Boolean).pop() || "projects"} [SSH: ${workspace.remote?.host || workspace.name}]`
+    : workspacePath;
+  const parts = [locationLabel, `${workspaceSessions.length}/${workspaceLayoutFor(workspace.id)} agents`];
   if (errors) parts.push(`${errors} error`);
   else if (working) parts.push(`${working} working`);
   else if (waiting) parts.push(`${waiting} waiting`);
@@ -536,18 +1243,55 @@ function updateCommandCenterStatus() {
   commandCenter.title = `${parts.join(" · ")} · Open Command Palette (⌘P)`;
 }
 
+function renderRemoteConnectionStatus(workspace = activeWorkspace()) {
+  const isRemote = workspace?.type === "ssh" && workspace.remote;
+  const connectionState = isRemote
+    ? remoteConnectionStates.get(workspace.id) || "disconnected"
+    : "local";
+  const host = isRemote ? workspace.remote.host || workspace.name || "remote" : "";
+  const statusText = connectionState === "connected"
+    ? `Connected to ${host}`
+    : connectionState === "disconnected"
+      ? `Disconnected from ${host}`
+      : `Checking ${host}…`;
+  const actionText = isRemote ? "Open SSH connections" : "Open remote workspace";
+  remoteStatusLabel.textContent = isRemote ? statusText : "";
+  remoteStatusButton.classList.toggle("remote", Boolean(isRemote));
+  remoteStatusButton.classList.toggle("connected", connectionState === "connected");
+  remoteStatusButton.classList.toggle("disconnected", connectionState === "disconnected");
+  remoteStatusButton.classList.toggle("checking", connectionState === "checking");
+  remoteStatusButton.dataset.connectionState = connectionState;
+  remoteStatusButton.title = isRemote ? `${statusText}. ${actionText}` : actionText;
+  remoteStatusButton.setAttribute("aria-label", remoteStatusButton.title);
+}
+
+function isWorkspaceConnected(workspace) {
+  return Boolean(
+    workspace
+    && (workspace.type !== "ssh" || remoteConnectionStates.get(workspace.id) === "connected")
+  );
+}
+
+function setRemoteConnectionState(workspaceId, connectionState) {
+  if (!workspaceId || !["checking", "connected", "disconnected"].includes(connectionState)) return;
+  const previousState = remoteConnectionStates.get(workspaceId);
+  remoteConnectionStates.set(workspaceId, connectionState);
+  if (workspaceId !== activeWorkspaceId) return;
+  renderRemoteConnectionStatus();
+  updateWorkspaceActionAvailability();
+  if (connectionState === "disconnected") {
+    clearDisconnectedWorkspacePanels();
+  } else if (connectionState === "connected" && previousState !== "connected") {
+    refreshWorkspacePanels().catch((error) => showToast(error.message || String(error)));
+  }
+}
+
 function setFooter(message) {
   const workspace = activeWorkspace();
   const workspacePath = workspace ? remoteWorkspaceLabel(workspace) : "";
   footerStatus.textContent = workspacePath || message || "No workspace";
   footerStatus.title = workspacePath || message || "No workspace";
-  const connectedRemotely = workspace?.type === "ssh";
-  const remoteLabel = connectedRemotely
-    ? `Remote: ${workspacePath}. Open SSH connections`
-    : "Open remote workspace";
-  remoteStatusButton.classList.toggle("connected", connectedRemotely);
-  remoteStatusButton.title = remoteLabel;
-  remoteStatusButton.setAttribute("aria-label", remoteLabel);
+  renderRemoteConnectionStatus(workspace);
 }
 
 function showToast(message) {
@@ -696,10 +1440,75 @@ function postPixelMessage(message) {
   pixelModeFrame.contentWindow.postMessage(message, "*");
 }
 
+function setPixelViewLoading(loading, status = "Loading the visual view…", { delay = 0 } = {}) {
+  if (pixelLoaderHideTimer) clearTimeout(pixelLoaderHideTimer);
+  pixelLoaderHideTimer = null;
+  if (loading) {
+    pixelViewLoaderStatus.textContent = status;
+    pixelViewLoader.hidden = false;
+    pixelViewLoader.classList.remove("leaving");
+    if (!document.body.classList.contains("reduce-motion")) {
+      try {
+        pixelLoaderAnimation.currentTime = 0;
+      } catch (error) {
+      }
+      pixelLoaderAnimation.play().catch(() => {});
+    }
+    return;
+  }
+  pixelViewLoader.classList.add("leaving");
+  pixelLoaderHideTimer = setTimeout(() => {
+    pixelViewLoader.hidden = true;
+    pixelViewLoader.classList.remove("leaving");
+    pixelLoaderAnimation.pause();
+    pixelLoaderHideTimer = null;
+  }, Math.max(180, Number(delay) || 0));
+}
+
 function activePixelSessions() {
   return Array.from(sessions.values())
     .filter((session) => session.workspaceId === activeWorkspaceId)
     .sort((left, right) => left.slotIndex - right.slotIndex);
+}
+
+function availablePixelAgentSlot() {
+  const capacity = activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4;
+  for (let index = 0; index < capacity; index += 1) {
+    if (!slots[index]) return index;
+  }
+  return -1;
+}
+
+function renderPixelFloorLauncher() {
+  // Agent creation stays in the persistent toolbar. Automatically placing a
+  // launcher over an empty room makes the office look blocked by a modal.
+  pixelFloorLauncher.hidden = true;
+}
+
+async function startPixelFloorAgent(kind) {
+  const slotIndex = Number(pixelFloorLauncher.dataset.slot);
+  const floor = Number(pixelFloorLauncher.dataset.floor) || activePixelFloor;
+  if (!Number.isInteger(slotIndex) || slotIndex < 0 || slots[slotIndex]) return;
+  const task = pixelFloorTaskInput.value.trim();
+  pixelFloorLauncher.classList.add("loading");
+  pixelFloorLauncherButtons.forEach((button) => {
+    button.disabled = true;
+  });
+  try {
+    const session = await startAgent(slotIndex, kind, task);
+    if (!session) return;
+    const assignments = pixelAgentFloorAssignments(session.workspaceId);
+    assignments[String(slotIndex + 1)] = floor;
+    savePixelAgentFloorAssignments(session.workspaceId, assignments);
+    pixelFloorTaskInput.value = "";
+    renderPixelFloorLauncher();
+    syncPixelMode(true);
+  } finally {
+    pixelFloorLauncher.classList.remove("loading");
+    pixelFloorLauncherButtons.forEach((button) => {
+      button.disabled = false;
+    });
+  }
 }
 
 function pixelAgentAssignmentKey(workspaceId) {
@@ -722,7 +1531,7 @@ function savePixelAgentFloorAssignments(workspaceId, assignments) {
 function ensurePixelFloorCapacity(requiredFloors) {
   const nextFloorCount = Math.max(
     pixelFloorCount,
-    Math.min(12, Math.max(1, Number(requiredFloors) || 1))
+    Math.min(20, Math.max(1, Number(requiredFloors) || 1))
   );
   if (nextFloorCount === pixelFloorCount) return false;
   pixelFloorCount = nextFloorCount;
@@ -735,10 +1544,10 @@ function ensurePixelFloorCapacity(requiredFloors) {
       floors: pixelFloorCount,
       slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4,
       petsEnabled: booleanPreference("agentWorkbenchPixelPets", true),
-      pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat"
+      pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "hamster"
     });
   }
-  schedulePixelPreviewRefresh(180);
+  schedulePixelPreviewRefresh(260, { all: true });
   return true;
 }
 
@@ -839,17 +1648,21 @@ function pixelSessionPreviewSignature(session) {
   ]);
 }
 
-function schedulePixelPreviewRefresh(delay = 480) {
+function schedulePixelPreviewRefresh(delay = 1500, { all = false } = {}) {
   if (!pixelModeEnabled || !pixelFrameReady) return;
+  pixelPreviewRefreshAll = pixelPreviewRefreshAll || all;
   if (pixelPreviewRefreshTimer) clearTimeout(pixelPreviewRefreshTimer);
   pixelPreviewRefreshTimer = setTimeout(() => {
     pixelPreviewRefreshTimer = null;
-    refreshPixelFloorPreviews();
+    const refreshAll = pixelPreviewRefreshAll;
+    pixelPreviewRefreshAll = false;
+    refreshPixelFloorPreviews({ all: refreshAll });
   }, delay);
 }
 
-function queuePixelFloorPreviewRefresh(floor, delay = 480) {
+function queuePixelFloorPreviewRefresh(floor, delay = 1500) {
   const normalizedFloor = Math.max(1, Math.min(pixelFloorCount, Number(floor) || 1));
+  if (normalizedFloor !== activePixelFloor) return;
   pixelDirtyPreviewFloors.add(normalizedFloor);
   schedulePixelPreviewRefresh(delay);
 }
@@ -862,6 +1675,31 @@ function notePixelSessionPreviewChange(session) {
   if (previous !== signature) {
     queuePixelFloorPreviewRefresh(pixelFloorForSession(session));
   }
+}
+
+function agentPortraitIndex(session) {
+  const stored = Number(session?.metadata?.portraitIndex);
+  if (Number.isInteger(stored) && stored >= 0) return stored % 6;
+  const originalNumber = Number(session?.metadata?.agentNumber);
+  if (Number.isInteger(originalNumber) && originalNumber > 0) return (originalNumber - 1) % 6;
+  return Math.max(0, Number(session?.slotIndex) || 0) % 6;
+}
+
+function agentPortraitSpriteUrl(session) {
+  return `pixel-agents-mode/assets/characters/char_${agentPortraitIndex(session)}.png`;
+}
+
+function agentFaceUrl(session) {
+  return `assets/agent-face-${agentPortraitIndex(session)}.png`;
+}
+
+function applyAgentFace(element, session) {
+  if (!element || !session) return;
+  element.classList.add("has-agent-face");
+  element.textContent = "";
+  element.style.backgroundImage = `url("${agentFaceUrl(session)}")`;
+  element.title = session.metadata.name || `${session.kind} agent`;
+  element.setAttribute("aria-label", element.title);
 }
 
 function renderPixelAgentRoster() {
@@ -879,9 +1717,12 @@ function renderPixelAgentRoster() {
     const empty = document.createElement("div");
     empty.className = "pixel-clipboard-empty";
     empty.innerHTML = `
-      <img class="pixel-coffee-sprite" src="pixel-agents-mode/assets/furniture/COFFEE/COFFEE.png" alt="">
-      <strong>No agents yet</strong>
-      <small>Start one from the toolbar.</small>
+      <span class="pixel-coffee-animation" aria-hidden="true">
+        <span class="pixel-coffee-cup"><b></b></span>
+        <i></i><i></i><i></i>
+      </span>
+      <strong>Seems pretty empty in here...</strong>
+      <small>Fresh coffee is waiting for your agents.</small>
     `;
     pixelAgentRosterList.appendChild(empty);
     return;
@@ -895,7 +1736,7 @@ function renderPixelAgentRoster() {
     item.type = "button";
     item.dataset.agentSlot = String(session.slotIndex);
     item.dataset.pixelFloor = String(assignedFloor);
-    item.title = `Open Agent ${session.slotIndex + 1} · Floor ${assignedFloor}`;
+    item.title = `Inspect ${session.metadata.name || `Agent ${session.slotIndex + 1}`} · Floor ${assignedFloor}`;
     item.setAttribute(
       "aria-label",
       `Agent ${session.slotIndex + 1}, ${session.metadata.name || `${session.kind} agent`}, floor ${assignedFloor}, ${status}`
@@ -910,13 +1751,17 @@ function renderPixelAgentRoster() {
       <span class="pixel-roster-state">floor ${assignedFloor} · ${status}</span>
     `;
     item.querySelector(".pixel-roster-avatar").style.backgroundImage =
-      `url("pixel-agents-mode/assets/characters/char_${session.slotIndex % 6}.png")`;
+      `url("${agentPortraitSpriteUrl(session)}")`;
     item.querySelector(".pixel-roster-eta").textContent = pixelRosterEtaText(session, now);
     item.querySelector(".pixel-roster-copy strong").textContent =
       session.metadata.name || `${session.kind} agent`;
     item.querySelector(".pixel-roster-copy small").textContent =
       session.metadata.tldr || (status === "working" ? "Working…" : "Waiting for work");
-    item.addEventListener("click", () => focusAgentWindow(session.slotIndex));
+    item.addEventListener("click", async () => {
+      setPixelAgentClipboard(false);
+      await applyPixelFloor(assignedFloor, { showLoader: true });
+      openPixelAgentDetail(session);
+    });
     pixelAgentRosterList.appendChild(item);
   }
 }
@@ -929,7 +1774,159 @@ function pixelRosterEtaText(session, now = Date.now()) {
   return Number.isFinite(seconds) ? formatEtaClock(seconds) : "—";
 }
 
+function closePixelPetDetail() {
+  pixelPetDetail.hidden = true;
+  delete pixelPetDetail.dataset.petId;
+}
+
+function openPixelPetDetail(pet, floor = activePixelFloor) {
+  const reportedType = Number(pet?.petType);
+  const matchingType = Number.isInteger(reportedType)
+    ? reportedType
+    : pixelPetProfiles.findIndex((profile) =>
+      String(profile.species).toLowerCase() === String(pet?.name || "").toLowerCase()
+      || String(profile.id).toLowerCase() === String(pet?.name || "").toLowerCase()
+    );
+  const petType = Math.max(0, Math.min(pixelPetProfiles.length - 1, matchingType < 0 ? 0 : matchingType));
+  const profile = pixelPetProfiles[petType];
+  const petName = String(pet?.name || profile.species).trim() || profile.species;
+  const normalizedFloor = Math.max(1, Number(floor) || activePixelFloor);
+  const level = 2 + ((normalizedFloor + petType) % 8);
+
+  setPixelAgentClipboard(false);
+  closePixelAgentDetail();
+  pixelPetDetail.hidden = false;
+  pixelPetDetail.dataset.petId = String(pet?.id || profile.id);
+  pixelPetDetailAvatar.style.backgroundImage = "none";
+  pixelPetDetailAvatar.style.setProperty(
+    "--pixel-pet-image",
+    `url("pixel-agents-mode/assets/pets/${profile.id}/pet.png")`
+  );
+  pixelPetDetailName.textContent = petName;
+  pixelPetDetailMeta.textContent = `${profile.species} · Floor ${normalizedFloor}`;
+  pixelPetHpFill.style.width = `${Math.min(100, profile.hp)}%`;
+  pixelPetHpText.textContent = `${profile.hp}/${profile.hp}`;
+  pixelPetEnergyFill.style.width = `${profile.energy}%`;
+  pixelPetEnergyText.textContent = `${profile.energy}%`;
+  pixelPetLevel.textContent = String(level);
+  pixelPetMood.textContent = profile.mood;
+  pixelPetSnack.textContent = profile.snack;
+  pixelPetHobbies.textContent = profile.hobbies;
+  pixelPetTrait.textContent = profile.trait;
+  pixelPetTalent.textContent = profile.talent;
+}
+
+function closePixelAgentDetail() {
+  selectedPixelDetailAgentId = null;
+  pixelAgentDetail.hidden = true;
+}
+
+function renderPixelAgentDetail(session) {
+  if (!session || session.workspaceId !== activeWorkspaceId) {
+    closePixelAgentDetail();
+    return;
+  }
+  selectedPixelDetailAgentId = session.id;
+  pixelAgentDetail.hidden = false;
+  pixelAgentDetail.dataset.agentSlot = String(session.slotIndex);
+  pixelAgentDetailAvatar.style.backgroundImage = `url("${agentFaceUrl(session)}")`;
+  pixelAgentDetailName.textContent = session.metadata.name || `${session.kind} agent`;
+  const state = normalizedAgentState(session.metadata);
+  const eta = pixelRosterEtaText(session);
+  pixelAgentDetailMeta.textContent = `${session.runtimeModel || session.metadata.model || (
+    session.kind === "codex" ? "Codex" : session.kind === "claude" ? "Claude" : "Shell"
+  )} · ${state} · ${eta}`;
+  pixelAgentDetailTask.textContent =
+    session.metadata.currentTask || session.metadata.tldr || "Waiting for a task.";
+
+  pixelAgentDetailChecklist.replaceChildren();
+  const checklist = normalizedAgentChecklist(session.metadata);
+  if (!checklist.length) {
+    const empty = document.createElement("small");
+    empty.textContent = state === "waiting" ? "Ready for work." : "Waiting for checklist…";
+    pixelAgentDetailChecklist.appendChild(empty);
+  } else {
+    checklist.slice(0, 6).forEach((entry) => {
+      const row = document.createElement("div");
+      row.className = `pixel-agent-detail-check ${entry.status}`;
+      const marker = document.createElement("span");
+      marker.setAttribute("aria-hidden", "true");
+      const text = document.createElement("span");
+      text.textContent = entry.text;
+      const itemEta = document.createElement("small");
+      itemEta.textContent = entry.status === "done"
+        ? "done"
+        : Number.isFinite(entry.etaSeconds)
+          ? formatEtaClock(entry.etaSeconds)
+          : entry.status;
+      row.append(marker, text, itemEta);
+      pixelAgentDetailChecklist.appendChild(row);
+    });
+  }
+
+  pixelAgentDetailFiles.replaceChildren();
+  const files = Array.isArray(session.metadata.relevantFiles)
+    ? session.metadata.relevantFiles.slice(0, 4)
+    : [];
+  for (const relativePath of files) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = String(relativePath).split("/").pop() || relativePath;
+    button.title = relativePath;
+    button.addEventListener("click", () => previewWorkspaceFile(session.workspaceId, relativePath));
+    pixelAgentDetailFiles.appendChild(button);
+  }
+}
+
+function openPixelAgentDetail(session) {
+  setPixelAgentClipboard(false);
+  closePixelPetDetail();
+  renderPixelAgentDetail(session);
+  requestAnimationFrame(() => pixelAgentDetailPrompt.focus());
+}
+
+function sendPixelAgentDetailInstruction() {
+  const session = sessions.get(selectedPixelDetailAgentId);
+  const message = pixelAgentDetailPrompt.value.trim();
+  if (!session || !message) return;
+  lastTerminalInputAt = Date.now();
+  resumeSessionEta(session);
+  session.pausedByUser = false;
+  beginAgentTask(session, message);
+  updateRuntimeStatus();
+  api.writeAgent(session.id, `${message}\r`);
+  pixelAgentDetailPrompt.value = "";
+  renderPixelAgentDetail(session);
+  showToast(`Sent to Agent ${session.slotIndex + 1}`);
+}
+
+async function refreshPixelView({ notify = true } = {}) {
+  if (!pixelModeEnabled || !pixelFrameReady || pixelRefreshButton.disabled) return;
+  pixelRefreshButton.disabled = true;
+  pixelRefreshButton.classList.add("refreshing");
+  try {
+    syncPixelAppearance();
+    await applyPixelFloor(activePixelFloor, { persist: false, showLoader: false });
+    setPixelVisibleSessionsForFloor(activePixelFloor);
+    for (const session of pixelSessionsForFloor(activePixelFloor)) {
+      postPixelSessionDetails(session);
+    }
+    renderPixelAgentRoster();
+    renderPixelFloorLauncher();
+    pixelDirtyPreviewFloors.add(activePixelFloor);
+    await refreshPixelFloorPreviews({ all: true });
+    lastPixelAutoSyncAt = Date.now();
+    if (notify) showToast("Visual view refreshed");
+  } finally {
+    pixelRefreshButton.classList.remove("refreshing");
+    pixelRefreshButton.disabled = false;
+  }
+}
+
 function updatePixelFloorButtons() {
+  pixelFloorStack.style.setProperty("--pixel-floor-count", String(pixelFloorCount));
+  pixelFloorStack.style.setProperty("--pixel-tower-height", `${Math.min(1090, pixelFloorCount * 82 + 106)}px`);
+  pixelFloorStack.dataset.floorCount = String(pixelFloorCount);
   pixelFloorButtons.forEach((button) => {
     const active = Number(button.dataset.pixelFloor) === activePixelFloor;
     button.classList.toggle("active", active);
@@ -948,31 +1945,49 @@ function pixelFloorTexture(floor) {
   return `url("pixel-agents-mode/assets/floors/floor_${texture}.png")`;
 }
 
-function pixelFloorPreviewKey(floor) {
-  return `agentWorkbenchPixelPreview:${Math.max(1, Number(floor) || 1)}`;
+function pixelFloorPreviewKey(floor, workspaceId = activeWorkspaceId) {
+  const workspaceKey = encodeURIComponent(String(workspaceId || "no-workspace"));
+  return `agentWorkbenchPixelPreview:${workspaceKey}:${Math.max(1, Number(floor) || 1)}`;
 }
 
 function pixelFloorPreview(floor) {
-  return localStorage.getItem(pixelFloorPreviewKey(floor)) || "";
+  const preset = ((Math.max(1, Number(floor) || 1) - 1) % 20) + 1;
+  return `assets/tower-previews/floor-${String(preset).padStart(2, "0")}.png?v=4`;
 }
 
 function setPixelFloorPreview(floor, image) {
   const normalizedFloor = Math.max(1, Number(floor) || 1);
-  if (!String(image || "").startsWith("data:image/")) return;
-  try {
-    localStorage.setItem(pixelFloorPreviewKey(normalizedFloor), image);
-  } catch (error) {
-  }
   const button = pixelFloorButtons.find(
     (candidate) => Number(candidate.dataset.pixelFloor) === normalizedFloor
   );
   const preview = button?.querySelector(".pixel-floor-room img");
-  if (preview) preview.src = image;
+  if (preview) preview.src = pixelFloorPreview(normalizedFloor);
+  const pending = pendingPixelPreviewRequests.get(normalizedFloor);
+  if (pending) {
+    clearTimeout(pending.timeout);
+    pendingPixelPreviewRequests.delete(normalizedFloor);
+    pending.resolve(true);
+  }
+  return true;
 }
 
 function requestPixelFloorPreview(floor = activePixelFloor) {
-  if (!pixelFrameReady) return;
-  postPixelMessage({ type: "captureFloorPreview", floor });
+  if (!pixelFrameReady) return Promise.resolve(false);
+  const normalizedFloor = Math.max(1, Math.min(pixelFloorCount, Number(floor) || 1));
+  const previous = pendingPixelPreviewRequests.get(normalizedFloor);
+  if (previous) {
+    clearTimeout(previous.timeout);
+    previous.resolve(false);
+  }
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      if (pendingPixelPreviewRequests.get(normalizedFloor)?.resolve !== resolve) return;
+      pendingPixelPreviewRequests.delete(normalizedFloor);
+      resolve(false);
+    }, 700);
+    pendingPixelPreviewRequests.set(normalizedFloor, { resolve, timeout });
+    postPixelMessage({ type: "captureFloorPreview", floor: normalizedFloor });
+  });
 }
 
 function waitForPixelPreview(milliseconds) {
@@ -984,58 +1999,34 @@ function refreshPixelFloorPreviewsForWorkspaceSwitch() {
   pixelDirtyPreviewFloors.clear();
   pixelSessionPreviewSignatures.clear();
   pixelRoomStates.clear();
-  for (let floor = 1; floor <= pixelFloorCount; floor += 1) {
-    localStorage.removeItem(pixelFloorPreviewKey(floor));
-  }
+  // Previews are real captures of a visited floor. Keep them per workspace
+  // instead of replacing inactive floors with a generic office every time the
+  // user changes tabs.
   pixelFloorButtons.forEach(decoratePixelFloorButton);
   if (pixelModeEnabled && pixelFrameReady) {
-    setTimeout(refreshPixelFloorPreviews, 180);
+    schedulePixelPreviewRefresh(260, { all: true });
   }
 }
 
-async function refreshPixelFloorPreviews() {
+async function refreshPixelFloorPreviews({ all = false } = {}) {
   if (!pixelModeEnabled || !pixelFrameReady) return;
-  if (pixelPreviewGenerationBusy) {
-    schedulePixelPreviewRefresh(220);
-    return;
-  }
-  const floorsToRefresh = pixelPreviewRefreshNeeded || pixelDirtyPreviewFloors.size === 0
-    ? Array.from({ length: pixelFloorCount }, (_, index) => pixelFloorCount - index)
-    : Array.from(pixelDirtyPreviewFloors).sort((left, right) => right - left);
+  // Floor artwork is bundled as 20 pre-rendered PNGs. Refreshing the tower must
+  // never load hidden layouts or move the live iframe through every floor.
+  const floors = all
+    ? Array.from({ length: pixelFloorCount }, (_, index) => index + 1)
+    : [activePixelFloor];
   pixelDirtyPreviewFloors.clear();
   pixelPreviewGenerationBusy = true;
   pixelPreviewRefreshNeeded = false;
-  pixelModeView.classList.add("refreshing-floor-previews");
-  const originalFloor = activePixelFloor;
   try {
-    postPixelMessage({ type: "previewCycle", active: true });
-    for (const floor of floorsToRefresh) {
-      const layout = await pixelLayoutForFloor(floor);
-      postPixelMessage({ type: "layoutLoaded", layout });
-      setPixelVisibleSessionsForFloor(floor);
-      await waitForPixelPreview(280);
-      requestPixelFloorPreview(floor);
-      await waitForPixelPreview(90);
+    for (const floor of floors) {
+      const button = pixelFloorButtons.find(
+        (candidate) => Number(candidate.dataset.pixelFloor) === floor
+      );
+      if (button) decoratePixelFloorButton(button);
     }
-    const originalLayout = await pixelLayoutForFloor(originalFloor);
-    postPixelMessage({ type: "layoutLoaded", layout: originalLayout });
-    setPixelVisibleSessionsForFloor(originalFloor);
-    await waitForPixelPreview(280);
-    requestPixelFloorPreview(originalFloor);
-    await waitForPixelPreview(90);
-  } catch (error) {
   } finally {
-    postPixelMessage({ type: "previewCycle", active: false });
-    setPixelVisibleSessionsForFloor(originalFloor);
-    pixelModeView.classList.remove("refreshing-floor-previews");
     pixelPreviewGenerationBusy = false;
-    if (
-      (pixelPreviewRefreshNeeded || pixelDirtyPreviewFloors.size > 0)
-      && pixelModeEnabled
-      && pixelFrameReady
-    ) {
-      schedulePixelPreviewRefresh(180);
-    }
   }
 }
 
@@ -1050,7 +2041,8 @@ function decoratePixelFloorButton(button) {
     room.appendChild(summary);
   }
   const roomState = pixelRoomStates.get(floor);
-  const agentCount = Array.isArray(roomState?.agents) ? roomState.agents.length : 0;
+  const floorSessions = activeWorkspaceId ? pixelSessionsForFloor(floor) : [];
+  const agentCount = floorSessions.length;
   const petCount = Array.isArray(roomState?.pets) ? roomState.pets.length : 0;
   const detail = roomState
     ? ` · ${agentCount} ${agentCount === 1 ? "agent" : "agents"} · ${petCount} ${petCount === 1 ? "pet" : "pets"}`
@@ -1058,13 +2050,15 @@ function decoratePixelFloorButton(button) {
   button.title = `Open floor ${floor}${detail}`;
   button.setAttribute("aria-label", button.title);
   if (room) room.style.setProperty("--pixel-floor-texture", pixelFloorTexture(floor));
-  if (preview) preview.src = pixelFloorPreview(floor) || "pixel-agents-mode/office.png";
+  if (preview) preview.src = pixelFloorPreview(floor);
   if (summary) {
     const agentLabel = roomState
       ? agentCount === 1
         ? "1 agent"
         : `${agentCount} agents`
-      : "loading";
+      : agentCount === 1
+        ? "1 agent"
+        : `${agentCount} agents`;
     const petName = roomState?.pets?.[0]?.name || "";
     summary.textContent = [agentLabel, petName].filter(Boolean).join(" · ");
   }
@@ -1077,8 +2071,8 @@ function createPixelFloorButton(floor) {
   button.innerHTML = `
     <span class="pixel-floor-elevator">${floor}</span>
     <span class="pixel-floor-room">
-      <img src="pixel-agents-mode/office.png" alt="">
-      <small class="pixel-floor-summary">loading</small>
+      <img src="${pixelFloorPreview(floor)}" alt="">
+      <small class="pixel-floor-summary">0 agents</small>
     </span>
   `;
   decoratePixelFloorButton(button);
@@ -1102,7 +2096,7 @@ function initializePixelFloors() {
 }
 
 function addPixelFloor() {
-  if (pixelFloorCount >= 12) {
+  if (pixelFloorCount >= 20) {
     showToast("The tower is full.");
     return;
   }
@@ -1117,11 +2111,11 @@ function addPixelFloor() {
     floors: pixelFloorCount,
     slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4,
     petsEnabled: booleanPreference("agentWorkbenchPixelPets", true),
-    pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat"
+    pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "hamster"
   });
   pixelPreviewRefreshNeeded = true;
   applyPixelFloor(pixelFloorCount);
-  schedulePixelPreviewRefresh(180);
+  schedulePixelPreviewRefresh(120);
   button.scrollIntoView({ block: "nearest" });
   showToast(`Floor ${pixelFloorCount} added.`);
 }
@@ -1141,7 +2135,6 @@ function deletePixelFloor() {
     return;
   }
   const floor = activePixelFloor;
-  if (!window.confirm(`Delete floor ${floor}?`)) return;
   localStorage.removeItem(`agentWorkbenchPixelLayout:${floor}`);
   localStorage.removeItem(pixelFloorPreviewKey(floor));
   for (let nextFloor = floor + 1; nextFloor <= pixelFloorCount; nextFloor += 1) {
@@ -1175,12 +2168,261 @@ function deletePixelFloor() {
     floors: pixelFloorCount,
     slots: activeWorkspace() ? workspaceLayoutFor(activeWorkspaceId) : 4,
     petsEnabled: booleanPreference("agentWorkbenchPixelPets", true),
-    pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat"
+    pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "hamster"
   });
   pixelPreviewRefreshNeeded = true;
   applyPixelFloor(activePixelFloor);
-  schedulePixelPreviewRefresh(180);
+  schedulePixelPreviewRefresh(120);
   showToast(`Floor ${floor} deleted.`);
+}
+
+function isPixelRoomDivider(topology, column, row) {
+  const doorwayRow = row === 14 || row === 15;
+  switch (topology) {
+    case "library-aisles":
+      return [7, 13].includes(column) && row <= 13;
+    case "studio-split":
+      return (column === 8 && !doorwayRow) || (row === 17 && column > 8 && column < 19 && ![13, 14].includes(column));
+    case "lounge-bay":
+      return column === 13 && !doorwayRow;
+    case "greenhouse":
+      return ((column === 6 || column === 14) && row >= 12 && row <= 17 && row !== 15)
+        || (row === 12 && column > 6 && column < 14 && ![9, 10].includes(column));
+    case "war-room":
+      return row === 16 && column >= 4 && column <= 15 && ![9, 10].includes(column);
+    case "cafe-counter":
+      return (row === 14 && column >= 12 && column < 19 && column !== 15)
+        || (column === 12 && row < 14 && row !== 12);
+    case "observatory":
+      return ((column === 4 || column === 16) && row <= 14 && row !== 13)
+        || (row === 13 && (column < 4 || column > 16));
+    case "maker-lanes":
+      return column === 10 && !doorwayRow;
+    case "gallery-wings":
+      return ([6, 13].includes(column) && row <= 15 && row !== 13);
+    case "recording-booth":
+      return (column === 13 && row <= 17 && row !== 15)
+        || (row === 17 && column >= 13 && column < 19 && column !== 16);
+    case "arcade-grid":
+      return row === 17 && (column <= 6 || column >= 13) && ![3, 16].includes(column);
+    case "zen-courtyard":
+      return ((column === 7 || column === 13) && row >= 13 && row <= 18 && row !== 16)
+        || ((row === 13 || row === 18) && column > 7 && column < 13 && column !== 10);
+    case "newsroom":
+      return row === 16 && column >= 6 && column <= 18 && ![11, 12].includes(column);
+    case "wellness-suites":
+      return ([6, 13].includes(column) && !doorwayRow);
+    case "research-cross":
+      return (column === 10 && !doorwayRow)
+        || (row === 16 && column > 10 && column < 19 && ![14, 15].includes(column));
+    case "open-loft":
+      return (column === 15 && row <= 13) || (row === 18 && column <= 5);
+    case "archive-stacks":
+      return [5, 10, 15].includes(column) && row >= 11 && row <= 15 && row !== 13;
+    case "command-bridge":
+      return row === 15 && column >= 3 && column <= 16 && ![8, 9, 10, 11].includes(column);
+    case "sunroom":
+      return (column === 5 && row <= 12) || (column === 15 && row <= 12);
+    case "rooftop":
+      return row === 18 && (column <= 3 || column >= 17);
+    default:
+      return false;
+  }
+}
+
+function pixelRoomFootprintContains(plan, column, row) {
+  const [left, right, top, bottom] = plan.bounds;
+  if (column < left || column > right || row < top || row > bottom) return false;
+  const depth = row - top;
+  const middle = Math.round((left + right) / 2);
+
+  switch (plan.silhouette) {
+    case "compact-rectangle":
+      return true;
+    case "east-studio-notch":
+      return depth >= 4 || column <= right - 4;
+    case "graduated-bay":
+      if (depth <= 2) return column >= left + 5 && column <= right - 5;
+      if (depth <= 5) return column >= left + 2 && column <= right - 2;
+      return true;
+    case "twin-greenhouse-wings":
+      return depth >= 6 || column <= left + 5 || column >= right - 5;
+    case "stepped-bunker":
+      if (depth < 3) return column >= left + 4 && column <= right - 4;
+      if (depth < 7) return column >= left + 2 && column <= right - 2;
+      return true;
+    case "cafe-l":
+      return depth >= 5 || column <= right - 6;
+    case "observatory-dome": {
+      const inset = Math.max(0, 4 - Math.floor(depth / 2));
+      return column >= left + inset && column <= right - inset;
+    }
+    case "offset-workshop":
+      if (depth < 5) return column >= left + 3;
+      if (depth < 8) return column >= left + 1;
+      return true;
+    case "gallery-u":
+      return depth >= 7 || column <= left + 4 || column >= right - 4;
+    case "recording-j":
+      return depth >= 5 || column >= left + 5;
+    case "arcade-t":
+      return depth > 6 || (column >= middle - 4 && column <= middle + 4);
+    case "courtyard-ring":
+      return !(
+        depth >= 4
+        && depth <= 8
+        && column >= middle - 3
+        && column <= middle + 3
+      );
+    case "broadcast-desk":
+      return depth >= 2 || (column >= left + 3 && column <= right - 3);
+    case "wellness-zigzag":
+      if (depth < 5) return column <= right - 3;
+      if (depth < 10) return column >= left + 3;
+      return true;
+    case "research-cross":
+      if (depth < 5) return column >= middle - 4 && column <= middle + 4;
+      if (depth < 9) return true;
+      return column >= middle - 6 && column <= middle + 6;
+    case "creative-l":
+      return depth >= 5 || column >= left + 5;
+    case "archive-vault":
+      if (depth < 3) return column >= left + 3 && column <= right - 3;
+      return depth < 12 || (column >= left + 2 && column <= right - 2);
+    case "bridge-chevron": {
+      const inset = depth < 5 ? 5 - depth : Math.max(0, depth - 11);
+      return column >= left + inset && column <= right - inset;
+    }
+    case "sunroom-pavilion":
+      if (depth < 4) return column >= middle - 4 && column <= middle + 4;
+      if (depth < 8) return column <= left + 6 || column >= right - 6;
+      return true;
+    case "rooftop-terraces":
+      if (depth < 4) return column >= left + 6;
+      if (depth < 8) return column >= left + 3 && column <= right - 2;
+      return true;
+    default:
+      return true;
+  }
+}
+
+function pixelRoomFloorTile(themeIndex, theme, column, row) {
+  const [primary, secondary] = theme.palette;
+  switch (themeIndex % 10) {
+    case 0: return column < 10 ? primary : secondary;
+    case 1: return row < 16 ? primary : secondary;
+    case 2: return column < 13 && row < 17 ? primary : secondary;
+    case 3: return column >= 7 && column <= 13 ? secondary : primary;
+    case 4: return row >= 14 && row <= 17 ? secondary : primary;
+    case 5: return column + row > 28 ? secondary : primary;
+    case 6: return (column < 5 || column > 15) ? secondary : primary;
+    case 7: return Math.floor(column / 4) % 2 ? secondary : primary;
+    case 8: return (column + Math.floor(row / 2)) % 4 === 0 ? secondary : primary;
+    default: return row % 3 === 0 ? secondary : primary;
+  }
+}
+
+function pixelRoomTileColor(plan, theme, tile) {
+  if (tile === 255) return null;
+  if (tile === 0) return { ...plan.colors[0] };
+  return {
+    ...(tile === theme.palette[0] ? plan.colors[1] : plan.colors[2])
+  };
+}
+
+function nearestPixelRoomFurnitureSpot(layout, targetColumn, targetRow, preferWall, occupied) {
+  const candidates = [];
+  for (let row = 0; row < layout.rows; row += 1) {
+    for (let column = 0; column < layout.cols; column += 1) {
+      const tile = layout.tiles[row * layout.cols + column];
+      const valid = preferWall ? tile === 0 : tile !== 0 && tile !== 255 && tile !== undefined;
+      if (!valid) continue;
+      const key = `${column},${row}`;
+      candidates.push({
+        column,
+        row,
+        score:
+          Math.abs(column - targetColumn)
+          + Math.abs(row - targetRow) * 1.35
+          + (occupied.has(key) ? 1000 : 0)
+      });
+    }
+  }
+  candidates.sort((first, second) => first.score - second.score);
+  return candidates[0] || { column: targetColumn, row: targetRow };
+}
+
+function buildPixelRoomFurniture(floor, theme, plan, layout) {
+  const pieces = [
+    ...(PIXEL_WORKSTATION_KITS[theme.workstations] || PIXEL_WORKSTATION_KITS["north-row"]),
+    ...theme.decor
+  ];
+  const [left, right, top, bottom] = plan.bounds;
+  const occupied = new Set();
+  const wallMounted = /BOOKSHELF|PAINTING|CLOCK|WHITEBOARD|HANGING_PLANT/;
+  return pieces.map(([type, col, row], index) => {
+    const preferWall = wallMounted.test(type);
+    const horizontalRange = Math.max(1, right - left - 2);
+    const verticalRange = Math.max(1, bottom - top - 2);
+    const targetColumn = Math.round(
+      left + 1 + ((Math.max(1, Math.min(18, col)) - 1) / 17) * horizontalRange
+    );
+    const targetRow = preferWall
+      ? top
+      : Math.round(
+          top + 1 + ((Math.max(11, Math.min(20, row)) - 11) / 9) * verticalRange
+        );
+    const spot = nearestPixelRoomFurnitureSpot(
+      layout,
+      targetColumn,
+      targetRow,
+      preferWall,
+      occupied
+    );
+    occupied.add(`${spot.column},${spot.row}`);
+    return {
+      uid: `f${floor}-${theme.topology}-${index + 1}`,
+      type,
+      col: spot.column,
+      row: spot.row
+    };
+  });
+}
+
+function buildPixelRoomLayout(baseLayout, floor) {
+  const themeIndex = (Math.max(1, Number(floor) || 1) - 1) % PIXEL_ROOM_THEMES.length;
+  const theme = PIXEL_ROOM_THEMES[themeIndex];
+  const plan = PIXEL_ROOM_PLANS[themeIndex];
+  const layout = JSON.parse(JSON.stringify(baseLayout));
+  layout.workbenchFloor = floor;
+  layout.workbenchRoomTheme = theme.name;
+  layout.workbenchRoomTopology = theme.topology;
+  layout.workbenchRoomPlan = plan.key;
+  layout.workbenchRoomDesignVersion = PIXEL_ROOM_DESIGN_VERSION;
+  layout.tiles = Array(layout.cols * layout.rows).fill(255);
+  layout.tileColors = Array(layout.tiles.length).fill(null);
+  for (let row = 0; row < layout.rows; row += 1) {
+    for (let column = 0; column < layout.cols; column += 1) {
+      if (!pixelRoomFootprintContains(plan, column, row)) continue;
+      const outsideWall =
+        !pixelRoomFootprintContains(plan, column, row - 1)
+        || !pixelRoomFootprintContains(plan, column - 1, row)
+        || !pixelRoomFootprintContains(plan, column + 1, row);
+      const divider = isPixelRoomDivider(theme.topology, column, row);
+      const tile = outsideWall || divider
+        ? 0
+        : pixelRoomFloorTile(themeIndex, theme, column, row);
+      const index = row * layout.cols + column;
+      layout.tiles[index] = tile;
+      layout.tileColors[index] = pixelRoomTileColor(plan, theme, tile);
+    }
+  }
+  layout.furniture = buildPixelRoomFurniture(floor, theme, plan, layout);
+  delete layout.carpetTiles;
+  delete layout.areaTiles;
+  layout.areas = [];
+  layout.areaMappings = {};
+  return layout;
 }
 
 async function pixelLayoutForFloor(floor) {
@@ -1188,8 +2430,10 @@ async function pixelLayoutForFloor(floor) {
   if (saved) {
     try {
       const savedLayout = JSON.parse(saved);
-      savedLayout.workbenchFloor = floor;
-      return savedLayout;
+      if (savedLayout.workbenchRoomDesignVersion === PIXEL_ROOM_DESIGN_VERSION) {
+        savedLayout.workbenchFloor = floor;
+        return savedLayout;
+      }
     } catch (error) {
     }
   }
@@ -1197,133 +2441,41 @@ async function pixelLayoutForFloor(floor) {
     const response = await fetch("pixel-agents-mode/assets/default-layout-1.json");
     pixelBaseLayout = await response.json();
   }
-  const layout = JSON.parse(JSON.stringify(pixelBaseLayout));
-  layout.workbenchFloor = floor;
-  if (floor === 2) {
-    layout.tiles = Array(layout.cols * layout.rows).fill(255);
-    for (let row = 10; row <= 20; row += 1) {
-      for (let column = 0; column <= 19; column += 1) {
-        const edge = row === 10 || column === 0 || column === 19;
-        const studioWall = column === 8 && ![14, 15].includes(row);
-        const reviewWall = row === 16 && column > 8 && column < 19 && ![13, 14].includes(column);
-        const tile = edge || studioWall || reviewWall
-          ? 0
-          : column < 8
-            ? 4
-            : row < 16
-              ? 5
-              : 6;
-        layout.tiles[row * layout.cols + column] = tile;
-      }
-    }
-    layout.tileColors = Array(layout.tiles.length).fill(null);
-    layout.furniture = [
-      { uid: "f2-desk-1", type: "DESK_FRONT", col: 1, row: 12 },
-      { uid: "f2-pc-1", type: "PC_FRONT_OFF", col: 2, row: 12 },
-      { uid: "f2-chair-1", type: "CUSHIONED_BENCH", col: 2, row: 14 },
-      { uid: "f2-desk-2", type: "DESK_FRONT", col: 5, row: 12 },
-      { uid: "f2-pc-2", type: "PC_FRONT_OFF", col: 6, row: 12 },
-      { uid: "f2-chair-2", type: "CUSHIONED_BENCH", col: 6, row: 14 },
-      { uid: "f2-books-1", type: "DOUBLE_BOOKSHELF", col: 10, row: 10 },
-      { uid: "f2-books-2", type: "DOUBLE_BOOKSHELF", col: 15, row: 10 },
-      { uid: "f2-review-table", type: "TABLE_FRONT", col: 12, row: 13 },
-      { uid: "f2-review-chair-1", type: "WOODEN_CHAIR_SIDE", col: 11, row: 13 },
-      { uid: "f2-review-chair-2", type: "WOODEN_CHAIR_SIDE:left", col: 16, row: 13 },
-      { uid: "f2-test-desk", type: "DESK_FRONT", col: 10, row: 18 },
-      { uid: "f2-test-pc", type: "PC_FRONT_OFF", col: 11, row: 18 },
-      { uid: "f2-deploy-desk", type: "DESK_FRONT", col: 15, row: 18 },
-      { uid: "f2-deploy-pc", type: "PC_FRONT_OFF", col: 16, row: 18 },
-      { uid: "f2-plant-1", type: "PLANT_2", col: 7, row: 10 },
-      { uid: "f2-plant-2", type: "PLANT", col: 18, row: 17 },
-      { uid: "f2-bin", type: "BIN", col: 1, row: 20 }
-    ];
-  } else if (floor === 3) {
-    layout.tiles = Array(layout.cols * layout.rows).fill(255);
-    for (let row = 10; row <= 20; row += 1) {
-      for (let column = 0; column <= 19; column += 1) {
-        const edge = row === 10 || column === 0 || column === 19;
-        const designWall = column === 13 && ![14, 15].includes(row);
-        const loungeWall = row === 17 && column > 0 && column < 13 && ![6, 7].includes(column);
-        const tile = edge || designWall || loungeWall
-          ? 0
-          : column >= 13
-            ? 8
-            : row >= 17
-              ? 3
-              : 2;
-        layout.tiles[row * layout.cols + column] = tile;
-      }
-    }
-    layout.tileColors = Array(layout.tiles.length).fill(null);
-    layout.furniture = [
-      { uid: "f3-sofa-top", type: "SOFA_FRONT", col: 4, row: 12 },
-      { uid: "f3-sofa-left", type: "SOFA_SIDE", col: 3, row: 13 },
-      { uid: "f3-sofa-right", type: "SOFA_SIDE:left", col: 8, row: 13 },
-      { uid: "f3-coffee-table", type: "COFFEE_TABLE", col: 5, row: 14 },
-      { uid: "f3-coffee", type: "COFFEE", col: 6, row: 14 },
-      { uid: "f3-art", type: "LARGE_PAINTING", col: 15, row: 10 },
-      { uid: "f3-art-side", type: "SMALL_PAINTING_2", col: 18, row: 10 },
-      { uid: "f3-design-table", type: "TABLE_FRONT", col: 15, row: 14 },
-      { uid: "f3-design-chair-1", type: "WOODEN_CHAIR_SIDE", col: 14, row: 15 },
-      { uid: "f3-design-chair-2", type: "WOODEN_CHAIR_SIDE:left", col: 18, row: 15 },
-      { uid: "f3-doc-books", type: "DOUBLE_BOOKSHELF", col: 1, row: 17 },
-      { uid: "f3-doc-table", type: "SMALL_TABLE_FRONT", col: 8, row: 19 },
-      { uid: "f3-doc-chair", type: "CUSHIONED_BENCH", col: 9, row: 19 },
-      { uid: "f3-plant-1", type: "PLANT", col: 1, row: 11 },
-      { uid: "f3-plant-2", type: "PLANT_2", col: 12, row: 11 },
-      { uid: "f3-plant-3", type: "PLANT", col: 18, row: 18 }
-    ];
-  } else if (floor > 3) {
-    const primaryTile = ((floor * 2) % 8) + 1;
-    const secondaryTile = ((floor * 2 + 3) % 8) + 1;
-    const splitColumn = 7 + (floor % 5);
-    layout.tiles = Array(layout.cols * layout.rows).fill(255);
-    for (let row = 10; row <= 20; row += 1) {
-      for (let column = 0; column <= 19; column += 1) {
-        const edge = row === 10 || column === 0 || column === 19;
-        const divider = column === splitColumn && ![14, 15].includes(row);
-        const tile = edge || divider ? 0 : column < splitColumn ? primaryTile : secondaryTile;
-        layout.tiles[row * layout.cols + column] = tile;
-      }
-    }
-    layout.tileColors = Array(layout.tiles.length).fill(null);
-    const rightDeskColumn = Math.min(15, splitColumn + 2);
-    layout.furniture = [
-      { uid: `f${floor}-desk-1`, type: "DESK_FRONT", col: 1, row: 12 },
-      { uid: `f${floor}-pc-1`, type: "PC_FRONT_OFF", col: 2, row: 12 },
-      { uid: `f${floor}-chair-1`, type: "CUSHIONED_BENCH", col: 2, row: 14 },
-      { uid: `f${floor}-desk-2`, type: "DESK_FRONT", col: Math.max(4, splitColumn - 4), row: 17 },
-      { uid: `f${floor}-pc-2`, type: "PC_FRONT_OFF", col: Math.max(5, splitColumn - 3), row: 17 },
-      { uid: `f${floor}-table`, type: floor % 2 ? "TABLE_FRONT" : "COFFEE_TABLE", col: rightDeskColumn, row: 13 },
-      { uid: `f${floor}-seat-1`, type: "WOODEN_CHAIR_SIDE", col: rightDeskColumn - 1, row: 14 },
-      { uid: `f${floor}-seat-2`, type: "WOODEN_CHAIR_SIDE:left", col: Math.min(18, rightDeskColumn + 3), row: 14 },
-      { uid: `f${floor}-books`, type: "DOUBLE_BOOKSHELF", col: Math.min(17, splitColumn + 1), row: 10 },
-      { uid: `f${floor}-plant-1`, type: "PLANT", col: Math.max(1, splitColumn - 1), row: 11 },
-      { uid: `f${floor}-plant-2`, type: "PLANT_2", col: 18, row: 18 },
-      { uid: `f${floor}-coffee`, type: "COFFEE", col: Math.min(18, rightDeskColumn + 1), row: 14 }
-    ];
-  }
-  return layout;
+  return buildPixelRoomLayout(pixelBaseLayout, floor);
 }
 
-async function applyPixelFloor(floor, { persist = true } = {}) {
+async function applyPixelFloor(floor, { persist = true, showLoader = false } = {}) {
+  const previousFloor = activePixelFloor;
   activePixelFloor = Math.max(1, Math.min(pixelFloorCount, Number(floor) || 1));
+  if (activePixelFloor !== previousFloor) closePixelPetDetail();
+  const requestedFloor = activePixelFloor;
   if (persist) localStorage.setItem("agentWorkbenchPixelFloor", String(activePixelFloor));
   updatePixelFloorButtons();
+  renderPixelFloorLauncher({ focus: pixelModeEnabled });
   if (!pixelFrameReady) return;
+  if (showLoader && pixelModeEnabled) {
+    setPixelViewLoading(true, `Opening floor ${requestedFloor}…`);
+  }
   try {
-    const layout = await pixelLayoutForFloor(activePixelFloor);
+    const layout = await pixelLayoutForFloor(requestedFloor);
+    if (requestedFloor !== activePixelFloor) return;
     postPixelMessage({ type: "layoutLoaded", layout });
-    setTimeout(() => {
-      setPixelVisibleSessionsForFloor(activePixelFloor);
-    }, 60);
+    await waitForPixelPreview(60);
+    if (requestedFloor !== activePixelFloor) return;
+    setPixelVisibleSessionsForFloor(requestedFloor);
+    pixelPreviewRefreshNeeded = true;
+    schedulePixelPreviewRefresh(90);
+    if (showLoader) setPixelViewLoading(false, "", { delay: 180 });
   } catch (error) {
+    if (showLoader) setPixelViewLoading(false);
     showToast("Could not open that floor.");
   }
 }
 
-function syncPixelMode(reset = false) {
+function syncPixelMode(reset = false, { showLoader = true } = {}) {
   if (!pixelFrameReady) return;
+  syncPixelAppearance();
+  postPixelMessage({ type: "pixelModeVisibility", active: pixelModeEnabled });
   const workspace = activeWorkspace();
   const activeSessions = activePixelSessions();
   ensurePixelFloorCapacity(activeSessions.length);
@@ -1348,7 +2500,7 @@ function syncPixelMode(reset = false) {
     floors: pixelFloorCount,
     slots: workspace ? workspaceLayoutFor(workspace.id) : 4,
     petsEnabled: booleanPreference("agentWorkbenchPixelPets", true),
-    pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat"
+    pet: localStorage.getItem("agentWorkbenchPixelPetChoice") || "hamster"
   });
   postPixelMessage({
     type: "existingAgents",
@@ -1363,11 +2515,30 @@ function syncPixelMode(reset = false) {
   // office loads before our parent bridge replies, so flush against that
   // already-loaded layout without replacing the user's room.
   postPixelMessage({ type: "layoutLoaded", layout: null });
-  applyPixelFloor(activePixelFloor, { persist: false });
+  const floorReady = applyPixelFloor(activePixelFloor, { persist: false, showLoader });
   for (const session of activeSessions) {
     notePixelSessionPreviewChange(session);
   }
   renderPixelAgentRoster();
+  renderPixelFloorLauncher();
+  return floorReady;
+}
+
+function warmPixelView() {
+  if (!pixelFrameReady) return Promise.resolve(false);
+  if (pixelViewReady) return Promise.resolve(true);
+  if (pixelWarmupPromise) return pixelWarmupPromise;
+  pixelWarmupPromise = (async () => {
+    try {
+      await syncPixelMode(true, { showLoader: false });
+      pixelViewReady = true;
+      if (pixelModeEnabled) setPixelViewLoading(false, "", { delay: 120 });
+      return true;
+    } finally {
+      pixelWarmupPromise = null;
+    }
+  })();
+  return pixelWarmupPromise;
 }
 
 function postPixelSessionDetails(session) {
@@ -1422,6 +2593,25 @@ function postPixelSessionDetails(session) {
     tldr: session.metadata.tldr || (active ? "Working…" : "Waiting for work"),
     present: true
   });
+  const speech = status === "error"
+    ? "I hit an error."
+    : status === "done"
+      ? `Done — ${session.metadata.tldr || "ready for more."}`
+      : communicating
+        ? "Syncing with the team."
+        : status === "waiting"
+          ? "Ready for more."
+          : session.metadata.currentTask || session.metadata.tldr || "Working on it.";
+  const speechKey = `${status}:${speech}`;
+  if (speechKey !== session.pixelSpeechKey) {
+    session.pixelSpeechKey = speechKey;
+    postPixelMessage({
+      type: "agentSpeech",
+      id,
+      text: speech.slice(0, 58),
+      duration: status === "done" || status === "error" ? 5.2 : 4.2
+    });
+  }
 }
 
 function setPixelVisibleSessionsForFloor(floor) {
@@ -1450,6 +2640,7 @@ function syncPixelSession(session) {
 
 function setPixelAgentClipboard(open) {
   const next = Boolean(open);
+  if (next) closePixelPetDetail();
   pixelAgentClipboard.hidden = !next;
   pixelAgentClipboardButton.setAttribute("aria-expanded", String(next));
   pixelAgentClipboardButton.classList.toggle("active", next);
@@ -1457,18 +2648,39 @@ function setPixelAgentClipboard(open) {
 }
 
 function setPixelMode(enabled, { persist = true } = {}) {
+  if (enabled && !homeView.hidden) {
+    showToast("Open a workspace before entering Pixel mode.");
+    return;
+  }
   pixelModeEnabled = Boolean(enabled);
   agentGrid.hidden = pixelModeEnabled;
-  pixelModeView.hidden = !pixelModeEnabled;
+  pixelModeView.hidden = false;
+  pixelModeView.classList.toggle("background-warm", !pixelModeEnabled);
+  pixelModeView.setAttribute("aria-hidden", String(!pixelModeEnabled));
   document.querySelector(".agent-stage").classList.toggle("pixel-mode", pixelModeEnabled);
   pixelModeButton.classList.toggle("active", pixelModeEnabled);
   pixelModeButton.setAttribute("aria-pressed", String(pixelModeEnabled));
   pixelModeButton.title = pixelModeEnabled ? "Terminal mode" : "Pixel mode";
   pixelModeButton.setAttribute("aria-label", pixelModeButton.title);
   if (persist) localStorage.setItem("agentWorkbenchPixelMode", pixelModeEnabled ? "1" : "0");
-  if (pixelModeEnabled) syncPixelMode(true);
+  if (pixelFrameReady) {
+    postPixelMessage({ type: "pixelModeVisibility", active: pixelModeEnabled });
+  }
+  if (pixelModeEnabled) {
+    if (!pixelViewReady) {
+      setPixelViewLoading(true, "Building the visual view…");
+      warmPixelView();
+    } else {
+      syncPixelMode(true, { showLoader: false });
+      setPixelViewLoading(false);
+    }
+  }
   else {
+    if (pixelPreviewRefreshTimer) clearTimeout(pixelPreviewRefreshTimer);
+    pixelPreviewRefreshTimer = null;
     setPixelAgentClipboard(false);
+    closePixelAgentDetail();
+    closePixelPetDetail();
     requestAnimationFrame(() => {
       for (const session of activePixelSessions()) {
         try {
@@ -1479,8 +2691,9 @@ function setPixelMode(enabled, { persist = true } = {}) {
     });
   }
   if (pixelModeEnabled && (pixelPreviewRefreshNeeded || pixelDirtyPreviewFloors.size > 0)) {
-    setTimeout(refreshPixelFloorPreviews, 220);
+    schedulePixelPreviewRefresh(160);
   }
+  renderPixelFloorLauncher({ focus: pixelModeEnabled });
 }
 
 function normalizedAgentState(metadata = {}) {
@@ -1491,6 +2704,15 @@ function normalizedAgentState(metadata = {}) {
   if (status === "error") return "failed";
   if (status === "waiting") return "waiting";
   return Number(metadata.progressPercent) < 12 ? "planning" : "coding";
+}
+
+function agentStateLabel(state, metadata = {}) {
+  if (state === "planning") return "Planning";
+  if (state === "coding") return "Running";
+  if (state === "waiting") return "Waiting";
+  if (state === "failed") return "Failed";
+  if (state === "complete") return "Done";
+  return String(metadata.status || "").toLowerCase() === "done" ? "Idle" : "Idle";
 }
 
 function formatElapsedClock(startedAt, now = Date.now()) {
@@ -1544,10 +2766,16 @@ function queueTerminalOutput(session, data) {
 }
 
 function updateAgentStatusCard(session, now = Date.now()) {
-  if (!session?.statusCard) return;
+  if (!session) return;
   const metadata = session.metadata || {};
   const state = normalizedAgentState(metadata);
   const progress = Math.max(0, Math.min(100, Number(metadata.progressPercent) || (state === "complete" ? 100 : 0)));
+  if (session.stateChip) {
+    session.stateChip.dataset.state = state;
+    session.stateChip.textContent = agentStateLabel(state, metadata);
+    session.stateChip.hidden = !booleanPreference("agentWorkbenchPixelStatusLabels", true);
+  }
+  if (!session.statusCard) return;
   session.statusCard.dataset.state = state;
   session.statusCard.querySelector(".agent-state").textContent = state;
   session.statusCard.querySelector(".agent-model").textContent = session.runtimeModel || metadata.model || (
@@ -1576,7 +2804,7 @@ function updateAgentStatusCard(session, now = Date.now()) {
 }
 
 function normalizedAgentChecklist(metadata = {}) {
-  return (Array.isArray(metadata.checklist) ? metadata.checklist : [])
+  const checklist = (Array.isArray(metadata.checklist) ? metadata.checklist : [])
     .filter((item) => item && String(item.text || "").trim())
     .map((item) => ({
       text: String(item.text || "").trim().slice(0, 180),
@@ -1588,6 +2816,19 @@ function normalizedAgentChecklist(metadata = {}) {
         : null
     }))
     .slice(0, 16);
+  const firstWorking = checklist.findIndex((item) => item.status === "working");
+  checklist.forEach((item, index) => {
+    if (item.status === "working" && index !== firstWorking) item.status = "pending";
+  });
+  if (
+    checklist.length
+    && firstWorking < 0
+    && String(metadata.status || "").toLowerCase() === "working"
+  ) {
+    const nextIndex = checklist.findIndex((item) => item.status === "pending");
+    if (nextIndex >= 0) checklist[nextIndex].status = "working";
+  }
+  return checklist;
 }
 
 function syncChecklistEtaState(session, metadata, now = Date.now()) {
@@ -1630,6 +2871,11 @@ function renderAgentCleanView(session, now = Date.now()) {
   if (!session?.cleanView) return;
   const metadata = session.metadata || {};
   const state = normalizedAgentState(metadata);
+  if (session.cleanCurrentTask) {
+    session.cleanCurrentTask.querySelector("strong").textContent =
+      metadata.currentTask || metadata.tldr || "Waiting for the next request";
+    session.cleanCurrentTask.dataset.state = state;
+  }
   const etaSeconds = remainingEtaSeconds(session, now);
   if (session.cleanInterruptButton) {
     const unavailable = session.exited || session.etaPaused || state === "complete" || state === "failed";
@@ -1637,8 +2883,15 @@ function renderAgentCleanView(session, now = Date.now()) {
     session.cleanInterruptButton.title = session.etaPaused ? "Agent interrupted" : "Interrupt agent";
     session.cleanInterruptButton.setAttribute("aria-label", session.cleanInterruptButton.title);
   }
-  session.cleanEtaText.textContent = state === "complete"
-    ? "✓"
+  const etaRow = session.cleanEtaText.closest(".agent-clean-eta-row");
+  const etaLabel = etaRow?.querySelector("span");
+  const hasOutputMessage = state === "complete" || state === "failed";
+  etaRow?.classList.toggle("has-output-message", hasOutputMessage);
+  if (etaLabel) {
+    etaLabel.textContent = state === "failed" ? "Failed" : state === "complete" ? "Done" : "ETA";
+  }
+  session.cleanEtaText.textContent = hasOutputMessage
+    ? metadata.tldr || metadata.currentTask || (state === "failed" ? "The task failed." : "Task complete.")
     : Number.isFinite(etaSeconds)
       ? `${session.etaPaused ? "Ⅱ " : ""}${formatEtaClock(etaSeconds)}`
       : "—";
@@ -1708,6 +2961,21 @@ function scheduleAgentCleanRender(session) {
   }, delay);
 }
 
+function sendAgentCleanInstruction(session) {
+  const message = session?.cleanComposeInput?.value.trim();
+  if (!session || !message || session.exited) return false;
+  lastTerminalInputAt = Date.now();
+  resumeSessionEta(session);
+  session.pausedByUser = false;
+  beginAgentTask(session, message);
+  updateRuntimeStatus();
+  api.writeAgent(session.id, `${message}\r`);
+  session.cleanComposeInput.value = "";
+  session.cleanComposeInput.dispatchEvent(new Event("input", { bubbles: true }));
+  showToast(`Sent to ${session.metadata.name || `Agent ${session.slotIndex + 1}`}`);
+  return true;
+}
+
 function setAgentCleanMode(session, enabled, { focus = true } = {}) {
   if (!session?.slot) return;
   const next = Boolean(enabled);
@@ -1746,6 +3014,339 @@ function setGlobalCleanMode(enabled, { persist = true } = {}) {
   }
 }
 
+function cinematicPaneBounds() {
+  const compact = window.innerWidth <= 920;
+  const horizontalPadding = compact ? 64 : 144;
+  const verticalPadding = compact ? 130 : 166;
+  const columnGap = compact ? 22 : 40;
+  const rowGap = compact ? 22 : 34;
+  return {
+    minWidth: Math.min(360, Math.max(260, Math.floor((window.innerWidth - horizontalPadding - columnGap) / 2))),
+    maxWidth: Math.max(260, Math.floor((window.innerWidth - horizontalPadding - columnGap) / 2)),
+    minHeight: Math.min(190, Math.max(150, Math.floor((window.innerHeight - verticalPadding - rowGap) / 2))),
+    maxHeight: Math.max(150, Math.floor((window.innerHeight - verticalPadding - rowGap) / 2))
+  };
+}
+
+function applyCinematicPaneSize(width = cinematicPaneSize.width, height = cinematicPaneSize.height) {
+  const bounds = cinematicPaneBounds();
+  cinematicPaneSize = {
+    width: Math.round(Math.max(bounds.minWidth, Math.min(bounds.maxWidth, Number(width) || 600))),
+    height: Math.round(Math.max(bounds.minHeight, Math.min(bounds.maxHeight, Number(height) || 285)))
+  };
+  document.body.style.setProperty("--cinematic-agent-width", `${cinematicPaneSize.width}px`);
+  document.body.style.setProperty("--cinematic-agent-height", `${cinematicPaneSize.height}px`);
+  cinematicResizeReadout.querySelector("strong").textContent = `${cinematicPaneSize.width} × ${cinematicPaneSize.height}`;
+  return cinematicPaneSize;
+}
+
+function loadCinematicPaneSize() {
+  const width = Number(localStorage.getItem("agentWorkbenchCinematicPaneWidth")) || 600;
+  const height = Number(localStorage.getItem("agentWorkbenchCinematicPaneHeight")) || 285;
+  return applyCinematicPaneSize(width, height);
+}
+
+function ensureCinematicResizeHandle(slot) {
+  if (!slot || slot.querySelector(":scope > .cinematic-agent-resize-handle")) return;
+  const handle = document.createElement("button");
+  handle.type = "button";
+  handle.className = "cinematic-agent-resize-handle";
+  handle.title = "Resize all cinematic panes";
+  handle.setAttribute("aria-label", "Resize all cinematic panes");
+  handle.innerHTML = "<i></i><i></i><i></i>";
+  slot.appendChild(handle);
+}
+
+function ensureCinematicResizeHandles() {
+  agentGrid.querySelectorAll(".agent-slot").forEach(ensureCinematicResizeHandle);
+}
+
+function beginCinematicPaneResize(event) {
+  const handle = event.target.closest(".cinematic-agent-resize-handle");
+  if (!handle || !cinematicModeEnabled) return;
+  event.preventDefault();
+  event.stopPropagation();
+  clearTimeout(cinematicResizeSettleTimer);
+  document.body.classList.remove("cinematic-resize-settling");
+  cinematicResizeState = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    width: cinematicPaneSize.width,
+    height: cinematicPaneSize.height,
+    clientX: event.clientX,
+    clientY: event.clientY
+  };
+  handle.setPointerCapture?.(event.pointerId);
+  document.body.classList.add("cinematic-resizing");
+  cinematicResizeReadout.hidden = false;
+}
+
+function updateCinematicPaneResize(event) {
+  if (!cinematicResizeState || event.pointerId !== cinematicResizeState.pointerId) return;
+  cinematicResizeState.clientX = event.clientX;
+  cinematicResizeState.clientY = event.clientY;
+  if (cinematicResizeFrame) return;
+  cinematicResizeFrame = requestAnimationFrame(() => {
+    cinematicResizeFrame = 0;
+    if (!cinematicResizeState) return;
+    applyCinematicPaneSize(
+      cinematicResizeState.width + (cinematicResizeState.clientX - cinematicResizeState.startX),
+      cinematicResizeState.height + (cinematicResizeState.clientY - cinematicResizeState.startY)
+    );
+  });
+}
+
+function finishCinematicPaneResize(event = {}) {
+  if (!cinematicResizeState || (event.pointerId !== undefined && event.pointerId !== cinematicResizeState.pointerId)) return;
+  cinematicResizeState = null;
+  if (cinematicResizeFrame) cancelAnimationFrame(cinematicResizeFrame);
+  cinematicResizeFrame = 0;
+  document.body.classList.remove("cinematic-resizing");
+  document.body.classList.add("cinematic-resize-settling");
+  cinematicResizeReadout.hidden = true;
+  localStorage.setItem("agentWorkbenchCinematicPaneWidth", String(cinematicPaneSize.width));
+  localStorage.setItem("agentWorkbenchCinematicPaneHeight", String(cinematicPaneSize.height));
+  cinematicResizeSettleTimer = setTimeout(() => {
+    document.body.classList.remove("cinematic-resize-settling");
+  }, 520);
+}
+
+function setCinematicMode(enabled, { persist = true } = {}) {
+  if (enabled && !homeView.hidden) {
+    showToast("Open a workspace before entering Cinematic mode.");
+    return;
+  }
+  cinematicModeEnabled = Boolean(enabled);
+  if (cinematicModeEnabled && pixelModeEnabled) setPixelMode(false);
+  document.body.classList.toggle("cinematic-mode", cinematicModeEnabled);
+  cinematicModeButton.classList.toggle("active", cinematicModeEnabled);
+  cinematicModeButton.setAttribute("aria-pressed", String(cinematicModeEnabled));
+  cinematicModeButton.title = cinematicModeEnabled ? "Exit cinematic mode" : "Cinematic mode";
+  cinematicModeButton.setAttribute("aria-label", cinematicModeButton.title);
+  cinematicExitButton.hidden = !cinematicModeEnabled;
+  cinematicNextSceneButton.hidden = !cinematicModeEnabled;
+  cinematicPromptDock.hidden = !cinematicModeEnabled;
+  if (!cinematicModeEnabled) closeCinematicMentionMenu();
+  if (persist) {
+    localStorage.setItem("agentWorkbenchCinematicMode", cinematicModeEnabled ? "1" : "0");
+  }
+  if (cinematicModeEnabled) {
+    loadCinematicPaneSize();
+    ensureCinematicResizeHandles();
+  } else {
+    finishCinematicPaneResize();
+  }
+  api.setWindowCinematicFullScreen(cinematicModeEnabled).catch(() => {});
+  syncSceneBackgroundPlayback();
+  refreshTerminalThemes();
+  requestAnimationFrame(() => {
+    for (const session of activeWorkspaceSessions()) {
+      try {
+        session.fitAddon.fit();
+      } catch (error) {
+      }
+    }
+    if (cinematicModeEnabled) cinematicPromptInput.focus();
+  });
+}
+
+async function submitCinematicPrompt() {
+  const rawMessage = cinematicPromptInput.value.trim();
+  const workspaceSessions = activeWorkspaceSessions().filter((session) => !session.exited);
+  const routing = resolveCinematicMention(rawMessage, workspaceSessions);
+  const message = routing.message;
+  if (!message) {
+    if (routing.explicit) showToast("Add an instruction after the @mention.");
+    return;
+  }
+  const selectedSession = sessions.get(selectedAgentId);
+  let target = routing.target || (!routing.explicit && (
+    selectedSession?.workspaceId === activeWorkspaceId && !selectedSession.exited
+      ? selectedSession
+      : workspaceSessions.find((session) => {
+        const state = normalizedAgentState(session.metadata);
+        return state === "waiting" || state === "idle";
+      })
+  ));
+
+  cinematicPromptSendButton.disabled = true;
+  closeCinematicMentionMenu();
+  try {
+    if (!target) {
+      const requestedSlot = Number.isInteger(routing.slotIndex) && !slots[routing.slotIndex]
+        ? routing.slotIndex
+        : -1;
+      const slotIndex = requestedSlot !== -1 ? requestedSlot : firstEmptySlot();
+      if (slotIndex !== -1) {
+        const preferredKind = localStorage.getItem("agentWorkbenchDefaultAgent") || "codex";
+        target = await startAgent(
+          slotIndex,
+          routing.kind || (["codex", "claude", "shell"].includes(preferredKind) ? preferredKind : "codex"),
+          message
+        );
+        if (target) cinematicPromptInput.value = "";
+        return;
+      }
+      target = workspaceSessions[0] || null;
+    }
+    if (!target) {
+      showToast("No available agent slot.");
+      return;
+    }
+    lastTerminalInputAt = Date.now();
+    resumeSessionEta(target);
+    target.pausedByUser = false;
+    beginAgentTask(target, message);
+    updateRuntimeStatus();
+    api.writeAgent(target.id, `${message}\r`);
+    cinematicPromptInput.value = "";
+    showToast(`Sent to ${target.metadata.name || `Agent ${target.slotIndex + 1}`}`);
+  } finally {
+    cinematicPromptSendButton.disabled = false;
+    cinematicPromptInput.focus();
+  }
+}
+
+function resolveCinematicMention(rawMessage, workspaceSessions) {
+  const match = rawMessage.match(/^@([a-z0-9_-]+)(?:\s+|$)/i);
+  if (!match) return { explicit: false, kind: null, message: rawMessage, slotIndex: null, target: null };
+  const token = match[1].toLowerCase();
+  const message = rawMessage.slice(match[0].length).trim();
+  const selectedSession = sessions.get(selectedAgentId);
+  if (["codex", "claude", "shell"].includes(token)) {
+    const target = selectedSession?.kind === token && !selectedSession.exited
+      ? selectedSession
+      : workspaceSessions.find((session) => session.kind === token) || null;
+    return { explicit: true, kind: token, message, slotIndex: null, target };
+  }
+  if (/^[1-4]$/.test(token)) {
+    const slotIndex = Number(token) - 1;
+    const target = workspaceSessions.find((session) => session.slotIndex === slotIndex) || null;
+    return {
+      explicit: true,
+      kind: target?.kind || null,
+      message,
+      slotIndex,
+      target
+    };
+  }
+  const target = workspaceSessions.find((session) => {
+    const name = String(session.metadata.name || "").trim().toLowerCase();
+    return name === token;
+  }) || null;
+  return target
+    ? { explicit: true, kind: target.kind, message, slotIndex: target.slotIndex, target }
+    : { explicit: false, kind: null, message: rawMessage, slotIndex: null, target: null };
+}
+
+function cinematicMentionContext() {
+  const cursor = cinematicPromptInput.selectionStart ?? cinematicPromptInput.value.length;
+  const beforeCursor = cinematicPromptInput.value.slice(0, cursor);
+  const match = beforeCursor.match(/(?:^|\s)@([a-z0-9_-]*)$/i);
+  if (!match) return null;
+  return {
+    cursor,
+    query: match[1].toLowerCase(),
+    start: beforeCursor.lastIndexOf("@")
+  };
+}
+
+function cinematicMentionChoices(query = "") {
+  const modelChoices = [
+    { token: "codex", label: "Codex", detail: "OpenAI coding agent" },
+    { token: "claude", label: "Claude", detail: "Claude Code agent" },
+    { token: "shell", label: "Shell", detail: "Terminal session" }
+  ];
+  const slotChoices = Array.from({ length: activeWorkspaceLayout() }, (_, slotIndex) => {
+    const session = activeWorkspaceSessions().find((entry) => !entry.exited && entry.slotIndex === slotIndex);
+    return {
+      token: String(slotIndex + 1),
+      label: session?.metadata.name || `Agent ${slotIndex + 1}`,
+      detail: session
+        ? `Pane ${slotIndex + 1} · ${session.kind} · ${normalizedAgentState(session.metadata)}`
+        : `Pane ${slotIndex + 1} · start default model`,
+      session: session || null
+    };
+  });
+  const namedChoices = activeWorkspaceSessions()
+    .filter((session) => !session.exited && session.metadata.name)
+    .map((session) => ({
+      token: String(session.metadata.name).toLowerCase(),
+      label: session.metadata.name,
+      detail: `${session.kind} · pane ${session.slotIndex + 1} · ${normalizedAgentState(session.metadata)}`,
+      session
+    }));
+  const seen = new Set();
+  return [...modelChoices, ...slotChoices, ...namedChoices].filter((choice) => {
+    if (seen.has(choice.token)) return false;
+    seen.add(choice.token);
+    return !query
+      || choice.token.includes(query)
+      || choice.label.toLowerCase().includes(query)
+      || choice.detail.toLowerCase().includes(query);
+  });
+}
+
+function closeCinematicMentionMenu() {
+  cinematicMentionMenu.hidden = true;
+  cinematicMentionMenu.replaceChildren();
+  cinematicMentionChoicesState = [];
+  cinematicMentionIndex = 0;
+}
+
+function renderCinematicMentionMenu(forceOpen = false) {
+  const context = cinematicMentionContext();
+  if (!context && !forceOpen) {
+    closeCinematicMentionMenu();
+    return;
+  }
+  cinematicMentionChoicesState = cinematicMentionChoices(context?.query || "");
+  if (!cinematicMentionChoicesState.length) {
+    closeCinematicMentionMenu();
+    return;
+  }
+  cinematicMentionIndex = Math.min(cinematicMentionIndex, cinematicMentionChoicesState.length - 1);
+  cinematicMentionMenu.replaceChildren(...cinematicMentionChoicesState.map((choice, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "cinematic-mention-choice";
+    button.dataset.mentionIndex = String(index);
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", String(index === cinematicMentionIndex));
+    if (choice.session) {
+      button.classList.add("has-profile");
+      const avatar = document.createElement("span");
+      avatar.className = "cinematic-mention-avatar";
+      applyAgentFace(avatar, choice.session);
+      const profile = document.createElement("span");
+      profile.className = "cinematic-mention-profile";
+      profile.innerHTML = `
+        <strong>@${escapeHtml(choice.token)}</strong>
+        <span>${escapeHtml(choice.label)}</span>
+        <small>${escapeHtml(choice.detail)}</small>
+      `;
+      const state = document.createElement("em");
+      state.className = "cinematic-mention-state";
+      state.textContent = normalizedAgentState(choice.session.metadata);
+      button.append(avatar, profile, state);
+    } else {
+      button.innerHTML = `<strong>@${escapeHtml(choice.token)}</strong><span>${escapeHtml(choice.label)}</span><small>${escapeHtml(choice.detail)}</small>`;
+    }
+    return button;
+  }));
+  cinematicMentionMenu.hidden = false;
+}
+
+function insertCinematicMention(index = cinematicMentionIndex) {
+  const context = cinematicMentionContext();
+  const choice = cinematicMentionChoicesState[index];
+  if (!context || !choice) return;
+  cinematicPromptInput.setRangeText(`@${choice.token} `, context.start, context.cursor, "end");
+  closeCinematicMentionMenu();
+  cinematicPromptInput.focus();
+}
+
 function activeWorkspaceSessions() {
   return Array.from(sessions.values()).filter((session) => session.workspaceId === activeWorkspaceId);
 }
@@ -1766,6 +3367,9 @@ function selectAgentSession(session) {
   selectedAgentId = session?.id || null;
   document.querySelectorAll(".agent-slot.selected").forEach((slot) => slot.classList.remove("selected"));
   if (session?.slot) session.slot.classList.add("selected");
+  cinematicPromptInput.placeholder = session
+    ? `Tell ${session.metadata.name || `Agent ${session.slotIndex + 1}`} what to do…`
+    : "Use @codex, @claude, @shell, or choose an agent…";
   updateRuntimeStatus();
 }
 
@@ -1862,6 +3466,47 @@ function toggleFocusMode() {
   });
 }
 
+async function copyWorkspaceHandoff() {
+  const workspace = activeWorkspace();
+  if (!workspace) {
+    showToast("Open a workspace first.");
+    return;
+  }
+  const now = new Date();
+  const agents = activeWorkspaceSessions();
+  const lines = [
+    `# ${workspace.name} handoff`,
+    "",
+    `Generated by BsCode on ${now.toLocaleString()}`,
+    `Workspace: ${remoteWorkspaceLabel(workspace)}`,
+    "",
+    "## Agents",
+    "",
+    ...(agents.length ? agents.flatMap((session) => {
+      const state = normalizedAgentState(session.metadata);
+      const eta = remainingEtaSeconds(session);
+      const checklist = normalizedAgentChecklist(session.metadata);
+      return [
+        `### ${session.metadata.name || `Agent ${session.slotIndex + 1}`} — ${agentStateLabel(state, session.metadata)}`,
+        "",
+        session.metadata.currentTask || session.metadata.tldr || "Waiting for work.",
+        Number.isFinite(eta) ? `ETA: ${formatEtaClock(eta)}` : "",
+        ...checklist.map((item) => `- [${item.status === "done" ? "x" : " "}] ${item.text} (${item.status})`),
+        ...(Array.isArray(session.metadata.relevantFiles) && session.metadata.relevantFiles.length
+          ? ["", `Files: ${session.metadata.relevantFiles.join(", ")}`]
+          : []),
+        ""
+      ];
+    }) : ["_No active agents._", ""]),
+    "## Shared notes",
+    "",
+    "See `.bscode-notes.md` in the workspace root.",
+    ""
+  ];
+  await api.writeClipboardText(lines.filter((line, index) => line !== "" || lines[index - 1] !== "").join("\n"));
+  showToast("Workspace handoff copied.");
+}
+
 function paletteCommands() {
   const commands = [
     { id: "agent-codex", icon: "◉", label: "New Codex agent", detail: "Start in the first empty slot", run: () => startFromToolbar("codex") },
@@ -1881,6 +3526,7 @@ function paletteCommands() {
     { id: "agents-status", icon: "?", label: "Ask for status", detail: "Request fresh progress, usage, and ETA metadata", run: () => askAgentsForStatus() },
     { id: "agents-zen", icon: "☷", label: globalCleanMode ? "Show all terminals" : "Zen view for all agents", detail: "Show checklists, ETAs, files, and prompt boxes", run: () => setGlobalCleanMode(!globalCleanMode) },
     { id: "focus-mode", icon: "⌗", label: document.body.classList.contains("focus-mode") ? "Exit focus mode" : "Enter focus mode", detail: "Hide side panels and maximize the workspace", run: toggleFocusMode },
+    { id: "handoff-copy", icon: "✦", label: "Copy workspace handoff", detail: "A Markdown standup with every agent, ETA, checklist, and file", run: copyWorkspaceHandoff },
     { id: "settings", icon: "⚙", label: "Open settings", detail: "Appearance, workspace, and profile", run: openSettings }
   ];
   for (const session of activeWorkspaceSessions()) {
@@ -2040,25 +3686,34 @@ function renderWorkspaceEditorTabs() {
     const count = workspaceLayoutFor(workspace.id);
     const tab = document.createElement("div");
     tab.className = "editor-tab workspace-editor-tab";
-    tab.dataset.agentCount = String(count);
     tab.classList.toggle("active", isActive);
     tab.setAttribute("role", "tab");
     tab.setAttribute("aria-selected", String(isActive));
     tab.title = `${remoteWorkspaceLabel(workspace)}\nRight-click to rename`;
 
+    const tabShape = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    tabShape.classList.add("workspace-tab-shape");
+    tabShape.setAttribute("viewBox", "0 0 240 34");
+    tabShape.setAttribute("preserveAspectRatio", "none");
+    tabShape.setAttribute("aria-hidden", "true");
+    tabShape.innerHTML = `
+      <path class="workspace-tab-shape-fill" d="M0 34C7 34 10 31 13 26C17 20 18 14 19 9C20 4 25 2 31 2H209C215 2 220 4 221 9C222 14 223 20 227 26C230 31 233 34 240 34Z"/>
+      <path class="workspace-tab-shape-edge" d="M0 33.5C7 33.5 10 30.5 13 26C17 20 18 14 19 9C20 4 25 2 31 2H209C215 2 220 4 221 9C222 14 223 20 227 26C230 30.5 233 33.5 240 33.5"/>
+      <path class="workspace-tab-shape-baseline" d="M0 33.5H240"/>
+    `;
     const label = document.createElement("span");
     label.className = "workspace-editor-label";
     label.textContent = workspace.name;
-    tab.append(label);
+    tab.append(tabShape, label);
 
     const etaGroup = document.createElement("span");
     etaGroup.className = "agent-eta";
-    etaGroup.dataset.agentCount = String(count);
-    etaGroup.setAttribute("aria-label", `${workspace.name} agent estimates`);
+    etaGroup.hidden = true;
+    etaGroup.setAttribute("aria-label", `${workspace.name} running agents`);
     for (let index = 0; index < count; index += 1) {
       const eta = document.createElement("span");
       eta.dataset.etaSlot = String(index);
-      eta.textContent = `${index + 1} —`;
+      eta.hidden = true;
       etaGroup.appendChild(eta);
     }
     workspaceEtaNodes.set(workspace.id, etaGroup);
@@ -2095,15 +3750,7 @@ function renderWorkspaceEditorTabs() {
     event.stopPropagation();
     openWorkspaceSetup();
   });
-  if (renderedTabs.length) {
-    const tabTail = document.createElement("div");
-    tabTail.className = "workspace-tab-tail";
-    tabTail.setAttribute("role", "presentation");
-    tabTail.append(renderedTabs.at(-1), addTabButton);
-    workspaceEditorTabs.appendChild(tabTail);
-  } else {
-    workspaceEditorTabs.appendChild(addTabButton);
-  }
+  workspaceEditorTabs.appendChild(addTabButton);
 
   updateAgentEta();
   requestAnimationFrame(() => activeTab?.scrollIntoView({ block: "nearest", inline: "nearest" }));
@@ -2172,6 +3819,7 @@ async function prepareWorkspaceSetup(workspace) {
   pendingWorkspaceSetup = workspace;
   activeWorkspaceId = workspace.id;
   localStorage.setItem("agentWorkbenchActiveWorkspace", workspace.id);
+  localStorage.setItem("agentWorkbenchLastWorkspace", workspace.id);
   saveWorkspaceLayout(workspace.id, pendingWorkspaceLayout);
   await loadWorkspaces();
   workspaceSetupFolderName.textContent = workspace.name;
@@ -2204,18 +3852,14 @@ function setSidebarView(view) {
   sidebarViewToggleButton.title = showingWorkspaces ? "Show files" : "Show workspaces";
   sidebarViewToggleButton.setAttribute("aria-label", sidebarViewToggleButton.title);
   sidebarViewToggleButton.setAttribute("aria-pressed", String(showingWorkspaces));
+  sidebarViewToggleButton.innerHTML = `<span class="${!showingWorkspaces ? "active" : ""}">Files</span><span class="${showingWorkspaces ? "active" : ""}">Workspaces</span>`;
   fileViewActions.forEach((button) => {
     button.hidden = showingWorkspaces;
   });
   workspaceViewActions.forEach((button) => {
     button.hidden = !showingWorkspaces;
   });
-  fileEmpty.hidden = showingWorkspaces ? workspaces.length > 0 : Boolean(activeWorkspace());
-  if (!fileEmpty.hidden) {
-    fileEmpty.textContent = showingWorkspaces
-      ? "Add a workspace to start."
-      : "Add a workspace to browse its files.";
-  }
+  updateFileEmptyState();
   setWorkspaceAddMenu(false);
   document.body.classList.toggle("sidebar-workspaces-view", showingWorkspaces);
   localStorage.setItem("agentWorkbenchSidebarView", currentSidebarView);
@@ -2228,7 +3872,7 @@ const FILES_COLLAPSED_LABEL = '<span class="pane-collapsed-label">Files</span>';
 const OUTPUTS_COLLAPSED_LABEL = '<span class="pane-collapsed-label">Outputs</span>';
 const AGENT_MAXIMIZE_ICON = '<svg class="agent-resize-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M7 7 2.5 2.5M2.5 6V2.5H6M11 11l4.5 4.5M12 15.5h3.5V12"/></svg>';
 const AGENT_RESTORE_ICON = '<svg class="agent-resize-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M2.5 2.5 7 7M7 3.5V7H3.5M15.5 15.5 11 11M11 14.5V11h3.5"/></svg>';
-const AGENT_ZEN_ICON = '<svg class="agent-zen-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3.5H4.5a1 1 0 0 0-1 1V7M13 3.5h2.5a1 1 0 0 1 1 1V7M7 16.5H4.5a1 1 0 0 1-1-1V13M13 16.5h2.5a1 1 0 0 0 1-1V13"/><path d="m6.4 10 2.1 2.1 5-5.1"/></svg>';
+const AGENT_ZEN_ICON = '<svg class="agent-zen-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="5" r="1"/><circle cx="4" cy="10" r="1"/><circle cx="4" cy="15" r="1"/><path d="M7 5h10M7 10h10M7 15h10"/></svg>';
 const AGENT_INTERRUPT_ICON = '<svg class="agent-interrupt-icon" viewBox="0 0 18 18" aria-hidden="true"><rect x="4.2" y="4.2" width="9.6" height="9.6" rx="1.3"/></svg>';
 
 function setOutputCollapsed(collapsed) {
@@ -2285,8 +3929,6 @@ function showSettingsPage(page) {
 
 function openSettings() {
   const workspace = activeWorkspace();
-  settingsWorkspacePath.textContent = workspace ? remoteWorkspaceLabel(workspace) : "No workspace selected";
-  settingsCodexUsage.textContent = codexUsageText.textContent;
   showSettingsPage("appearance");
   settingsOverlay.hidden = false;
   requestAnimationFrame(() => settingsSearchInput.focus());
@@ -2294,6 +3936,36 @@ function openSettings() {
 
 function closeSettings() {
   settingsOverlay.hidden = true;
+}
+
+function currentPixelAppearanceConfig() {
+  const root = document.documentElement;
+  const computed = getComputedStyle(root);
+  const value = (name, fallback) => computed.getPropertyValue(name).trim() || fallback;
+  return {
+    background: value("--theme-background", value("--theme-bg", "#10141c")),
+    bg: value("--theme-bg", "#10141c"),
+    panel: value("--theme-panel", "#171d26"),
+    elevated: value("--theme-elevated", "#202936"),
+    hover: value("--theme-hover", "#293444"),
+    active: value("--theme-active", "#334155"),
+    border: value("--theme-border", "#465465"),
+    text: value("--theme-text", "#eef2f7"),
+    muted: value("--theme-muted", "#99a5b3"),
+    accent: value("--theme-accent", "#69a8ff"),
+    status: value("--theme-status", value("--theme-accent", "#69a8ff")),
+    tone: root.dataset.appearanceTone || "dark",
+    mode: root.dataset.appearanceMode || "dark",
+    theme: root.dataset.theme || "dark-plus"
+  };
+}
+
+function syncPixelAppearance() {
+  if (!pixelFrameReady) return;
+  postPixelMessage({
+    type: "appearanceConfig",
+    appearance: currentPixelAppearanceConfig()
+  });
 }
 
 function applyPalette(palette, mode, theme = "") {
@@ -2307,6 +3979,7 @@ function applyPalette(palette, mode, theme = "") {
   const lightAppearance = mode.toLowerCase().startsWith("light") || theme === "pixel-studio";
   root.dataset.appearanceTone = lightAppearance ? "light" : "dark";
   root.style.colorScheme = lightAppearance ? "light" : "dark";
+  syncPixelAppearance();
   const terminalTheme = terminalThemeFromPalette(palette);
   for (const session of sessions.values()) {
     session.term.options.theme = terminalTheme;
@@ -2324,6 +3997,345 @@ function themeCategoryForOption(option) {
 
 function selectedAppearanceCategory() {
   return appearanceCategories.find((category) => category.classList.contains("active"))?.textContent.trim() || "Dark";
+}
+
+function selectedSceneTheme() {
+  const saved = localStorage.getItem("agentWorkbenchSceneTheme") || "aurora-peak";
+  return Object.prototype.hasOwnProperty.call(SCENE_THEMES, saved) ? saved : "aurora-peak";
+}
+
+function refreshTerminalThemes() {
+  const terminalTheme = terminalThemeFromPalette();
+  for (const session of sessions.values()) {
+    session.term.options.theme = terminalTheme;
+    session.term.refresh(0, Math.max(0, session.term.rows - 1));
+  }
+  if (sshAuthSession) {
+    sshAuthSession.term.options.theme = terminalTheme;
+    sshAuthSession.term.refresh(0, Math.max(0, sshAuthSession.term.rows - 1));
+  }
+}
+
+function sceneHash(value) {
+  let hash = 2166136261;
+  for (const character of String(value)) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function sceneRandom(seed, index) {
+  const value = Math.sin((seed + index * 1013) * 12.9898) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function resizeSceneCanvas() {
+  const pixelRatio = Math.min(1.5, Math.max(1, window.devicePixelRatio || 1));
+  const width = Math.max(1, Math.round(window.innerWidth * pixelRatio));
+  const height = Math.max(1, Math.round(window.innerHeight * pixelRatio));
+  if (sceneBackgroundCanvas.width === width && sceneBackgroundCanvas.height === height) return;
+  sceneBackgroundCanvas.width = width;
+  sceneBackgroundCanvas.height = height;
+}
+
+function drawSceneMountains(context, width, height, colors, time, seed) {
+  for (let layer = 0; layer < 4; layer += 1) {
+    const base = height * (0.48 + layer * 0.12);
+    const step = Math.max(90, width / 11);
+    const points = [];
+    for (let x = -step; x <= width + step; x += step) {
+      const rise = (0.11 + sceneRandom(seed, layer * 90 + Math.round(x)) * 0.19) * height;
+      const sway = Math.sin(time * 0.000055 + x * 0.003 + layer) * 5;
+      points.push({ x, y: base - rise + sway });
+    }
+    context.beginPath();
+    context.moveTo(0, height);
+    context.lineTo(points[0].x, points[0].y);
+    for (let index = 1; index < points.length; index += 1) {
+      const previous = points[index - 1];
+      const point = points[index];
+      const midpointX = (previous.x + point.x) / 2;
+      const midpointY = (previous.y + point.y) / 2;
+      context.quadraticCurveTo(previous.x, previous.y, midpointX, midpointY);
+    }
+    const last = points.at(-1);
+    context.lineTo(last.x, last.y);
+    context.lineTo(width, height);
+    context.closePath();
+    context.fillStyle = layer < 2 ? colors[0] : colors[1];
+    context.globalAlpha = 0.86 - layer * 0.1;
+    context.fill();
+  }
+  context.globalAlpha = 1;
+}
+
+function drawSceneClouds(context, width, height, colors, time, seed, density = 11) {
+  for (let index = 0; index < density; index += 1) {
+    const speed = 0.006 + sceneRandom(seed, index + 90) * 0.008;
+    const x = ((sceneRandom(seed, index) * (width + 360) + time * speed) % (width + 360)) - 180;
+    const y = height * (0.08 + sceneRandom(seed, index + 40) * 0.58);
+    const size = 34 + sceneRandom(seed, index + 70) * 85;
+    const cloudAlpha = 0.1 + sceneRandom(seed, index + 120) * 0.17;
+    context.save();
+    context.globalAlpha = cloudAlpha;
+    context.fillStyle = colors[2];
+    context.filter = `blur(${Math.max(5, size * 0.13)}px)`;
+    for (let lobe = 0; lobe < 6; lobe += 1) {
+      const offset = (lobe - 2.5) * size * 0.48;
+      const lift = Math.sin(lobe * 1.7 + index) * size * 0.14;
+      context.beginPath();
+      context.ellipse(
+        x + offset,
+        y + lift,
+        size * (0.58 + sceneRandom(seed, index * 20 + lobe) * 0.22),
+        size * (0.32 + sceneRandom(seed, index * 30 + lobe) * 0.18),
+        0,
+        0,
+        Math.PI * 2
+      );
+      context.fill();
+    }
+    context.restore();
+  }
+}
+
+function drawSceneParticles(context, width, height, colors, time, seed, kind) {
+  const count = kind === "rain" || kind === "snow" ? 110 : 42;
+  for (let index = 0; index < count; index += 1) {
+    const baseX = sceneRandom(seed, index) * width;
+    const baseY = sceneRandom(seed, index + 200) * height;
+    if (kind === "rain") {
+      const x = (baseX + time * 0.04) % width;
+      const y = (baseY + time * 0.18) % height;
+      context.strokeStyle = `${colors[2]}68`;
+      context.lineWidth = 1.4;
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x - 9, y + 28);
+      context.stroke();
+    } else if (kind === "snow") {
+      const x = (baseX + Math.sin(time * 0.001 + index) * 28 + width) % width;
+      const y = (baseY + time * (0.018 + sceneRandom(seed, index + 400) * 0.02)) % height;
+      context.fillStyle = `${colors[2]}bb`;
+      context.beginPath();
+      context.arc(x, y, 1.4 + sceneRandom(seed, index + 300) * 2.8, 0, Math.PI * 2);
+      context.fill();
+    } else {
+      const x = (baseX + Math.sin(time * 0.0007 + index) * 20 + width) % width;
+      const y = (baseY + Math.cos(time * 0.0005 + index * 2) * 16 + height) % height;
+      const glow = 0.35 + 0.65 * Math.abs(Math.sin(time * 0.002 + index));
+      context.fillStyle = `${colors[2]}${Math.round(glow * 255).toString(16).padStart(2, "0")}`;
+      context.beginPath();
+      context.arc(x, y, 1.5 + glow * 2.2, 0, Math.PI * 2);
+      context.fill();
+    }
+  }
+}
+
+function drawLivingScene(timestamp = performance.now()) {
+  sceneAnimationFrame = 0;
+  if (!cinematicModeEnabled || document.visibilityState !== "visible") return;
+  const sceneId = document.body.dataset.sceneTheme || selectedSceneTheme();
+  const scene = SCENE_THEMES[sceneId];
+  if (!scene) return;
+  if (scene.src) {
+    const reactive = booleanPreference("agentWorkbenchMusicReactive", false)
+      && latestSpotifyStatus?.state === "playing";
+    const reduceMotion = booleanPreference("agentWorkbenchReduceMotion", false);
+    const strength = numericPreference("agentWorkbenchCinematicEffectStrength", 45, 0, 100) / 100;
+    const estimatedPosition = Number(latestSpotifyStatus?.position || 0)
+      + Math.max(0, Date.now() - Number(latestSpotifyStatus?.retrievedAt || Date.now())) / 1000;
+    const beat = reactive && !reduceMotion
+      ? Math.pow((Math.sin(estimatedPosition * Math.PI * 3.2) + 1) / 2, 4) * strength
+      : 0;
+    document.body.style.setProperty("--cinematic-beat", beat.toFixed(3));
+    resizeSceneCanvas();
+    const context = sceneBackgroundCanvas.getContext("2d", { alpha: true });
+    const width = sceneBackgroundCanvas.width;
+    const height = sceneBackgroundCanvas.height;
+    context.clearRect(0, 0, width, height);
+    if (reactive && !reduceMotion) {
+      const glow = context.createRadialGradient(
+        width * 0.5,
+        height * 0.48,
+        0,
+        width * 0.5,
+        height * 0.48,
+        Math.max(width, height) * 0.72
+      );
+      glow.addColorStop(0, `rgba(144, 201, 255, ${0.025 + beat * 0.11})`);
+      glow.addColorStop(0.52, `rgba(103, 152, 224, ${0.012 + beat * 0.06})`);
+      glow.addColorStop(1, "rgba(4, 8, 14, 0)");
+      context.fillStyle = glow;
+      context.fillRect(0, 0, width, height);
+      drawSceneParticles(context, width, height, scene.colors, timestamp, sceneHash(sceneId), "glow");
+      sceneAnimationFrame = requestAnimationFrame(drawLivingScene);
+    }
+    return;
+  }
+  const frameRate = numericPreference("agentWorkbenchSceneFrameRate", 24, 15, 45);
+  const interval = 1000 / frameRate;
+  if (timestamp - sceneLastFrameAt < interval) {
+    sceneAnimationFrame = requestAnimationFrame(drawLivingScene);
+    return;
+  }
+  sceneLastFrameAt = timestamp;
+  resizeSceneCanvas();
+  const context = sceneBackgroundCanvas.getContext("2d", { alpha: false });
+  const width = sceneBackgroundCanvas.width;
+  const height = sceneBackgroundCanvas.height;
+  const seed = sceneHash(sceneId);
+  const reduceMotion = booleanPreference("agentWorkbenchReduceMotion", false);
+  const reactive = booleanPreference("agentWorkbenchMusicReactive", false) && latestSpotifyStatus?.state === "playing";
+  const strength = numericPreference("agentWorkbenchCinematicEffectStrength", 45, 0, 100) / 100;
+  const estimatedPosition = Number(latestSpotifyStatus?.position || 0)
+    + Math.max(0, Date.now() - Number(latestSpotifyStatus?.retrievedAt || Date.now())) / 1000;
+  const beat = reactive ? Math.pow((Math.sin(estimatedPosition * Math.PI * 3.2) + 1) / 2, 4) * strength : 0;
+  document.body.style.setProperty("--cinematic-beat", beat.toFixed(3));
+  const motionTime = reduceMotion ? 0 : timestamp * (1 + beat * 0.2);
+  const gradient = context.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, scene.colors[0]);
+  gradient.addColorStop(0.58, scene.colors[1]);
+  gradient.addColorStop(1, scene.colors[2]);
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+
+  if (["mountains", "clouds", "forest", "solar", "storm", "snow"].includes(scene.type)) {
+    drawSceneMountains(context, width, height, scene.colors, motionTime, seed);
+  }
+  if (["clouds", "architecture", "dream", "solar"].includes(scene.type)) {
+    drawSceneClouds(context, width, height, scene.colors, motionTime, seed);
+  }
+  if (["ocean", "koi", "underwater"].includes(scene.type)) {
+    for (let line = 0; line < 18; line += 1) {
+      const y = height * (0.42 + line * 0.035);
+      context.strokeStyle = `${line % 2 ? scene.colors[2] : scene.colors[1]}${(35 + line * 3).toString(16)}`;
+      context.lineWidth = 2 + line * 0.15;
+      context.beginPath();
+      for (let x = 0; x <= width; x += 24) {
+        const wave = Math.sin(x * 0.009 + motionTime * 0.0012 + line * 0.7) * (8 + line * 0.8);
+        if (x === 0) context.moveTo(x, y + wave);
+        else context.lineTo(x, y + wave);
+      }
+      context.stroke();
+    }
+  }
+  if (scene.type === "aurora") {
+    for (let ribbon = 0; ribbon < 5; ribbon += 1) {
+      context.strokeStyle = `${ribbon % 2 ? scene.colors[2] : "#82c8ff"}55`;
+      context.lineWidth = height * (0.03 + ribbon * 0.007);
+      context.beginPath();
+      for (let x = 0; x <= width; x += 24) {
+        const y = height * (0.17 + ribbon * 0.055)
+          + Math.sin(x * 0.006 + motionTime * 0.00035 + ribbon) * height * 0.08;
+        if (x === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+      }
+      context.stroke();
+    }
+  }
+  if (["city", "library", "lava", "architecture", "dream"].includes(scene.type)) {
+    for (let index = 0; index < 16; index += 1) {
+      const columnWidth = width / 15;
+      const buildingHeight = height * (0.16 + sceneRandom(seed, index) * 0.35);
+      const x = index * columnWidth - columnWidth * 0.2;
+      context.fillStyle = `${scene.colors[0]}e6`;
+      context.fillRect(x, height - buildingHeight, columnWidth * 0.78, buildingHeight);
+      context.fillStyle = `${scene.colors[2]}${scene.type === "city" ? "9a" : "54"}`;
+      for (let row = 0; row < 5; row += 1) {
+        context.fillRect(x + columnWidth * 0.18, height - buildingHeight + 16 + row * 28, 5, 9);
+      }
+    }
+  }
+  if (scene.type === "retro") {
+    context.strokeStyle = `${scene.colors[2]}66`;
+    context.lineWidth = 2;
+    for (let row = 0; row < 18; row += 1) {
+      const y = height * 0.62 + Math.pow(row / 18, 1.8) * height * 0.4;
+      context.beginPath();
+      context.moveTo(0, y);
+      context.lineTo(width, y);
+      context.stroke();
+    }
+    for (let column = -12; column <= 12; column += 1) {
+      context.beginPath();
+      context.moveTo(width / 2, height * 0.62);
+      context.lineTo(width / 2 + column * width * 0.09, height);
+      context.stroke();
+    }
+  }
+  if (scene.type === "desert") {
+    for (let layer = 0; layer < 4; layer += 1) {
+      context.fillStyle = `${layer % 2 ? scene.colors[1] : scene.colors[2]}${70 + layer * 28}`;
+      context.beginPath();
+      context.moveTo(0, height);
+      for (let x = 0; x <= width; x += 40) {
+        context.lineTo(x, height * (0.58 + layer * 0.09) + Math.sin(x * 0.004 + motionTime * 0.0002 + layer) * 45);
+      }
+      context.lineTo(width, height);
+      context.fill();
+    }
+  }
+  if (["rain", "city", "storm"].includes(scene.type)) drawSceneParticles(context, width, height, scene.colors, motionTime, seed, "rain");
+  if (scene.type === "snow") drawSceneParticles(context, width, height, scene.colors, motionTime, seed, "snow");
+  if (["meadow", "forest", "library", "underwater", "space", "koi", "lava"].includes(scene.type)) {
+    drawSceneParticles(context, width, height, scene.colors, motionTime, seed, "glow");
+  }
+  if (!reduceMotion) sceneAnimationFrame = requestAnimationFrame(drawLivingScene);
+}
+
+function syncSceneBackgroundPlayback() {
+  const scene = document.body.dataset.sceneTheme || selectedSceneTheme();
+  const config = SCENE_THEMES[scene] || null;
+  const active = Boolean(config && cinematicModeEnabled && homeView.hidden);
+  const reactive = active && booleanPreference("agentWorkbenchMusicReactive", false);
+  document.body.classList.toggle("scene-background-active", active);
+  sceneBackground.classList.toggle("active", active);
+  if (active) {
+    if (sceneBackground.getAttribute("src") !== config.src) {
+      sceneBackground.src = config.src;
+      sceneBackground.poster = config.poster;
+      sceneBackground.load();
+    }
+    sceneBackground.play().catch(() => {});
+  } else {
+    sceneBackground.pause();
+    sceneBackground.removeAttribute("src");
+    sceneBackground.removeAttribute("poster");
+    sceneBackground.load();
+  }
+  sceneBackgroundCanvas.classList.toggle("active", reactive);
+  if (sceneAnimationFrame) cancelAnimationFrame(sceneAnimationFrame);
+  sceneAnimationFrame = 0;
+  if (reactive) {
+    sceneLastFrameAt = 0;
+    drawLivingScene();
+  } else {
+    document.body.style.setProperty("--cinematic-beat", "0");
+    const context = sceneBackgroundCanvas.getContext("2d", { alpha: true });
+    context.clearRect(0, 0, sceneBackgroundCanvas.width, sceneBackgroundCanvas.height);
+  }
+}
+
+function selectSceneTheme(scene, { persist = true } = {}) {
+  const selected = Object.prototype.hasOwnProperty.call(SCENE_THEMES, scene) ? scene : "aurora-peak";
+  document.body.dataset.sceneTheme = selected;
+  sceneThemeOptions.forEach((option) => {
+    const active = option.dataset.sceneTheme === selected;
+    option.classList.toggle("active", active);
+    option.setAttribute("aria-checked", String(active));
+  });
+  if (persist) localStorage.setItem("agentWorkbenchSceneTheme", selected);
+  syncSceneBackgroundPlayback();
+  refreshTerminalThemes();
+}
+
+function selectNextSceneTheme() {
+  const scenes = Object.keys(SCENE_THEMES).filter((scene) => scene !== "none");
+  const current = document.body.dataset.sceneTheme || selectedSceneTheme();
+  const currentIndex = scenes.indexOf(current);
+  selectSceneTheme(scenes[(currentIndex + 1 + scenes.length) % scenes.length]);
 }
 
 function refreshThemeOptionVisibility(query = "") {
@@ -2411,6 +4423,19 @@ function applyTerminalPreferences() {
 function applyWorkbenchPreferences() {
   document.body.classList.toggle("compact-output-rows", booleanPreference("agentWorkbenchCompactOutputs", true));
   document.body.classList.toggle("reduce-motion", booleanPreference("agentWorkbenchReduceMotion", false));
+  document.body.classList.toggle("compact-workspace-tabs", booleanPreference("agentWorkbenchCompactTabs", false));
+  document.body.classList.toggle("hide-tab-etas", !booleanPreference("agentWorkbenchShowTabEtas", true));
+  document.body.classList.toggle("hide-pixel-status-labels", !booleanPreference("agentWorkbenchPixelStatusLabels", true));
+  document.documentElement.style.setProperty(
+    "--cinematic-panel-opacity",
+    String(numericPreference("agentWorkbenchCinematicPanelOpacity", 55, 35, 94) / 100)
+  );
+  settingsCinematicEffectStrengthValue.textContent =
+    `${numericPreference("agentWorkbenchCinematicEffectStrength", 40, 0, 100)}%`;
+  settingsCinematicPanelOpacityValue.textContent =
+    `${numericPreference("agentWorkbenchCinematicPanelOpacity", 55, 35, 94)}%`;
+  syncSceneBackgroundPlayback();
+  refreshTerminalThemes();
   for (const session of sessions.values()) updateAgentMetadata(session, {});
   applyTerminalPreferences();
 }
@@ -2422,17 +4447,19 @@ function restartSystemMetricsTimer() {
 }
 
 function initializeWorkbenchSettings() {
-  settingsDefaultLayout.value = String(numericPreference("agentWorkbenchDefaultLayout", 4, 1, 4));
   settingsRememberWidths.checked = booleanPreference("agentWorkbenchRememberWidths", true);
   settingsAutoCollapsePanes.checked = booleanPreference("agentWorkbenchAutoCollapsePanes", true);
+  settingsCompactTabs.checked = booleanPreference("agentWorkbenchCompactTabs", false);
+  settingsShowTabEtas.checked = booleanPreference("agentWorkbenchShowTabEtas", true);
   settingsDefaultAgent.value = localStorage.getItem("agentWorkbenchDefaultAgent") || "codex";
   settingsDefaultZen.checked = globalCleanMode;
   settingsAutoPreview.checked = booleanPreference("agentWorkbenchAutoPreview", true);
   settingsAgentNotifications.checked = booleanPreference("agentWorkbenchAgentNotifications", true);
   settingsRecentFilesLimit.value = String(numericPreference("agentWorkbenchRecentFilesLimit", 40, 8, 40));
   settingsPixelPets.checked = booleanPreference("agentWorkbenchPixelPets", true);
-  settingsPixelPetChoice.value = localStorage.getItem("agentWorkbenchPixelPetChoice") || "gitcat";
+  settingsPixelPetChoice.value = localStorage.getItem("agentWorkbenchPixelPetChoice") || "hamster";
   settingsPixelPetChoice.disabled = !settingsPixelPets.checked;
+  settingsPixelStatusLabels.checked = booleanPreference("agentWorkbenchPixelStatusLabels", true);
   settingsTerminalFontSize.value = String(numericPreference("agentWorkbenchTerminalFontSize", 9, 8, 16));
   settingsTerminalLineHeight.value = String(numericPreference("agentWorkbenchTerminalLineHeight", 1.15, 1, 1.5));
   settingsTerminalScrollback.value = String(numericPreference("agentWorkbenchTerminalScrollback", 6000, 1000, 10000));
@@ -2441,7 +4468,118 @@ function initializeWorkbenchSettings() {
   settingsCompactOutputs.checked = booleanPreference("agentWorkbenchCompactOutputs", true);
   settingsMetricsInterval.value = String(numericPreference("agentWorkbenchMetricsInterval", 5000, 2000, 10000));
   settingsReduceMotion.checked = booleanPreference("agentWorkbenchReduceMotion", false);
+  settingsMusicReactive.checked = booleanPreference("agentWorkbenchMusicReactive", false);
+  settingsCinematicEffectStrength.value = String(numericPreference("agentWorkbenchCinematicEffectStrength", 40, 0, 100));
+  settingsCinematicPanelOpacity.value = String(numericPreference("agentWorkbenchCinematicPanelOpacity", 55, 35, 94));
+  settingsSceneFrameRate.value = String(numericPreference("agentWorkbenchSceneFrameRate", 24, 15, 45));
+  const profile = {
+    name: localStorage.getItem("agentWorkbenchProfileName") || "Alex",
+    role: localStorage.getItem("agentWorkbenchProfileRole") || "",
+    focus: localStorage.getItem("agentWorkbenchProfileFocus") || "",
+    avatar: numericPreference("agentWorkbenchProfileAvatar", 0, 0, 5)
+  };
+  settingsProfileNameInput.value = profile.name;
+  settingsProfileRoleInput.value = profile.role;
+  settingsProfileFocusInput.value = profile.focus;
+  settingsProfileName.textContent = profile.name;
+  settingsProfileAvatar.src = `assets/agent-face-${profile.avatar}.png`;
+  selectSceneTheme(selectedSceneTheme(), { persist: false });
   applyWorkbenchPreferences();
+}
+
+function currentUserProfile() {
+  return {
+    name: localStorage.getItem("agentWorkbenchProfileName") || "Alex",
+    role: localStorage.getItem("agentWorkbenchProfileRole") || "",
+    focus: localStorage.getItem("agentWorkbenchProfileFocus") || "",
+    avatar: numericPreference("agentWorkbenchProfileAvatar", 0, 0, 5)
+  };
+}
+
+function renderNotepadTodos() {
+  notepadTodoList.replaceChildren();
+  if (!notepadTodos.length) {
+    const empty = document.createElement("p");
+    empty.className = "notepad-todo-empty";
+    empty.textContent = "Nothing here yet. Add a task above.";
+    notepadTodoList.appendChild(empty);
+    return;
+  }
+  for (const todo of notepadTodos) {
+    const row = document.createElement("label");
+    row.className = "notepad-todo-row";
+    row.innerHTML = `<input type="checkbox"><span></span><button type="button" title="Delete task">×</button>`;
+    row.querySelector("input").checked = Boolean(todo.done);
+    row.querySelector("span").textContent = todo.text;
+    row.querySelector("input").addEventListener("change", (event) => {
+      todo.done = event.currentTarget.checked;
+      queueNotepadSave();
+      renderNotepadTodos();
+    });
+    row.querySelector("button").addEventListener("click", () => {
+      notepadTodos = notepadTodos.filter((item) => item !== todo);
+      renderNotepadTodos();
+      queueNotepadSave();
+    });
+    notepadTodoList.appendChild(row);
+  }
+}
+
+function drawSavedSketch(dataUrl) {
+  const context = notepadSketchCanvas.getContext("2d");
+  context.clearRect(0, 0, notepadSketchCanvas.width, notepadSketchCanvas.height);
+  if (!dataUrl) return;
+  const image = new Image();
+  image.onload = () => context.drawImage(image, 0, 0, notepadSketchCanvas.width, notepadSketchCanvas.height);
+  image.src = dataUrl;
+}
+
+async function saveNotepad() {
+  if (!activeWorkspaceId || notepadBackdrop.hidden) return;
+  notepadSaveState.textContent = "Saving…";
+  try {
+    await api.writeWorkspaceNotes(activeWorkspaceId, {
+      notes: notepadText.value,
+      todos: notepadTodos,
+      sketch: notepadSketchCanvas.toDataURL("image/png"),
+      profile: currentUserProfile()
+    });
+    notepadSaveState.textContent = "Saved";
+  } catch (error) {
+    notepadSaveState.textContent = "Couldn’t save";
+    showToast(error.message || String(error));
+  }
+}
+
+function queueNotepadSave() {
+  notepadSaveState.textContent = "Unsaved";
+  if (notepadSaveTimer) clearTimeout(notepadSaveTimer);
+  notepadSaveTimer = setTimeout(() => saveNotepad(), 450);
+}
+
+async function openNotepad() {
+  if (!activeWorkspaceId) {
+    showToast("Open a workspace to use shared notes.");
+    return;
+  }
+  notepadBackdrop.hidden = false;
+  notepadSaveState.textContent = "Loading…";
+  const payload = await api.readWorkspaceNotes(activeWorkspaceId);
+  notepadText.value = payload?.notes || "";
+  notepadTodos = Array.isArray(payload?.todos) ? payload.todos : [];
+  renderNotepadTodos();
+  drawSavedSketch(payload?.sketch || "");
+  notepadSaveState.textContent = "Saved";
+  requestAnimationFrame(() => notepadText.focus());
+}
+
+async function closeNotepad() {
+  if (notepadSaveTimer) {
+    clearTimeout(notepadSaveTimer);
+    notepadSaveTimer = null;
+    await saveNotepad();
+  }
+  notepadBackdrop.hidden = true;
 }
 
 function terminalColorChannels(value) {
@@ -2520,11 +4658,14 @@ function terminalThemeFromPalette(palette = null) {
     accent: styles.getPropertyValue("--theme-accent").trim(),
     active: styles.getPropertyValue("--theme-active").trim()
   };
-  const background = terminalBackgroundColor(colors.terminal || colors.bg, "#090b0e");
+  const baseBackground = terminalBackgroundColor(colors.terminal || colors.bg, "#090b0e");
+  const background = document.body?.classList.contains("scene-background-active")
+    ? "rgba(0, 0, 0, 0)"
+    : baseBackground;
   const foreground = normalizeTerminalColor(colors.text, "#c7ced7");
   const accent = normalizeTerminalColor(colors.accent, "#79d7a7");
   const muted = normalizeTerminalColor(colors.muted, "#7e8794");
-  const backgroundChannels = terminalColorChannels(background) || [9, 11, 14];
+  const backgroundChannels = terminalColorChannels(baseBackground) || [9, 11, 14];
   const lightBackground = (
     backgroundChannels[0] * 0.2126
     + backgroundChannels[1] * 0.7152
@@ -2812,11 +4953,12 @@ async function connectSshWorkspace() {
   sshStatus.className = "ssh-status";
   try {
     await runSshAuthentication(remote);
-    sshStatus.textContent = "Authentication succeeded. Verifying the remote path and mirroring files…";
+    sshStatus.textContent = "Authentication succeeded. Verifying the remote path…";
     const workspace = await api.connectSshWorkspace(remote);
     closeSshDialog(false);
     sshOpenedFromWorkspaceSetup = false;
     await prepareWorkspaceSetup(workspace);
+    setRemoteConnectionState(workspace.id, "connected");
     refreshSystemMetrics();
   } catch (error) {
     sshStatus.textContent = formatSshConnectionError(error);
@@ -2868,15 +5010,17 @@ function renderWorkspaces() {
 
   const workspace = activeWorkspace();
   updateCommandCenterStatus();
-  newCodexButton.disabled = !workspace;
-  newClaudeButton.disabled = !workspace;
-  openCodeButton.disabled = !workspace;
-  newFileButton.disabled = !workspace;
-  newFolderButton.disabled = !workspace;
-  settingsWorkspacePath.textContent = workspace ? remoteWorkspaceLabel(workspace) : "No workspace selected";
+  updateWorkspaceActionAvailability(workspace);
   renderWorkspaceEditorTabs();
   renderHomeView();
   setFooter("No workspace");
+}
+
+function updateWorkspaceActionAvailability(workspace = activeWorkspace()) {
+  const available = isWorkspaceConnected(workspace);
+  openCodeButton.disabled = !available;
+  newFileButton.disabled = !available;
+  newFolderButton.disabled = !available;
 }
 
 function renderHomeView() {
@@ -2919,9 +5063,15 @@ function renderHomeView() {
 
 function setHomeView(open) {
   const next = Boolean(open);
+  if (next) {
+    if (cinematicModeEnabled) setCinematicMode(false, { persist: false });
+    if (pixelModeEnabled) setPixelMode(false, { persist: false });
+  }
   homeView.hidden = !next;
   homeButton.classList.toggle("active", next);
   homeButton.setAttribute("aria-pressed", String(next));
+  cinematicModeButton.disabled = next;
+  pixelModeButton.disabled = next;
   mainLayout.inert = next;
   mainLayout.setAttribute("aria-hidden", String(next));
   if (next) {
@@ -2929,6 +5079,8 @@ function setHomeView(open) {
     closeCommandPalette();
     setWorkspaceAddMenu(false);
     renderHomeView();
+  } else {
+    syncSceneBackgroundPlayback();
   }
 }
 
@@ -3104,6 +5256,7 @@ async function selectWorkspace(workspaceId) {
   selectedFilePath = "";
   selectedFileKind = "directory";
   localStorage.setItem("agentWorkbenchActiveWorkspace", workspaceId);
+  localStorage.setItem("agentWorkbenchLastWorkspace", workspaceId);
   renderWorkspaces();
   renderWorkspaceAgentGrid();
   activeArtifactPath = "";
@@ -3120,6 +5273,36 @@ async function addWorkspace() {
   await prepareWorkspaceSetup(workspace);
 }
 
+function updateFileEmptyState() {
+  const showingWorkspaces = currentSidebarView === "workspaces";
+  const workspace = activeWorkspace();
+  const disconnected = workspace?.type === "ssh" && !isWorkspaceConnected(workspace);
+  fileEmpty.hidden = showingWorkspaces
+    ? workspaces.length > 0
+    : Boolean(workspace) && !disconnected;
+  if (fileEmpty.hidden) return;
+  if (showingWorkspaces) {
+    fileEmpty.textContent = "Add a workspace to start.";
+  } else if (disconnected) {
+    const host = workspace.remote?.host || workspace.name || "remote";
+    fileEmpty.textContent = `Disconnected from ${host}. Reconnect to browse remote files.`;
+  } else {
+    fileEmpty.textContent = "Add a workspace to browse its files.";
+  }
+}
+
+function clearDisconnectedWorkspacePanels() {
+  const workspace = activeWorkspace();
+  if (!workspace || workspace.type !== "ssh" || isWorkspaceConnected(workspace)) return;
+  fileNodes = [];
+  artifacts = [];
+  selectedFilePath = "";
+  selectedFileKind = "directory";
+  renderFileTree();
+  renderArtifacts();
+  resetArtifactPreview();
+}
+
 async function refreshWorkspacePanels({ syncRemote = false } = {}) {
   const workspace = activeWorkspace();
   if (!workspace) {
@@ -3129,27 +5312,54 @@ async function refreshWorkspacePanels({ syncRemote = false } = {}) {
     renderArtifacts();
     return;
   }
-  setFooter(`Loading ${workspace.name}…`);
-  if (syncRemote && workspace.type === "ssh") {
-    setFooter(`Syncing ${workspace.name} remotely…`);
-    await api.syncWorkspace(workspace.id);
+  if (workspace.type === "ssh" && !isWorkspaceConnected(workspace)) {
+    clearDisconnectedWorkspacePanels();
+    setFooter(`Disconnected from ${workspace.remote?.host || workspace.name}`);
+    return;
   }
-  const [nextFiles, nextArtifacts] = await Promise.all([
-    api.listFiles(workspace.id),
-    api.listArtifacts(workspace.id)
-  ]);
-  fileNodes = nextFiles;
-  artifacts = nextArtifacts;
-  renderFileTree();
-  renderArtifacts();
-  setFooter(`${workspace.name} · ${artifacts.length} outputs`);
+  setFooter(`Loading ${workspace.name}…`);
+  try {
+    if (syncRemote && workspace.type === "ssh") {
+      setFooter(`Syncing ${workspace.name} remotely…`);
+      await api.syncWorkspace(workspace.id);
+    }
+    const [nextFiles, nextArtifacts] = await Promise.all([
+      api.listFiles(workspace.id),
+      api.listArtifacts(workspace.id)
+    ]);
+    if (workspace.id !== activeWorkspaceId) return;
+    fileNodes = nextFiles;
+    artifacts = nextArtifacts;
+    renderFileTree();
+    renderArtifacts();
+    setFooter(`${workspace.name} · ${artifacts.length} outputs`);
+  } catch (error) {
+    if (workspace.type !== "ssh") throw error;
+    setRemoteConnectionState(workspace.id, "disconnected");
+  }
 }
 
 function renderFileTree() {
   fileTree.innerHTML = "";
-  fileEmpty.hidden = Boolean(activeWorkspace());
-  if (!activeWorkspace()) {
-    fileEmpty.textContent = "Add a workspace to browse its files.";
+  updateFileEmptyState();
+  const workspace = activeWorkspace();
+  if (workspace?.type === "ssh" && !isWorkspaceConnected(workspace)) return;
+  const openedHere = openedOutputPaths.filter((entry) => entry.workspaceId === activeWorkspaceId);
+  if (openedHere.length) {
+    const group = document.createElement("section");
+    group.className = "opened-output-files";
+    const heading = document.createElement("strong");
+    heading.textContent = "Opened outputs";
+    group.appendChild(heading);
+    for (const entry of openedHere) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.title = entry.relativePath;
+      button.innerHTML = `<span aria-hidden="true">↗</span><span>${escapeHtml(entry.name || entry.relativePath.split("/").pop())}</span>`;
+      button.addEventListener("click", () => previewWorkspaceFile(entry.workspaceId, entry.relativePath));
+      group.appendChild(button);
+    }
+    fileTree.appendChild(group);
   }
   fileNodes.forEach((node) => fileTree.appendChild(createFileTreeNode(node, 0)));
 }
@@ -3436,7 +5646,7 @@ function createFileTreeNode(node, depth) {
   row.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     selectFileTreeRow(row, node);
-    api.showFileMenu(activeWorkspaceId, node.relativePath);
+    api.showFileMenu(activeWorkspaceId, node.relativePath, node.type);
   });
   const dropParentPath = parentPathForFileNode(node);
   row.addEventListener("dragover", (event) => {
@@ -3461,15 +5671,42 @@ function createFileTreeNode(node, depth) {
     const expanded = expandedFilePaths.has(node.relativePath);
     children.hidden = !expanded;
     disclosure.classList.toggle("expanded", expanded);
-    makeInteractive(row, () => {
+    const loadRemoteChildren = async () => {
+      if (node.childrenLoaded !== false || row.classList.contains("loading")) return true;
+      const workspaceId = activeWorkspaceId;
+      row.classList.add("loading");
+      row.setAttribute("aria-busy", "true");
+      try {
+        const nextChildren = await api.listDirectory(workspaceId, node.relativePath);
+        if (workspaceId !== activeWorkspaceId) return false;
+        node.children = nextChildren;
+        node.childrenLoaded = true;
+        children.replaceChildren();
+        for (const child of nextChildren) {
+          children.appendChild(createFileTreeNode(child, depth + 1));
+        }
+        return true;
+      } catch (error) {
+        showToast(`Could not list ${node.name}: ${error.message || String(error)}`);
+        return false;
+      } finally {
+        row.classList.remove("loading");
+        row.removeAttribute("aria-busy");
+      }
+    };
+    makeInteractive(row, async () => {
       selectFileTreeRow(row, node);
       const shouldExpand = children.hidden;
+      if (shouldExpand && !(await loadRemoteChildren())) return;
       children.hidden = !shouldExpand;
       disclosure.classList.toggle("expanded", shouldExpand);
       if (shouldExpand) expandedFilePaths.add(node.relativePath);
       else expandedFilePaths.delete(node.relativePath);
     });
     wrapper.appendChild(children);
+    if (expanded && node.childrenLoaded === false) {
+      loadRemoteChildren().catch(() => {});
+    }
   } else {
     makeInteractive(row, () => {
       selectFileTreeRow(row, node);
@@ -3588,6 +5825,12 @@ function escapeCodeHtml(value) {
     .replace(/>/g, "&gt;");
 }
 
+function escapeHtml(value) {
+  return escapeCodeHtml(value)
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function highlightedCodeHtml(source, extension) {
   const keywordSource = CODE_KEYWORDS.get(extension);
   if (!keywordSource) return escapeCodeHtml(source);
@@ -3630,6 +5873,16 @@ function renderOutputContent(container, artifact, { expanded = false } = {}) {
     image.src = artifact.dataUrl;
     image.alt = artifact.name;
     container.appendChild(image);
+    return;
+  }
+  if (artifact.kind === "video") {
+    const video = document.createElement("video");
+    video.src = artifact.fileUrl;
+    video.controls = true;
+    video.autoplay = false;
+    video.playsInline = true;
+    video.setAttribute("aria-label", artifact.name);
+    container.appendChild(video);
     return;
   }
   if (artifact.kind === "pdf" || [".html", ".htm"].includes(artifact.extension)) {
@@ -3696,7 +5949,16 @@ async function previewWorkspaceFile(workspaceId, relativePath) {
 
   try {
     const artifact = await api.readArtifact(workspaceId, relativePath);
+    openedOutputPaths = [
+      { workspaceId, relativePath, name: artifact.name },
+      ...openedOutputPaths.filter((entry) => (
+        entry.workspaceId !== workspaceId || entry.relativePath !== relativePath
+      ))
+    ].slice(0, 20);
+    localStorage.setItem("agentWorkbenchOpenedOutputs", JSON.stringify(openedOutputPaths));
     renderArtifactPreview(artifact, workspaceId, relativePath);
+    renderFileTree();
+    if (cinematicModeEnabled) openOutputViewer(artifact, workspaceId);
   } catch (error) {
     showToast(error.message || String(error));
   }
@@ -3879,6 +6141,7 @@ function renderEmptySlot(slot, index) {
   });
   launcher.append(number, input, buttons);
   slot.appendChild(launcher);
+  ensureCinematicResizeHandle(slot);
   requestAnimationFrame(resizeTaskInput);
   renderAgentSidebar();
 }
@@ -3905,10 +6168,12 @@ async function startAgent(slotIndex, kind, task = "") {
     selectAgentSession(sessions.get(descriptor.id));
     renderAgentSidebar();
     setFooter(`${descriptor.metadata.name} started in ${workspace.name}`);
+    return sessions.get(descriptor.id);
   } catch (error) {
     slot.classList.remove("loading");
     showToast(error.message || String(error));
     setFooter("Could not start agent");
+    return null;
   }
 }
 
@@ -3922,6 +6187,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         <span class="agent-kind"></span>
         <span class="agent-number">${slotIndex + 1}</span>
         <input class="agent-name-input" maxlength="48" aria-label="Agent name">
+        <span class="agent-state-chip" data-state="waiting">Idle</span>
         <div class="agent-actions">
           <button class="agent-action agent-more" type="button" title="More actions" aria-label="More actions">⋯</button>
           <button class="agent-action agent-clean-toggle" type="button" title="Zen view" aria-label="Show Zen view" aria-pressed="false">${AGENT_ZEN_ICON}</button>
@@ -3947,6 +6213,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         <div class="agent-menu-item stop-terminal" role="menuitem" tabindex="0"><span>×</span><span>Stop agent</span></div>
       </div>
       <section class="agent-clean-view" aria-label="Agent progress">
+        <div class="agent-current-task-indicator" data-state="waiting"><span>Now</span><strong>Waiting for the next request</strong></div>
         <div class="agent-clean-heading">Checklist</div>
         <div class="agent-clean-checklist" aria-label="Agent checklist"></div>
         <div class="agent-clean-eta-row">
@@ -3959,6 +6226,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
         </div>
         <div class="agent-clean-compose">
           <textarea rows="3" placeholder="Send another instruction…" aria-label="Send another instruction"></textarea>
+          <button class="agent-clean-send" type="button" title="Send instruction" aria-label="Send instruction">↵</button>
           <button class="agent-clean-interrupt" type="button" title="Interrupt agent" aria-label="Interrupt agent">
             ${AGENT_INTERRUPT_ICON}
           </button>
@@ -3976,6 +6244,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
       </footer>
     </div>
   `;
+  ensureCinematicResizeHandle(slot);
 
   const kindBadge = slot.querySelector(".agent-kind");
   kindBadge.classList.add(descriptor.kind);
@@ -3989,18 +6258,26 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     kindBadge.appendChild(image);
   }
   kindBadge.title = descriptor.kind;
+  applyAgentFace(slot.querySelector(".agent-number"), {
+    metadata: descriptor.metadata || {},
+    kind: descriptor.kind,
+    slotIndex
+  });
   const nameInput = slot.querySelector(".agent-name-input");
   const tldrNode = null;
   const statusCard = slot.querySelector(".agent-status-card");
+  const stateChip = slot.querySelector(".agent-state-chip");
   const recentFooter = slot.querySelector(".agent-recent-footer");
   const recentFilesNode = slot.querySelector(".recent-files");
   const terminalHost = slot.querySelector(".terminal-host");
   const cleanView = slot.querySelector(".agent-clean-view");
   const cleanChecklist = slot.querySelector(".agent-clean-checklist");
+  const cleanCurrentTask = slot.querySelector(".agent-current-task-indicator");
   const cleanEtaText = slot.querySelector(".agent-clean-eta-text");
   const cleanFiles = slot.querySelector(".agent-clean-files");
   const cleanFileList = slot.querySelector(".agent-clean-file-list");
   const cleanComposeInput = slot.querySelector(".agent-clean-compose textarea");
+  const cleanSendButton = slot.querySelector(".agent-clean-send");
   const cleanInterruptButton = slot.querySelector(".agent-clean-interrupt");
   const reconnectBanner = slot.querySelector(".agent-reconnect-banner");
   const reconnectButton = reconnectBanner.querySelector("button");
@@ -4013,6 +6290,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     fontFamily: '"SFMono-Regular", "SF Mono", Menlo, Consolas, monospace',
     fontSize: numericPreference("agentWorkbenchTerminalFontSize", 9, 8, 16),
     lineHeight: numericPreference("agentWorkbenchTerminalLineHeight", 1.15, 1, 1.5),
+    scrollOnUserInput: false,
     scrollback: numericPreference("agentWorkbenchTerminalScrollback", 6000, 1000, 10000),
     theme: terminalThemeFromPalette()
   });
@@ -4026,7 +6304,9 @@ function renderAgentCard(slot, slotIndex, descriptor) {
       session.terminalInputBuffer = "";
       if (
         task
-        && ["done", "waiting", "error"].includes(String(session.metadata.status || "").toLowerCase())
+        && session.kind !== "shell"
+        && !task.startsWith("/")
+        && !/^(?:y|n|yes|no|c|q|quit|exit)$/i.test(task)
       ) {
         beginAgentTask(session, task);
       }
@@ -4082,12 +6362,15 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     nameInput,
     tldrNode,
     statusCard,
+    stateChip,
     cleanView,
     cleanChecklist,
+    cleanCurrentTask,
     cleanEtaText,
     cleanFiles,
     cleanFileList,
     cleanComposeInput,
+    cleanSendButton,
     cleanInterruptButton,
     reconnectBanner,
     checklistEtaState: new Map(),
@@ -4136,17 +6419,10 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   cleanComposeInput.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
     event.preventDefault();
-    const message = cleanComposeInput.value.trim();
-    if (!message) return;
-    lastTerminalInputAt = Date.now();
-    resumeSessionEta(session);
-    session.pausedByUser = false;
-    beginAgentTask(session, message);
-    updateRuntimeStatus();
-    api.writeAgent(descriptor.id, `${message}\r`);
-    cleanComposeInput.value = "";
-    showToast(`Sent to Agent ${session.slotIndex + 1}`);
+    event.stopPropagation();
+    sendAgentCleanInstruction(session);
   });
+  cleanSendButton.addEventListener("click", () => sendAgentCleanInstruction(session));
   cleanInterruptButton.addEventListener("click", () => {
     interruptAgentSession(session);
   });
@@ -4258,13 +6534,13 @@ function swapAgentSlot(session, axis) {
   session.slot.dataset.agentNumber = String(targetIndex + 1);
   session.slot.style.order = String(targetIndex);
   session.slotIndex = targetIndex;
-  session.slot.querySelector(".agent-number").textContent = String(targetIndex + 1);
+  applyAgentFace(session.slot.querySelector(".agent-number"), session);
   targetSlot.dataset.slot = String(currentIndex);
   targetSlot.dataset.agentNumber = String(currentIndex + 1);
   targetSlot.style.order = String(currentIndex);
   if (targetSession) {
     targetSession.slotIndex = currentIndex;
-    targetSession.slot.querySelector(".agent-number").textContent = String(currentIndex + 1);
+    applyAgentFace(targetSession.slot.querySelector(".agent-number"), targetSession);
   } else {
     renderEmptySlot(targetSlot, currentIndex);
   }
@@ -4322,26 +6598,36 @@ function updateAgentEta() {
       ));
       const prefix = String(index + 1);
       if (!session) {
-        item.textContent = `${prefix} —`;
+        item.hidden = true;
+        item.classList.remove("has-agent-face");
+        item.style.removeProperty("--agent-face");
+        item.textContent = "";
         item.title = `${workspace.name} · Agent ${prefix}: empty`;
+        item.removeAttribute("aria-label");
         continue;
       }
 
       const status = session.metadata.status || "working";
+      item.hidden = false;
+      item.classList.add("has-agent-face");
+      item.style.setProperty("--agent-face", `url("${agentFaceUrl(session)}")`);
+      let statusText = status;
       if (status === "done") {
-        item.textContent = `${prefix} ✓`;
+        statusText = "done";
       } else if (status === "error") {
-        item.textContent = `${prefix} err`;
+        statusText = "error";
       } else {
         const etaSeconds = remainingEtaSeconds(session, now);
-        if (!Number.isFinite(etaSeconds)) {
-          item.textContent = `${prefix} —`;
-        } else {
-          item.textContent = `${prefix} ${formatEtaClock(etaSeconds)}`;
-        }
+        statusText = Number.isFinite(etaSeconds) ? formatEtaClock(etaSeconds) : status;
       }
-      item.title = `${workspace.name} · ${session.metadata.name || `${session.kind} agent`}: ${item.textContent.slice(prefix.length + 1)}`;
+      item.textContent = booleanPreference("agentWorkbenchShowTabEtas", true)
+        ? statusText
+        : "";
+      item.dataset.status = status;
+      item.title = `${workspace.name} · ${session.metadata.name || `${session.kind} agent`}: ${statusText}`;
+      item.setAttribute("aria-label", item.title);
     }
+    etaGroup.hidden = !Array.from(etaGroup.children).some((item) => !item.hidden);
   }
   for (const session of activePixelSessions()) {
     const eta = pixelAgentRosterList.querySelector(
@@ -4366,9 +6652,24 @@ function updateAgentEta() {
       present: true
     });
   }
+  if (pixelModeEnabled && pixelFrameReady && now - lastPixelAutoSyncAt >= 5000) {
+    lastPixelAutoSyncAt = now;
+    setPixelVisibleSessionsForFloor(activePixelFloor);
+    for (const session of pixelSessionsForFloor(activePixelFloor)) {
+      postPixelSessionDetails(session);
+    }
+    renderPixelAgentRoster();
+    renderPixelFloorLauncher();
+    if (pixelPreviewRefreshNeeded || pixelDirtyPreviewFloors.size > 0) {
+      schedulePixelPreviewRefresh(350);
+    }
+  }
   for (const session of sessions.values()) {
     updateAgentStatusCard(session, now);
     if (session.cleanMode && !typingRecently) renderAgentCleanView(session, now);
+  }
+  if (selectedPixelDetailAgentId) {
+    renderPixelAgentDetail(sessions.get(selectedPixelDetailAgentId));
   }
   updateCommandCenterStatus();
   updateRuntimeStatus(now);
@@ -4496,8 +6797,11 @@ function updateAgentMetadata(session, metadata) {
   if (recentFooterWasHidden !== session.recentFooter.hidden) {
     requestAnimationFrame(() => {
       try {
+        const buffer = session.term.buffer.active;
+        const viewportY = buffer.viewportY;
+        const wasAtBottom = viewportY >= buffer.baseY;
         session.fitAddon.fit();
-        if (!session.recentFooter.hidden) session.term.scrollToBottom();
+        if (!wasAtBottom) session.term.scrollToLine(viewportY);
       } catch (error) {
       }
     });
@@ -4571,46 +6875,74 @@ async function refreshUsage() {
       codexUsageMeter.style.width = "0";
     }
 
-    settingsCodexUsage.textContent = codexUsageText.textContent;
   } catch (error) {
     codexUsageText.textContent = "Usage unavailable";
-    settingsCodexUsage.textContent = codexUsageText.textContent;
   }
 }
 
 async function refreshSystemMetrics() {
+  const requestedWorkspaceId = activeWorkspaceId;
+  const requestedWorkspace = activeWorkspace();
+  gpuMetrics.replaceChildren();
+  gpuMetrics.removeAttribute("title");
   try {
-    const metrics = await api.getSystemMetrics(activeWorkspaceId);
+    const metrics = await api.getSystemMetrics(requestedWorkspaceId);
+    if (requestedWorkspace?.type === "ssh") {
+      setRemoteConnectionState(
+        requestedWorkspaceId,
+        metrics.source === "ssh" ? "connected" : "disconnected"
+      );
+    }
+    if (requestedWorkspaceId !== activeWorkspaceId) return;
     const sourceLabel = metrics.source === "ssh"
       ? `Remote ${metrics.label}`
       : metrics.source === "ssh-error"
-        ? `Remote ${metrics.label}`
+        ? `Remote ${metrics.label} unavailable`
         : "Local";
     metricSource.textContent = sourceLabel;
     metricSource.classList.toggle("error", metrics.source === "ssh-error");
+    metricSource.title = metrics.source === "ssh-error" ? metrics.error || "Remote metrics unavailable" : "";
+    if (metrics.source === "ssh-error") {
+      cpuUsageText.textContent = "—";
+      memoryUsageText.textContent = "—";
+      storageUsageText.textContent = "—";
+      const unavailable = document.createElement("span");
+      unavailable.className = "gpu-metric muted";
+      unavailable.textContent = "GPU unavailable";
+      gpuMetrics.appendChild(unavailable);
+      return;
+    }
     cpuUsageText.textContent = Number.isFinite(metrics.cpuPercent) ? `${Math.round(metrics.cpuPercent)}%` : "—";
     memoryUsageText.textContent = metrics.memoryTotalBytes
       ? `${formatCompactBytes(metrics.memoryUsedBytes)} / ${formatCompactBytes(metrics.memoryTotalBytes)}`
       : "—";
-    gpuMetrics.innerHTML = "";
+    storageUsageText.textContent = metrics.storageTotalBytes
+      ? `${formatCompactBytes(metrics.storageUsedBytes)} / ${formatCompactBytes(metrics.storageTotalBytes)}`
+      : "—";
     gpuMetrics.title = metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : "";
     for (const gpu of metrics.gpus || []) {
       const item = document.createElement("span");
       item.className = "gpu-metric";
       const users = Array.isArray(gpu.users) ? gpu.users.filter(Boolean) : [];
-      const processes = Array.isArray(gpu.processes) ? gpu.processes : [];
-      const processLines = processes.slice(0, 12).map((process) => {
-        const memory = Number.isFinite(process.memoryUsedMiB)
-          ? ` · ${formatMiB(process.memoryUsedMiB)}`
-          : "";
-        return `${process.user || "unknown"} · ${process.name || `PID ${process.pid}`}${memory}`;
-      });
-      item.title = [
-        gpu.name || `GPU ${gpu.index}`,
-        users.length ? `Users: ${users.join(", ")}` : "No active compute users",
-        ...processLines,
-        metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : ""
-      ].filter(Boolean).join("\n");
+      const processes = Array.isArray(gpu.processes)
+        ? [...gpu.processes].sort(
+            (left, right) => (Number(right.memoryUsedMiB) || 0) - (Number(left.memoryUsedMiB) || 0)
+          )
+        : [];
+      const userMemory = new Map();
+      for (const process of processes) {
+        const user = process.user || "unknown";
+        const total = userMemory.get(user) || 0;
+        userMemory.set(user, total + (Number(process.memoryUsedMiB) || 0));
+      }
+      for (const user of users) {
+        if (!userMemory.has(user)) userMemory.set(user, null);
+      }
+      const userLines = Array.from(userMemory.entries())
+        .sort((left, right) => (Number(right[1]) || 0) - (Number(left[1]) || 0))
+        .map(([user, memoryUsedMiB]) => (
+          `${user} · ${Number.isFinite(memoryUsedMiB) ? formatMiB(memoryUsedMiB) : "usage unavailable"}`
+        ));
       const utilization = Number.isFinite(gpu.utilizationPercent)
         ? `${Math.round(gpu.utilizationPercent)}%`
         : "—";
@@ -4619,6 +6951,41 @@ async function refreshSystemMetrics() {
         : Number.isFinite(gpu.memoryTotalMiB)
           ? `—/${formatMiB(gpu.memoryTotalMiB)}`
           : "—";
+      const visibleProcesses = processes.slice(0, 12);
+      const processLines = visibleProcesses.map((process) => {
+        const memory = Number.isFinite(process.memoryUsedMiB)
+          ? ` · ${formatMiB(process.memoryUsedMiB)}`
+          : "";
+        return `${process.user || "unknown"} · ${process.name || `PID ${process.pid}`}${memory}`;
+      });
+      const hiddenProcesses = processes.slice(visibleProcesses.length);
+      if (hiddenProcesses.length) {
+        const hiddenMemoryMiB = hiddenProcesses.reduce(
+          (total, process) => total + (Number(process.memoryUsedMiB) || 0),
+          0
+        );
+        processLines.push(
+          `+ ${hiddenProcesses.length} more process${hiddenProcesses.length === 1 ? "" : "es"}`
+          + (hiddenMemoryMiB > 0 ? ` · ${formatMiB(hiddenMemoryMiB)}` : "")
+        );
+      }
+      const processMetricsAvailable = gpu.processMetricsAvailable !== false;
+      const gpuTooltip = [
+        gpu.name || `GPU ${gpu.index}`,
+        `VRAM ${memory} · usage ${utilization}`,
+        userLines.length ? "Users:" : "",
+        ...userLines,
+        !userLines.length && processMetricsAvailable ? "No active compute users" : "",
+        !processMetricsAvailable
+          ? `Process ownership unavailable${gpu.processError ? `: ${gpu.processError}` : ""}`
+          : "",
+        processLines.length ? "Processes:" : "",
+        ...processLines,
+        metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : ""
+      ].filter(Boolean).join("\n");
+      item.dataset.tooltip = gpuTooltip;
+      item.tabIndex = 0;
+      item.setAttribute("aria-label", gpuTooltip);
       item.classList.toggle("muted", !gpu.metricsAvailable && !Number.isFinite(gpu.utilizationPercent));
       item.textContent = `GPU ${gpu.index} · memory ${memory} · usage ${utilization}`;
       gpuMetrics.appendChild(item);
@@ -4630,8 +6997,19 @@ async function refreshSystemMetrics() {
       gpuMetrics.appendChild(empty);
     }
   } catch (error) {
+    if (requestedWorkspace?.type === "ssh") {
+      setRemoteConnectionState(requestedWorkspaceId, "disconnected");
+    }
+    if (requestedWorkspaceId !== activeWorkspaceId) return;
     cpuUsageText.textContent = "—";
     memoryUsageText.textContent = "—";
+    storageUsageText.textContent = "—";
+    gpuMetrics.replaceChildren();
+    const unavailable = document.createElement("span");
+    unavailable.className = "gpu-metric muted";
+    unavailable.textContent = "GPU unavailable";
+    unavailable.setAttribute("aria-label", `GPU metrics unavailable: ${error.message || error}`);
+    gpuMetrics.appendChild(unavailable);
   }
 }
 
@@ -4640,9 +7018,22 @@ async function refreshSpotifyStatus() {
   spotifyRefreshBusy = true;
   try {
     const status = await api.getSpotifyStatus();
+    latestSpotifyStatus = { ...status, retrievedAt: Date.now() };
     const hasTrack = Boolean(status.running && status.name);
-    spotifyNowPlaying.hidden = !hasTrack;
-    if (!hasTrack) return;
+    spotifyNowPlaying.hidden = false;
+    spotifyNowPlaying.classList.toggle("no-track", !hasTrack);
+    if (!hasTrack) {
+      spotifyTrackName.textContent = "Spotify";
+      spotifyTrackName.title = "Spotify";
+      spotifyTrackDetail.textContent = "Open Spotify";
+      spotifyTrackDetail.title = "Open Spotify";
+      spotifyArtwork.hidden = true;
+      spotifyNowPlaying.classList.remove("playing");
+      document.body.classList.remove("music-playing");
+      spotifyShuffleButton.classList.remove("active");
+      spotifyShuffleButton.setAttribute("aria-pressed", "false");
+      return;
+    }
     if (spotifyTrackName.textContent !== status.name) spotifyTrackName.textContent = status.name;
     spotifyTrackName.title = status.name;
     requestAnimationFrame(() => {
@@ -4669,12 +7060,22 @@ async function refreshSpotifyStatus() {
     if (artworkUrl && spotifyArtwork.src !== artworkUrl) spotifyArtwork.src = artworkUrl;
     const playing = status.state === "playing";
     spotifyNowPlaying.classList.toggle("playing", playing);
+    document.body.classList.toggle("music-playing", playing);
     const actionLabel = playing ? "Pause" : "Play";
     spotifyPlayPauseButton.title = actionLabel;
     spotifyPlayPauseButton.setAttribute("aria-label", actionLabel);
+    const shuffle = Boolean(status.shuffling);
+    spotifyShuffleButton.classList.toggle("active", shuffle);
+    spotifyShuffleButton.setAttribute("aria-pressed", String(shuffle));
+    spotifyShuffleButton.title = shuffle ? "Turn shuffle off" : "Turn shuffle on";
+    spotifyShuffleButton.setAttribute("aria-label", spotifyShuffleButton.title);
   } catch (error) {
-    spotifyNowPlaying.hidden = true;
+    spotifyNowPlaying.hidden = false;
+    spotifyNowPlaying.classList.add("no-track");
     spotifyArtwork.hidden = true;
+    spotifyTrackName.textContent = "Spotify";
+    spotifyTrackDetail.textContent = "Open Spotify";
+    document.body.classList.remove("music-playing");
   } finally {
     spotifyRefreshBusy = false;
   }
@@ -4689,12 +7090,69 @@ async function controlSpotify(action) {
   }
 }
 
+async function openApplicationShortcut(application, label) {
+  try {
+    await api.openApplication(application);
+  } catch (error) {
+    showToast(`${label} is not available.`);
+  }
+}
+
+function timeBasedPixelSkyPhase(now = new Date()) {
+  const hour = now.getHours() + now.getMinutes() / 60;
+  if (hour >= 5 && hour < 8) return "sunrise";
+  if (hour >= 8 && hour < 17) return "day";
+  if (hour >= 17 && hour < 20) return "sunset";
+  return "night";
+}
+
+function applyPixelSkyPhase(now = new Date()) {
+  const automaticPhase = timeBasedPixelSkyPhase(now);
+  const skyPhase = pixelSkyManualPhase || automaticPhase;
+  const phases = ["sunrise", "day", "sunset", "night"];
+  const nextPhase = phases[(Math.max(0, phases.indexOf(skyPhase)) + 1) % phases.length];
+  pixelModeView.dataset.skyPhase = skyPhase;
+  pixelModeView.dataset.skySource = pixelSkyManualPhase ? "manual" : "time";
+  pixelSkyToggleButton.dataset.skyPhase = skyPhase;
+  pixelSkyToggleButton.setAttribute("aria-pressed", String(Boolean(pixelSkyManualPhase)));
+  pixelSkyToggleButton.title = `Tower sky: ${skyPhase}. Switch to ${nextPhase}. Double-click for local time.`;
+  pixelSkyToggleButton.setAttribute("aria-label", pixelSkyToggleButton.title);
+}
+
+function togglePixelSkyPhase() {
+  const visiblePhase = pixelModeView.dataset.skyPhase || timeBasedPixelSkyPhase();
+  const phases = ["sunrise", "day", "sunset", "night"];
+  const currentIndex = Math.max(0, phases.indexOf(visiblePhase));
+  pixelSkyManualPhase = phases[(currentIndex + 1) % phases.length];
+  applyPixelSkyPhase();
+}
+
 function refreshTitlebarTime() {
   const now = new Date();
   const label = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" }).format(now);
   titlebarTime.textContent = label;
   titlebarTime.dateTime = now.toISOString();
   titlebarTime.title = now.toLocaleString();
+  applyPixelSkyPhase(now);
+}
+
+function renderCalendar(now = new Date()) {
+  calendarMonth.textContent = new Intl.DateTimeFormat([], { month: "long", year: "numeric" }).format(now);
+  calendarFullDate.textContent = new Intl.DateTimeFormat([], {
+    weekday: "long", month: "long", day: "numeric"
+  }).format(now);
+  calendarGrid.replaceChildren();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  for (let index = 0; index < first.getDay(); index += 1) {
+    calendarGrid.appendChild(document.createElement("span"));
+  }
+  for (let day = 1; day <= days; day += 1) {
+    const cell = document.createElement("b");
+    cell.textContent = String(day);
+    cell.classList.toggle("today", day === now.getDate());
+    calendarGrid.appendChild(cell);
+  }
 }
 
 async function refreshPowerStatus() {
@@ -4702,13 +7160,14 @@ async function refreshPowerStatus() {
   titlebarBattery.hidden = !status.available;
   if (!status.available) return;
   const percent = Math.max(0, Math.min(100, Number(status.percent) || 0));
-  titlebarBatteryText.textContent = `${Math.round(percent)}%`;
   titlebarBatteryFill.setAttribute("width", String(10.8 * percent / 100));
   const charging = Boolean(status.charging);
+  const charged = Boolean(status.charged);
+  titlebarBatteryText.textContent = `${Math.round(percent)}%`;
   titlebarBattery.classList.toggle("charging", charging);
-  titlebarBattery.classList.toggle("charged", Boolean(status.charged));
+  titlebarBattery.classList.toggle("charged", charged);
   titlebarBatteryCharge.hidden = !charging;
-  const stateLabel = status.charged ? "charged" : charging ? "charging" : "on battery";
+  const stateLabel = charged ? "charged" : charging ? "charging" : "on battery";
   titlebarBattery.title = `${Math.round(percent)}% · ${stateLabel}`;
   titlebarBattery.setAttribute("aria-label", `${Math.round(percent)} percent, ${stateLabel}`);
 }
@@ -4730,6 +7189,7 @@ function formatReset(value) {
 }
 
 function formatBytes(value) {
+  if (!Number.isFinite(Number(value))) return "remote";
   const bytes = Number(value) || 0;
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
@@ -4851,7 +7311,7 @@ function setupPanelResizing() {
 function scheduleWorkspaceRefresh(payload) {
   if (payload.workspaceId !== activeWorkspaceId) return;
   if (payload.remoteSyncError) {
-    showToast(`Remote connection succeeded, but file sync failed: ${payload.remoteSyncError}`);
+    console.warn("Legacy remote mirror failed:", payload.remoteSyncError);
   }
   clearTimeout(refreshTimer);
   const refreshWhenIdle = () => {
@@ -4956,17 +7416,215 @@ workspaceRemoveBackdrop.addEventListener("click", (event) => {
 });
 newFileButton.addEventListener("click", () => beginCreateWorkspaceEntry("file"));
 newFolderButton.addEventListener("click", () => beginCreateWorkspaceEntry("folder"));
-newCodexButton.addEventListener("click", () => startFromToolbar("codex"));
-newClaudeButton.addEventListener("click", () => startFromToolbar("claude"));
+openChromeButton.addEventListener("click", () => openApplicationShortcut("chrome", "Google Chrome"));
+openOpenleafButton.addEventListener("click", () => openApplicationShortcut("openleaf", "Openleaf"));
+spotifyOpenButton.addEventListener("click", () => openApplicationShortcut("spotify", "Spotify"));
 openCodeButton.addEventListener("click", async () => {
   if (activeWorkspaceId) await api.openInCode(activeWorkspaceId);
 });
-pixelModeButton.addEventListener("click", () => setPixelMode(!pixelModeEnabled));
+openNotepadButton.addEventListener("click", () => openNotepad().catch((error) => showToast(error.message || String(error))));
+closeNotepadButton.addEventListener("click", () => closeNotepad());
+notepadBackdrop.addEventListener("click", (event) => {
+  if (event.target === notepadBackdrop) closeNotepad();
+});
+notepadText.addEventListener("input", queueNotepadSave);
+notepadSectionButtons.forEach((button) => button.addEventListener("click", () => {
+  notepadSectionButtons.forEach((item) => item.classList.toggle("active", item === button));
+  for (const [name, section] of Object.entries(notepadSections)) {
+    section.hidden = name !== button.dataset.notepadSection;
+  }
+}));
+notepadTodoForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const text = notepadTodoInput.value.trim();
+  if (!text) return;
+  notepadTodos.push({ id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, text, done: false });
+  notepadTodoInput.value = "";
+  renderNotepadTodos();
+  queueNotepadSave();
+});
+notepadSketchCanvas.addEventListener("pointerdown", (event) => {
+  notepadSketchDrawing = true;
+  notepadSketchCanvas.setPointerCapture(event.pointerId);
+  const bounds = notepadSketchCanvas.getBoundingClientRect();
+  notepadSketchLastPoint = {
+    x: (event.clientX - bounds.left) * notepadSketchCanvas.width / bounds.width,
+    y: (event.clientY - bounds.top) * notepadSketchCanvas.height / bounds.height
+  };
+});
+notepadSketchCanvas.addEventListener("pointermove", (event) => {
+  if (!notepadSketchDrawing || !notepadSketchLastPoint) return;
+  const bounds = notepadSketchCanvas.getBoundingClientRect();
+  const next = {
+    x: (event.clientX - bounds.left) * notepadSketchCanvas.width / bounds.width,
+    y: (event.clientY - bounds.top) * notepadSketchCanvas.height / bounds.height
+  };
+  const context = notepadSketchCanvas.getContext("2d");
+  context.strokeStyle = notepadSketchColor.value;
+  context.lineWidth = Number(notepadSketchSize.value) * notepadSketchCanvas.width / bounds.width;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.beginPath();
+  context.moveTo(notepadSketchLastPoint.x, notepadSketchLastPoint.y);
+  context.lineTo(next.x, next.y);
+  context.stroke();
+  notepadSketchLastPoint = next;
+});
+const finishNotepadStroke = () => {
+  if (notepadSketchDrawing) queueNotepadSave();
+  notepadSketchDrawing = false;
+  notepadSketchLastPoint = null;
+};
+notepadSketchCanvas.addEventListener("pointerup", finishNotepadStroke);
+notepadSketchCanvas.addEventListener("pointercancel", finishNotepadStroke);
+notepadSketchClear.addEventListener("click", () => {
+  notepadSketchCanvas.getContext("2d").clearRect(0, 0, notepadSketchCanvas.width, notepadSketchCanvas.height);
+  queueNotepadSave();
+});
+cinematicModeButton.addEventListener("click", () => setCinematicMode(!cinematicModeEnabled));
+cinematicExitButton.addEventListener("click", () => setCinematicMode(false));
+cinematicNextSceneButton.addEventListener("click", selectNextSceneTheme);
+agentGrid.addEventListener("pointerdown", beginCinematicPaneResize);
+window.addEventListener("pointermove", updateCinematicPaneResize);
+window.addEventListener("pointerup", finishCinematicPaneResize);
+window.addEventListener("pointercancel", finishCinematicPaneResize);
+window.addEventListener("resize", () => {
+  if (cinematicModeEnabled) applyCinematicPaneSize();
+});
+pixelModeButton.addEventListener("click", () => {
+  if (!pixelModeEnabled && cinematicModeEnabled) setCinematicMode(false);
+  setPixelMode(!pixelModeEnabled);
+});
+pixelExitButton.addEventListener("click", () => setPixelMode(false));
 globalZenButton.addEventListener("click", () => setGlobalCleanMode(!globalCleanMode));
+cinematicPromptDock.addEventListener("submit", (event) => {
+  event.preventDefault();
+  submitCinematicPrompt();
+});
+cinematicMentionButton.addEventListener("click", () => {
+  const cursor = cinematicPromptInput.selectionStart ?? cinematicPromptInput.value.length;
+  const prefix = cursor > 0 && !/\s$/.test(cinematicPromptInput.value.slice(0, cursor)) ? " " : "";
+  cinematicPromptInput.setRangeText(`${prefix}@`, cursor, cursor, "end");
+  cinematicPromptInput.focus();
+  const mentionEnd = cursor + prefix.length + 1;
+  cinematicPromptInput.setSelectionRange(mentionEnd, mentionEnd);
+  cinematicMentionIndex = 0;
+  renderCinematicMentionMenu(true);
+});
+cinematicResultsButton.addEventListener("click", async () => {
+  if (activeOutputArtifact) {
+    outputViewer.hidden = false;
+    document.querySelector(".agent-stage").classList.add("output-viewer-active");
+    return;
+  }
+  const latest = artifacts[0] || openedOutputPaths.find((entry) => entry.workspaceId === activeWorkspaceId);
+  if (latest?.relativePath) {
+    await previewWorkspaceFile(activeWorkspaceId, latest.relativePath);
+    return;
+  }
+  setOutputCollapsed(false);
+  showToast("No generated results yet.");
+});
+cinematicPromptInput.addEventListener("input", () => {
+  cinematicMentionIndex = 0;
+  renderCinematicMentionMenu();
+});
+cinematicPromptInput.addEventListener("focus", renderCinematicMentionMenu);
+cinematicPromptInput.addEventListener("blur", () => {
+  setTimeout(() => {
+    if (
+      document.activeElement !== cinematicPromptInput
+      && !cinematicMentionMenu.matches(":hover")
+    ) {
+      closeCinematicMentionMenu();
+    }
+  }, 120);
+});
+cinematicPromptInput.addEventListener("keydown", (event) => {
+  if (cinematicMentionMenu.hidden) return;
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    const direction = event.key === "ArrowDown" ? 1 : -1;
+    cinematicMentionIndex = (
+      cinematicMentionIndex
+      + direction
+      + cinematicMentionChoicesState.length
+    ) % cinematicMentionChoicesState.length;
+    renderCinematicMentionMenu();
+    return;
+  }
+  if (event.key === "Enter" || event.key === "Tab") {
+    event.preventDefault();
+    insertCinematicMention();
+    return;
+  }
+  if (event.key === "Escape") {
+    event.preventDefault();
+    event.stopPropagation();
+    closeCinematicMentionMenu();
+  }
+});
+cinematicMentionMenu.addEventListener("pointerdown", (event) => {
+  const button = event.target.closest(".cinematic-mention-choice");
+  if (!button) return;
+  event.preventDefault();
+  insertCinematicMention(Number(button.dataset.mentionIndex));
+});
+cinematicMentionMenu.addEventListener("pointermove", (event) => {
+  const button = event.target.closest(".cinematic-mention-choice");
+  if (!button) return;
+  const nextIndex = Number(button.dataset.mentionIndex);
+  if (!Number.isInteger(nextIndex) || nextIndex === cinematicMentionIndex) return;
+  cinematicMentionIndex = nextIndex;
+  cinematicMentionMenu.querySelectorAll(".cinematic-mention-choice").forEach((choice, index) => {
+    choice.setAttribute("aria-selected", String(index === cinematicMentionIndex));
+  });
+});
+sceneThemeOptions.forEach((option) => {
+  option.addEventListener("click", () => selectSceneTheme(option.dataset.sceneTheme));
+});
 pixelAgentClipboardButton.addEventListener("click", () => {
   setPixelAgentClipboard(pixelAgentClipboard.hidden);
 });
+pixelSkyToggleButton.addEventListener("click", togglePixelSkyPhase);
+pixelSkyToggleButton.addEventListener("dblclick", () => {
+  pixelSkyManualPhase = null;
+  applyPixelSkyPhase();
+  showToast("Tower sky follows local time.");
+});
 closePixelAgentClipboardButton.addEventListener("click", () => setPixelAgentClipboard(false));
+closePixelAgentDetailButton.addEventListener("click", closePixelAgentDetail);
+closePixelPetDetailButton.addEventListener("click", closePixelPetDetail);
+pixelFloorLauncherButtons.forEach((button) => {
+  button.addEventListener("click", () => startPixelFloorAgent(button.dataset.agentKind));
+});
+pixelFloorTaskInput.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const defaultKind = localStorage.getItem("agentWorkbenchDefaultAgent") || "codex";
+  startPixelFloorAgent(["codex", "claude", "shell"].includes(defaultKind) ? defaultKind : "codex");
+});
+pixelAgentDetailSendButton.addEventListener("click", sendPixelAgentDetailInstruction);
+pixelAgentDetailPrompt.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+  event.preventDefault();
+  event.stopPropagation();
+  sendPixelAgentDetailInstruction();
+});
+pixelAgentDetailStatusButton.addEventListener("click", () => {
+  const session = sessions.get(selectedPixelDetailAgentId);
+  if (session) askAgentsForStatus(session);
+});
+pixelAgentDetailInterruptButton.addEventListener("click", () => {
+  const session = sessions.get(selectedPixelDetailAgentId);
+  if (session) interruptAgentSession(session);
+});
+pixelAgentDetailTerminalButton.addEventListener("click", () => {
+  const session = sessions.get(selectedPixelDetailAgentId);
+  if (session) focusAgentWindow(session.slotIndex);
+});
+pixelRefreshButton.addEventListener("click", () => refreshPixelView());
 pixelAddFloorButton.addEventListener("click", addPixelFloor);
 pixelDeleteFloorButton.addEventListener("click", deletePixelFloor);
 runPauseAllButton.addEventListener("click", toggleRunPauseAll);
@@ -4983,6 +7641,7 @@ setGlobalCleanMode(globalCleanMode, { persist: false });
 spotifyPreviousButton.addEventListener("click", () => controlSpotify("previous"));
 spotifyPlayPauseButton.addEventListener("click", () => controlSpotify("playpause"));
 spotifyNextButton.addEventListener("click", () => controlSpotify("next"));
+spotifyShuffleButton.addEventListener("click", () => controlSpotify("shuffle"));
 spotifyArtwork.addEventListener("error", () => {
   spotifyArtwork.hidden = true;
 });
@@ -4995,8 +7654,23 @@ notificationButton.addEventListener("contextmenu", (event) => {
   clearAgentNotifications();
   setNotificationPanel(false);
 });
+titlebarTime.addEventListener("click", (event) => {
+  event.stopPropagation();
+  renderCalendar();
+  calendarPopover.hidden = !calendarPopover.hidden;
+});
 openSettingsButton.addEventListener("click", openSettings);
 homeButton.addEventListener("click", () => setHomeView(homeView.hidden));
+workspaceBackButton.addEventListener("click", () => setHomeView(true));
+workspaceForwardButton.addEventListener("click", async () => {
+  const recentId = localStorage.getItem("agentWorkbenchLastWorkspace");
+  if (recentId && workspaces.some((workspace) => workspace.id === recentId)) {
+    activeWorkspaceId = recentId;
+    localStorage.setItem("agentWorkbenchActiveWorkspace", recentId);
+    await loadWorkspaces();
+  }
+  setHomeView(false);
+});
 homeAddWorkspaceButton.addEventListener("click", () => {
   setHomeView(false);
   setWorkspaceAddMenu(true);
@@ -5012,14 +7686,20 @@ pdfOptions.forEach((option) => makeInteractive(option, () => {
   pdfOptions.forEach((item) => item.classList.toggle("active", item === option));
   localStorage.setItem("agentWorkbenchPdfMode", option.dataset.pdfMode);
 }));
-settingsDefaultLayout.addEventListener("change", () => {
-  localStorage.setItem("agentWorkbenchDefaultLayout", settingsDefaultLayout.value);
-});
 settingsRememberWidths.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchRememberWidths", settingsRememberWidths.checked ? "1" : "0");
 });
 settingsAutoCollapsePanes.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchAutoCollapsePanes", settingsAutoCollapsePanes.checked ? "1" : "0");
+});
+settingsCompactTabs.addEventListener("change", () => {
+  localStorage.setItem("agentWorkbenchCompactTabs", settingsCompactTabs.checked ? "1" : "0");
+  applyWorkbenchPreferences();
+});
+settingsShowTabEtas.addEventListener("change", () => {
+  localStorage.setItem("agentWorkbenchShowTabEtas", settingsShowTabEtas.checked ? "1" : "0");
+  applyWorkbenchPreferences();
+  updateAgentEta();
 });
 settingsDefaultAgent.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchDefaultAgent", settingsDefaultAgent.value);
@@ -5042,13 +7722,17 @@ settingsPixelPets.addEventListener("change", () => {
   settingsPixelPetChoice.disabled = !settingsPixelPets.checked;
   syncPixelMode(true);
   pixelPreviewRefreshNeeded = true;
-  schedulePixelPreviewRefresh(180);
+  schedulePixelPreviewRefresh(260, { all: true });
 });
 settingsPixelPetChoice.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchPixelPetChoice", settingsPixelPetChoice.value);
   syncPixelMode(true);
   pixelPreviewRefreshNeeded = true;
-  schedulePixelPreviewRefresh(180);
+  schedulePixelPreviewRefresh(260, { all: true });
+});
+settingsPixelStatusLabels.addEventListener("change", () => {
+  localStorage.setItem("agentWorkbenchPixelStatusLabels", settingsPixelStatusLabels.checked ? "1" : "0");
+  applyWorkbenchPreferences();
 });
 settingsTerminalFontSize.addEventListener("input", () => {
   localStorage.setItem("agentWorkbenchTerminalFontSize", settingsTerminalFontSize.value);
@@ -5081,6 +7765,38 @@ settingsReduceMotion.addEventListener("change", () => {
   localStorage.setItem("agentWorkbenchReduceMotion", settingsReduceMotion.checked ? "1" : "0");
   applyWorkbenchPreferences();
 });
+settingsMusicReactive.addEventListener("change", () => {
+  localStorage.setItem("agentWorkbenchMusicReactive", settingsMusicReactive.checked ? "1" : "0");
+  syncSceneBackgroundPlayback();
+});
+settingsCinematicEffectStrength.addEventListener("input", () => {
+  localStorage.setItem("agentWorkbenchCinematicEffectStrength", settingsCinematicEffectStrength.value);
+  applyWorkbenchPreferences();
+});
+settingsCinematicPanelOpacity.addEventListener("input", () => {
+  localStorage.setItem("agentWorkbenchCinematicPanelOpacity", settingsCinematicPanelOpacity.value);
+  applyWorkbenchPreferences();
+});
+settingsSceneFrameRate.addEventListener("change", () => {
+  localStorage.setItem("agentWorkbenchSceneFrameRate", settingsSceneFrameRate.value);
+  syncSceneBackgroundPlayback();
+});
+function syncProfileSettings() {
+  const name = settingsProfileNameInput.value.trim() || "Alex";
+  localStorage.setItem("agentWorkbenchProfileName", name);
+  localStorage.setItem("agentWorkbenchProfileRole", settingsProfileRoleInput.value.trim());
+  localStorage.setItem("agentWorkbenchProfileFocus", settingsProfileFocusInput.value.trim());
+  settingsProfileName.textContent = name;
+}
+[settingsProfileNameInput, settingsProfileRoleInput, settingsProfileFocusInput].forEach((input) => {
+  input.addEventListener("input", syncProfileSettings);
+});
+settingsCycleProfileAvatar.addEventListener("click", () => {
+  const next = (numericPreference("agentWorkbenchProfileAvatar", 0, 0, 5) + 1) % 6;
+  localStorage.setItem("agentWorkbenchProfileAvatar", String(next));
+  settingsProfileAvatar.src = `assets/agent-face-${next}.png`;
+});
+document.addEventListener("visibilitychange", syncSceneBackgroundPlayback);
 settingsSearchInput.addEventListener("input", () => {
   const query = settingsSearchInput.value.trim().toLowerCase();
   if (!document.querySelector('[data-settings-page="appearance"]').hidden) {
@@ -5114,6 +7830,9 @@ sshModalBackdrop.addEventListener("click", (event) => {
   if (event.target === sshModalBackdrop) closeSshDialog(true);
 });
 document.addEventListener("click", (event) => {
+  if (!calendarPopover.hidden && !calendarPopover.contains(event.target) && event.target !== titlebarTime) {
+    calendarPopover.hidden = true;
+  }
   if (!workspaceAddMenu.contains(event.target) && event.target !== addWorkspaceButton) setWorkspaceAddMenu(false);
   if (
     pixelModeEnabled &&
@@ -5137,12 +7856,15 @@ window.addEventListener("message", (event) => {
   const message = envelope.message;
   if (message.type === "webviewReady") {
     pixelFrameReady = true;
-    syncPixelMode(true);
-    if (pixelModeEnabled) setTimeout(refreshPixelFloorPreviews, 220);
+    warmPixelView();
     return;
   }
   if (message.type === "floorPreview") {
     setPixelFloorPreview(message.floor, message.image);
+    return;
+  }
+  if (message.type === "pixelPetSelected") {
+    openPixelPetDetail(message.pet, message.floor);
     return;
   }
   if (message.type === "pixelRoomState") {
@@ -5162,7 +7884,7 @@ window.addEventListener("message", (event) => {
   }
   if (message.type === "focusAgent") {
     const session = activePixelSessions().find((candidate) => candidate.slotIndex + 1 === Number(message.id));
-    if (session) focusAgentWindow(session.slotIndex);
+    if (session) openPixelAgentDetail(session);
     return;
   }
   if (message.type === "closeAgent") {
@@ -5173,7 +7895,7 @@ window.addEventListener("message", (event) => {
   if (message.type === "saveLayout" && message.layout) {
     localStorage.setItem(`agentWorkbenchPixelLayout:${activePixelFloor}`, JSON.stringify(message.layout));
     pixelPreviewRefreshNeeded = true;
-    setTimeout(refreshPixelFloorPreviews, 180);
+    schedulePixelPreviewRefresh(110);
     return;
   }
   if (message.type === "saveAgentSeats" && message.seats) {
@@ -5342,6 +8064,16 @@ window.addEventListener("keydown", (event) => {
     else closeCommandPalette();
     return;
   }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+    event.preventDefault();
+    event.stopPropagation();
+    setCinematicMode(true);
+    requestAnimationFrame(() => {
+      cinematicPromptInput.focus();
+      cinematicPromptInput.select();
+    });
+    return;
+  }
   if (event.key === "Escape") {
     if (!notificationPanel.hidden) {
       setNotificationPanel(false);
@@ -5367,14 +8099,13 @@ window.addEventListener("keydown", (event) => {
       closeSshDialog(true);
       return;
     }
+    if (cinematicModeEnabled) {
+      event.preventDefault();
+      setCinematicMode(false);
+      return;
+    }
     setWorkspaceAddMenu(false);
     for (const session of sessions.values()) session.actionMenu.hidden = true;
-  }
-  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-    event.preventDefault();
-    if (!workspaces.length) return;
-    const currentIndex = Math.max(0, workspaces.findIndex((workspace) => workspace.id === activeWorkspaceId));
-    selectWorkspace(workspaces[(currentIndex + 1) % workspaces.length].id);
   }
 });
 
@@ -5401,21 +8132,27 @@ async function initialize() {
   setupPanelResizing();
   setSidebarView(localStorage.getItem("agentWorkbenchSidebarView") === "workspaces" ? "workspaces" : "files");
   renderNotificationBell();
-  await loadWorkspaces();
-  if (!workspaces.length) setHomeView(true);
-  setPixelMode(localStorage.getItem("agentWorkbenchPixelMode") === "1", { persist: false });
-  await refreshUsage();
-  await refreshSystemMetrics();
   refreshTitlebarTime();
-  await refreshPowerStatus();
-  await refreshSpotifyStatus();
-  document.body.classList.toggle("window-full-screen", await api.getWindowFullScreen());
-  setInterval(refreshUsage, 60000);
   titlebarClockTimer = setInterval(refreshTitlebarTime, 15000);
-  powerStatusTimer = setInterval(refreshPowerStatus, 60000);
+  powerStatusTimer = setInterval(() => refreshPowerStatus().catch(() => {}), 60000);
   etaTimer = setInterval(updateAgentEta, 1000);
   spotifyTimer = setInterval(refreshSpotifyStatus, 5000);
+  setInterval(refreshUsage, 60000);
   restartSystemMetricsTimer();
+  const initialPowerStatus = refreshPowerStatus().catch(() => {});
+  const initialFullScreenStatus = api.getWindowFullScreen()
+    .then((fullScreen) => document.body.classList.toggle("window-full-screen", fullScreen))
+    .catch(() => {});
+  await loadWorkspaces();
+  if (!workspaces.length) setHomeView(true);
+  // Workspaces always reopen in the dependable terminal view. Immersive modes
+  // are explicit per-session choices and never hijack launch or Home.
+  setPixelMode(false, { persist: false });
+  setCinematicMode(false, { persist: false });
+  refreshUsage();
+  refreshSystemMetrics();
+  refreshSpotifyStatus();
+  await Promise.allSettled([initialPowerStatus, initialFullScreenStatus]);
 }
 
 initialize().catch((error) => {

@@ -133,8 +133,12 @@
             }, "*");
           } catch (error) {
           }
-        }, 40);
+        }, 8);
       }
+
+      // Expose the same capture path to the BsCode bridge so automatic and
+      // manual refreshes always use the canvas that is actually on screen.
+      window.captureFloorPreview = captureFloorPreview;
 
       window.addEventListener("message", function (event) {
         if (event.data && event.data.type === "captureFloorPreview") {

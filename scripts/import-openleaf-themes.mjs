@@ -301,6 +301,53 @@ const PIXELIZED_THEMES = [
   }
 ];
 
+const CATEGORY_THEME_TARGET = 22;
+const VARIANT_ACCENTS = [
+  "#4f8cff", "#46b39a", "#e07a5f", "#9b7ede", "#d2a33a", "#3c9dd0",
+  "#d4689a", "#70a34a", "#d06b42", "#6d8fd1", "#a87951", "#4ba3a6",
+  "#bc6b8f", "#7e9c5b", "#c47b32", "#5d78ba", "#8e6eb4", "#3b9474",
+  "#c45b67", "#668ca8", "#aa7a3e", "#587fb8"
+];
+const VARIANT_LABELS = [
+  "Azure", "Mint", "Coral", "Violet", "Marigold", "Cobalt",
+  "Rose", "Fern", "Ember", "Periwinkle", "Mocha", "Teal",
+  "Orchid", "Moss", "Copper", "Indigo", "Plum", "Jade",
+  "Garnet", "Slate", "Amber", "Denim"
+];
+
+function expandThemeCategories(catalog) {
+  const expanded = [...catalog];
+  const categories = [...new Set(catalog.map((theme) => theme.category))];
+  for (const category of categories) {
+    const seeds = catalog.filter((theme) => theme.category === category);
+    let count = seeds.length;
+    while (count < CATEGORY_THEME_TARGET) {
+      const variantIndex = count - seeds.length;
+      const seed = seeds[variantIndex % seeds.length];
+      const accent = VARIANT_ACCENTS[variantIndex % VARIANT_ACCENTS.length];
+      const label = VARIANT_LABELS[variantIndex % VARIANT_LABELS.length];
+      const idSuffix = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      expanded.push({
+        ...seed,
+        id: `${seed.id}-studio-${idSuffix}-${variantIndex + 1}`,
+        name: `${seed.name} · ${label}`,
+        palette: {
+          ...seed.palette,
+          background: `radial-gradient(circle at 86% 10%, color-mix(in srgb, ${accent} 18%, transparent), transparent 38%), ${seed.palette.background}`,
+          border: `color-mix(in srgb, ${seed.palette.border} 72%, ${accent})`,
+          hover: `color-mix(in srgb, ${seed.palette.elevated} 88%, ${accent})`,
+          active: `color-mix(in srgb, ${seed.palette.elevated} 76%, ${accent})`,
+          accent,
+          status: accent,
+          gradientB: accent
+        }
+      });
+      count += 1;
+    }
+  }
+  return expanded;
+}
+
 function finalizeCatalog(catalog) {
   const next = catalog.map((theme) => ({
     ...theme,
@@ -319,7 +366,7 @@ function finalizeCatalog(catalog) {
       palette.active = `color-mix(in srgb, ${palette.elevated} 76%, ${palette.accent})`;
     }
   }
-  return next;
+  return expandThemeCategories(next);
 }
 
 export async function buildOpenleafThemeCatalog(appRoot) {

@@ -54,10 +54,17 @@ async function main() {
   }
 
   run("npm", ["ci", "--omit=dev", "--no-audit", "--no-fund"], { cwd: appResources });
-  for (const architecture of ["darwin-arm64", "darwin-x64"]) {
-    const helper = path.join(appResources, "node_modules", "node-pty", "prebuilds", architecture, "spawn-helper");
-    if (fs.existsSync(helper)) await fsp.chmod(helper, 0o755);
+  const prebuilds = path.join(appResources, "node_modules", "node-pty", "prebuilds");
+  if (fs.existsSync(prebuilds)) {
+    for (const entry of await fsp.readdir(prebuilds)) {
+      if (entry === "darwin-arm64") continue;
+      await fsp.rm(path.join(prebuilds, entry), { recursive: true, force: true });
+    }
   }
+  const arm64Helper = path.join(prebuilds, "darwin-arm64", "spawn-helper");
+  if (fs.existsSync(arm64Helper)) await fsp.chmod(arm64Helper, 0o755);
+  const windowsRuntime = path.join(appResources, "node_modules", "node-pty", "third_party", "conpty");
+  await fsp.rm(windowsRuntime, { recursive: true, force: true });
   plist(`Set :CFBundleDisplayName ${productName}`);
   plist("Set :CFBundleIdentifier com.alexdils.agent-workbench");
   plist(`Set :CFBundleShortVersionString ${packageJson.version}`);

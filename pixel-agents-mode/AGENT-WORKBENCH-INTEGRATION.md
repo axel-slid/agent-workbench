@@ -9,18 +9,36 @@ does not launch the Pixel Agents standalone server or install Claude hooks.
 ## BsCode bridge additions
 
 The bundled browser mock decodes the complete Pixel Agents 2D asset set,
-including all nine floor textures, all three auto-tiling carpets, and both
-official animated pets (`Claudio` and `Gitcat`). The pets appear as selectable
-options in Pixel Agents' Layout → Pets tool and retain the upstream walking,
-idle, following, and petting animation behavior.
+including all nine floor textures and all three auto-tiling carpets. BsCode
+bundles twelve animated pet species and keeps the upstream walking, idle,
+following, and petting animation behavior while slowing path updates enough to
+prevent sliding.
+
+Generated room geometry takes cues from:
+
+- The compact
+  [upstream default](https://github.com/pixel-agents-hq/pixel-agents/blob/main/webview-ui/public/assets/default-layout-1.json).
+- The wider 21 × 21 community layout in
+  [Hootbu's fork](https://github.com/hootbu/pixel-agents/blob/main/webview-ui/public/assets/default-layout.json).
+- The corporate, cozy-library, garden-office, and startup layouts in
+  [Orseni's fork](https://github.com/orseni/pixel-agents/tree/main/webview-ui/public/assets).
+
+BsCode uses those references as design vocabulary, then generates twenty
+distinct silhouettes, dimensions, tile combinations, color transforms,
+workstation arrangements, and decor sets. Generated rooms leave the carpet
+layer empty so their actual floor patterns remain visible.
 
 Every incoming `layoutLoaded` room is non-destructively enriched when needed:
 
 - `workbenchFloor` identifies the floor represented by the room.
-- Distinct auto-tiled carpet zones give generated floors a lived-in identity.
+- An empty carpet layer keeps generated geometry free of repeated mask shapes.
 - A never-customized standalone floor begins with one official walking pet.
   In BsCode, `houseConfig.petsEnabled` and `houseConfig.pet` are the source of
-  truth, so the Pixel pets toggle and Claudio/Gitcat selector update every room.
+  truth, so the Pixel pets toggle and first-floor species selector update every
+  room.
+
+Pet clicks call BsCode's direct profile bridge before the upstream dialogue
+handler runs. This opens the stat sheet without displaying a speech bubble.
 
 The bridge continues to support the existing `captureFloorPreview` request and
 `floorPreview` response. It also captures the active room every four seconds

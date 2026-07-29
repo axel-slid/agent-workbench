@@ -9,6 +9,20 @@ const { pathToFileURL } = require("node:url");
 const { promisify } = require("node:util");
 const pty = require("node-pty");
 const AGENT_NAMES = require("./assets/agent-names.json").names;
+// The source catalog alternates the SSA feminine and masculine lists. Pixel
+// Agents' six bundled faces use the matching presentation map below.
+const AGENT_NAMES_BY_PRESENTATION = {
+  feminine: AGENT_NAMES.filter((_, index) => index % 2 === 0),
+  masculine: AGENT_NAMES.filter((_, index) => index % 2 === 1)
+};
+const AGENT_FACE_PRESENTATIONS = [
+  "masculine",
+  "feminine",
+  "feminine",
+  "masculine",
+  "masculine",
+  "feminine"
+];
 
 const preservedUserDataPath = process.env.AGENT_WORKBENCH_USER_DATA_DIR
   || path.join(app.getPath("appData"), "Agent Workbench");
@@ -17,14 +31,15 @@ app.setPath("userData", preservedUserDataPath);
 
 const execFileAsync = promisify(execFile);
 let mainWindow = null;
+let cinematicFullScreenRestore = null;
 const terminalSessions = new Map();
 const sshAuthSessions = new Map();
 const workspaceWatchers = new Map();
 const workspaceRefreshTimers = new Map();
 const remoteWorkspaceSyncTimers = new Map();
-const remoteWorkspaceSyncBusy = new Set();
 const remoteSystemMetricsCache = new Map();
 const remoteSystemMetricsInFlight = new Map();
+const remoteFileMirrors = new Map();
 const workspaceOutputSessionStarts = new Map();
 const workspaceOutputSessionBaselines = new Map();
 const jsonWriteQueues = new Map();
@@ -32,10 +47,12 @@ let previousCpuSample = null;
 
 const ARTIFACT_EXTENSIONS = new Set([
   ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".pdf",
+  ".mp4", ".mov", ".webm",
   ".md", ".txt", ".csv", ".json", ".html", ".htm",
   ".ppt", ".pptx", ".doc", ".docx", ".xls", ".xlsx"
 ]);
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]);
+const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".webm"]);
 const PASTED_IMAGE_MIME_EXTENSIONS = new Map([
   ["image/png", ".png"],
   ["image/jpeg", ".jpg"],
@@ -57,7 +74,18 @@ const IGNORED_DIRECTORIES = new Set([
 ]);
 function coolAgentName(id, agentNumber) {
   const digest = crypto.createHash("sha256").update(`${id}:${agentNumber}`).digest();
-  return AGENT_NAMES[digest.readUInt32BE(0) % AGENT_NAMES.length];
+  const facePresentations = [
+    "masculine",
+    "feminine",
+    "feminine",
+    "masculine",
+    "masculine",
+    "feminine"
+  ];
+  const faceIndex = Math.max(0, Number(agentNumber || 1) - 1) % facePresentations.length;
+  const desiredParity = facePresentations[faceIndex] === "feminine" ? 0 : 1;
+  const pool = AGENT_NAMES.filter((_, index) => index % 2 === desiredParity);
+  return pool[digest.readUInt32BE(0) % pool.length];
 }
 
 function workspacesPath() {
@@ -318,84 +346,91 @@ function killSshAuthentication(_event, id) {
   return true;
 }
 
-async function mirrorRemoteWorkspace(remote = {}, destination) {
-  const normalized = validateRemote(remote);
-  await fsp.mkdir(destination, { recursive: true });
-  const remotePath = normalized.root || normalized.path || "~";
-  const sourcePath = remotePath === "~"
-    ? "~/"
-    : `${shellQuoteRemotePath(remotePath.replace(/\/+$/, ""))}/`;
-  const source = `${remoteTarget(normalized)}:${sourcePath}`;
-  await execFileAsync(
-    resolveExecutable("rsync"),
-    [
-      "-az",
-      "--delete",
-      "--delete-delay",
-      "--partial",
-      "--timeout=20",
-      "--exclude", ".git/",
-      "--exclude", ".agent-workbench/",
-      "--exclude", "node_modules/",
-      "--exclude", "__pycache__/",
-      "--exclude", ".venv/",
-      "--exclude", "venv/",
-      "--exclude", ".cache/",
-      "--exclude", ".pytest_cache/",
-      "--exclude", ".mypy_cache/",
-      "--exclude", ".ruff_cache/",
-      "--exclude", ".tox/",
-      "--exclude", ".ipynb_checkpoints/",
-      "--exclude", "wandb/",
-      "-e", rsyncSshCommand(normalized),
-      source,
-      `${destination}${path.sep}`
-    ],
-    { timeout: 120000, maxBuffer: 12 * 1024 * 1024 }
-  );
-}
-
 async function mirrorRemoteFile(workspace, relativePath) {
   if (!workspace || workspace.type !== "ssh" || !workspace.remote) return;
   const normalizedRelative = String(relativePath || "")
     .replace(/\\/g, "/")
     .replace(/^\/+/, "");
-  const destination = safeWorkspacePath(workspace.root, normalizedRelative);
-  const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
-  const sourcePath = remoteChildPath(remoteRoot, normalizedRelative);
-  await fsp.mkdir(path.dirname(destination), { recursive: true });
-  await execFileAsync(
-    resolveExecutable("rsync"),
-    [
-      "-az",
-      "--partial",
-      "--timeout=20",
-      "-e", rsyncSshCommand(workspace.remote),
-      `${remoteTarget(workspace.remote)}:${shellQuoteRemotePath(sourcePath)}`,
-      destination
-    ],
-    { timeout: 30000, maxBuffer: 4 * 1024 * 1024 }
-  );
+  const mirrorKey = `${workspace.id}:${normalizedRelative}`;
+  if (remoteFileMirrors.has(mirrorKey)) return remoteFileMirrors.get(mirrorKey);
+  const operation = (async () => {
+    const destination = safeWorkspacePath(workspace.root, normalizedRelative);
+    const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+    const sourcePath = remoteChildPath(remoteRoot, normalizedRelative);
+    await fsp.mkdir(path.dirname(destination), { recursive: true });
+    await execFileAsync(
+      resolveExecutable("rsync"),
+      [
+        "-az",
+        "--partial",
+        "--timeout=20",
+        "-e", rsyncSshCommand(workspace.remote),
+        `${remoteTarget(workspace.remote)}:${shellQuoteRemotePath(sourcePath)}`,
+        destination
+      ],
+      { timeout: 120000, maxBuffer: 4 * 1024 * 1024 }
+    );
+  })();
+  remoteFileMirrors.set(mirrorKey, operation);
+  try {
+    return await operation;
+  } finally {
+    remoteFileMirrors.delete(mirrorKey);
+  }
 }
 
-async function mirrorRemoteWorkspaceInBackground(workspace) {
-  if (!workspace || remoteWorkspaceSyncBusy.has(workspace.id)) return;
-  remoteWorkspaceSyncBusy.add(workspace.id);
-  try {
-    await mirrorRemoteWorkspace(workspace.remote, workspace.root);
-    sendToRenderer("workspace:changed", { workspaceId: workspace.id, relativePath: "", remoteSync: true });
-  } catch (error) {
-    const message = String(error && error.message ? error.message : error || "Remote sync failed.")
-      .split(/\r?\n/)[0]
-      .trim();
-    sendToRenderer("workspace:changed", {
-      workspaceId: workspace.id,
-      relativePath: "",
-      remoteSyncError: message || "Remote sync failed."
-    });
-  } finally {
-    remoteWorkspaceSyncBusy.delete(workspace.id);
+async function listRemoteWorkspaceDirectory(workspace, relativePath = "") {
+  if (!workspace || workspace.type !== "ssh" || !workspace.remote) {
+    throw new Error("This is not an SSH workspace.");
   }
+  const normalizedRelative = String(relativePath || "")
+    .replace(/\\/g, "/")
+    .replace(/^\/+|\/+$/g, "");
+  const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+  const remoteDirectory = remoteChildPath(remoteRoot, normalizedRelative);
+  const script = [
+    "import json, os, sys",
+    "directory = os.path.abspath(os.path.expanduser(sys.argv[1]))",
+    "if not os.path.isdir(directory):",
+    "    raise NotADirectoryError(f'Not a remote directory: {directory}')",
+    "items = []",
+    "with os.scandir(directory) as entries:",
+    "    for entry in entries:",
+    "        if entry.name in ('.DS_Store', '.agent-workbench'):",
+    "            continue",
+    "        try:",
+    "            is_directory = entry.is_dir(follow_symlinks=True)",
+    "        except OSError:",
+    "            is_directory = False",
+    "        items.append({'name': entry.name, 'type': 'directory' if is_directory else 'file'})",
+    "items.sort(key=lambda item: (item['type'] != 'directory', item['name'].casefold()))",
+    "print(json.dumps(items))"
+  ].join("\n");
+  const { stdout } = await execFileAsync(
+    resolveExecutable("ssh"),
+    [
+      ...sshConnectionArgs(workspace.remote),
+      remoteTarget(workspace.remote),
+      ["python3", "-c", script, remoteDirectory].map(shellQuote).join(" ")
+    ],
+    { timeout: 20000, maxBuffer: 8 * 1024 * 1024 }
+  );
+  const entries = JSON.parse(String(stdout || "[]"));
+  return entries.map((entry) => {
+    const childRelativePath = normalizedRelative
+      ? path.posix.join(normalizedRelative, entry.name)
+      : entry.name;
+    const extension = path.extname(entry.name).toLowerCase();
+    return {
+      name: entry.name,
+      relativePath: childRelativePath,
+      type: entry.type === "directory" ? "directory" : "file",
+      children: entry.type === "directory" ? [] : undefined,
+      childrenLoaded: entry.type !== "directory",
+      artifact: entry.type !== "directory" && ARTIFACT_EXTENSIONS.has(extension),
+      remote: true
+    };
+  });
 }
 
 function normalizedSshHistoryEntry(remote = {}) {
@@ -548,15 +583,27 @@ async function connectSshWorkspace(_event, remote = {}) {
   workspaces.unshift(workspace);
   await saveWorkspaces(workspaces);
   ensureWorkspaceWatcher(workspace);
-  void mirrorRemoteWorkspaceInBackground(workspace);
-  return { ...workspace, syncing: true };
+  sendToRenderer("workspace:changed", {
+    workspaceId: workspace.id,
+    relativePath: "",
+    remoteRefresh: true
+  });
+  return { ...workspace, connected: true };
 }
 
 async function syncWorkspace(_event, workspaceId) {
   const workspace = (await readWorkspaces()).find((item) => item.id === workspaceId);
   if (!workspace) throw new Error("Workspace not found.");
   if (workspace.type !== "ssh" || !workspace.remote) return workspace;
-  await mirrorRemoteWorkspace(workspace.remote, workspace.root);
+  const verified = await verifySshConnection(workspace.remote);
+  workspace.remote = verified;
+  workspace.lastOpenedAt = new Date().toISOString();
+  const workspaces = await readWorkspaces();
+  const index = workspaces.findIndex((item) => item.id === workspace.id);
+  if (index >= 0) {
+    workspaces[index] = workspace;
+    await saveWorkspaces(workspaces);
+  }
   return workspace;
 }
 
@@ -634,6 +681,110 @@ async function getWorkspace(workspaceId) {
   return workspace;
 }
 
+function workspaceNotesMarkdown(payload = {}) {
+  const todos = Array.isArray(payload.todos) ? payload.todos.slice(0, 200) : [];
+  const profile = payload.profile && typeof payload.profile === "object" ? payload.profile : {};
+  const lines = [
+    "# BsCode Workspace Notes",
+    "",
+    profile.focus ? `> Current focus: ${String(profile.focus).trim()}` : "",
+    profile.name || profile.role
+      ? `Owner: ${[profile.name, profile.role].filter(Boolean).map((value) => String(value).trim()).join(" · ")}`
+      : "",
+    "",
+    "## Notes",
+    "",
+    String(payload.notes || "").trim() || "_No notes yet._",
+    "",
+    "## To-do",
+    "",
+    ...(todos.length
+      ? todos.map((todo) => `- [${todo.done ? "x" : " "}] ${String(todo.text || "").replace(/[\r\n]+/g, " ").trim()}`)
+      : ["_No tasks yet._"]),
+    "",
+    payload.sketch ? "A sketch is stored in `.bscode-notes.json` and can be viewed in BsCode." : "",
+    "",
+    `Last updated: ${payload.updatedAt || new Date().toISOString()}`,
+    ""
+  ];
+  return lines.filter((line, index) => line !== "" || lines[index - 1] !== "").join("\n");
+}
+
+async function readWorkspaceNotes(_event, workspaceId) {
+  const workspace = await getWorkspace(workspaceId);
+  const jsonPath = safeWorkspacePath(workspace.root, ".bscode-notes.json");
+  if (workspace.type === "ssh" && workspace.remote) {
+    const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+    const remotePath = remoteChildPath(remoteRoot, ".bscode-notes.json");
+    const script = [
+      "import base64, pathlib, sys",
+      "p = pathlib.Path(sys.argv[1]).expanduser()",
+      "print(base64.b64encode(p.read_bytes()).decode() if p.exists() else '')"
+    ].join("\n");
+    try {
+      const { stdout } = await execFileAsync(
+        resolveExecutable("ssh"),
+        [
+          ...sshConnectionArgs(workspace.remote),
+          remoteTarget(workspace.remote),
+          ["python3", "-c", script, remotePath].map(shellQuote).join(" ")
+        ],
+        { timeout: 15000, maxBuffer: 12 * 1024 * 1024 }
+      );
+      const encoded = String(stdout || "").trim();
+      if (encoded) {
+        await fsp.writeFile(jsonPath, Buffer.from(encoded, "base64"));
+      }
+    } catch (error) {
+      // An offline SSH workspace can still use its most recently mirrored notes.
+    }
+  }
+  return readJson(jsonPath, { notes: "", todos: [], sketch: "", updatedAt: null });
+}
+
+async function writeWorkspaceNotes(_event, payload = {}) {
+  const workspace = await getWorkspace(payload.workspaceId);
+  const value = {
+    version: 1,
+    notes: String(payload.notes || "").slice(0, 200000),
+    todos: (Array.isArray(payload.todos) ? payload.todos : []).slice(0, 200).map((todo) => ({
+      id: String(todo.id || crypto.randomUUID()),
+      text: String(todo.text || "").replace(/[\r\n]+/g, " ").trim().slice(0, 500),
+      done: Boolean(todo.done)
+    })).filter((todo) => todo.text),
+    sketch: String(payload.sketch || "").slice(0, 12 * 1024 * 1024),
+    profile: payload.profile && typeof payload.profile === "object" ? {
+      name: String(payload.profile.name || "").slice(0, 40),
+      role: String(payload.profile.role || "").slice(0, 80),
+      focus: String(payload.profile.focus || "").slice(0, 120)
+    } : {},
+    updatedAt: new Date().toISOString()
+  };
+  const jsonPath = safeWorkspacePath(workspace.root, ".bscode-notes.json");
+  const markdownPath = safeWorkspacePath(workspace.root, ".bscode-notes.md");
+  await writeJson(jsonPath, value);
+  await fsp.writeFile(markdownPath, workspaceNotesMarkdown(value), "utf8");
+
+  if (workspace.type === "ssh" && workspace.remote) {
+    const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
+    const remoteDirectory = remoteChildPath(remoteRoot, "");
+    await execFileAsync(
+      resolveExecutable("rsync"),
+      [
+        "-az",
+        "--timeout=20",
+        "-e", rsyncSshCommand(workspace.remote),
+        jsonPath,
+        markdownPath,
+        `${remoteTarget(workspace.remote)}:${shellQuoteRemotePath(remoteDirectory)}/`
+      ],
+      { timeout: 120000, maxBuffer: 12 * 1024 * 1024 }
+    );
+  }
+  sendToRenderer("workspace:changed", { workspaceId: workspace.id, relativePath: ".bscode-notes.md" });
+  return value;
+}
+
 function safeWorkspacePath(root, relativePath = "") {
   const workspaceRoot = path.resolve(root);
   const resolved = path.resolve(workspaceRoot, String(relativePath || "").replace(/^[/\\]+/, ""));
@@ -693,7 +844,24 @@ async function walkFileTree(root, current = root, depth = 0, budget = { count: 0
 
 async function listWorkspaceFiles(_event, workspaceId) {
   const workspace = await getWorkspace(workspaceId);
+  if (workspace.type === "ssh" && workspace.remote) {
+    return listRemoteWorkspaceDirectory(workspace, "");
+  }
   return walkFileTree(workspace.root);
+}
+
+async function listWorkspaceDirectory(_event, payload = {}) {
+  const workspace = await getWorkspace(payload.workspaceId);
+  const relativePath = String(payload.relativePath || "")
+    .replace(/\\/g, "/")
+    .replace(/^\/+|\/+$/g, "");
+  if (workspace.type === "ssh" && workspace.remote) {
+    return listRemoteWorkspaceDirectory(workspace, relativePath);
+  }
+  const directory = safeWorkspacePath(workspace.root, relativePath);
+  const stat = await fsp.stat(directory);
+  if (!stat.isDirectory()) throw new Error("This path is not a directory.");
+  return walkFileTree(workspace.root, directory, 0, { count: 0 });
 }
 
 function validWorkspaceEntryName(value) {
@@ -951,7 +1119,9 @@ async function renameWorkspaceEntry(_event, payload = {}) {
   const parentRelative = path.posix.dirname(relativePath);
   const nextRelative = path.posix.join(parentRelative === "." ? "" : parentRelative, nextName);
   const destinationPath = safeWorkspacePath(workspace.root, nextRelative);
-  if (fs.existsSync(destinationPath)) throw new Error("A file or folder with that name already exists.");
+  if (workspace.type !== "ssh" && fs.existsSync(destinationPath)) {
+    throw new Error("A file or folder with that name already exists.");
+  }
 
   if (workspace.type === "ssh" && workspace.remote) {
     const remoteRoot = workspace.remote.root || workspace.remote.path || "~";
@@ -966,8 +1136,13 @@ async function renameWorkspaceEntry(_event, payload = {}) {
       ],
       { timeout: 20000, maxBuffer: 512 * 1024 }
     );
+    if (fs.existsSync(sourcePath)) {
+      await fsp.mkdir(path.dirname(destinationPath), { recursive: true });
+      await fsp.rename(sourcePath, destinationPath);
+    }
+  } else {
+    await fsp.rename(sourcePath, destinationPath);
   }
-  await fsp.rename(sourcePath, destinationPath);
   sendToRenderer("workspace:changed", { workspaceId: workspace.id, relativePath: nextRelative });
   return { relativePath: nextRelative, name: nextName };
 }
@@ -1035,7 +1210,13 @@ async function collectArtifacts(root, current = root, depth = 0, results = []) {
         createdAt: stat.birthtime.toISOString(),
         modifiedAt: stat.mtime.toISOString(),
         fileUrl: pathToFileURL(absolutePath).href,
-        kind: IMAGE_EXTENSIONS.has(extension) ? "image" : extension === ".pdf" ? "pdf" : "file"
+        kind: IMAGE_EXTENSIONS.has(extension)
+          ? "image"
+          : VIDEO_EXTENSIONS.has(extension)
+            ? "video"
+            : extension === ".pdf"
+              ? "pdf"
+              : "file"
       });
     } catch (error) {
     }
@@ -1048,8 +1229,43 @@ async function listArtifacts(_event, workspaceId) {
   const sessionStartedAt = workspaceOutputSessionStarts.get(workspace.id);
   if (!Number.isFinite(sessionStartedAt)) return [];
   const baseline = workspaceOutputSessionBaselines.get(workspace.id) || new Set();
-  const artifacts = await collectArtifacts(workspace.root);
   const attributions = await collectArtifactAttributions(workspace.id);
+  if (workspace.type === "ssh" && workspace.remote) {
+    return Array.from(attributions.entries())
+      .filter(([relativePath, owner]) => {
+        const extension = path.extname(relativePath).toLowerCase();
+        return ARTIFACT_EXTENSIONS.has(extension)
+          && !baseline.has(relativePath)
+          && owner.updatedAt >= sessionStartedAt - 1500;
+      })
+      .map(([relativePath, owner]) => {
+        const extension = path.extname(relativePath).toLowerCase();
+        return {
+          name: path.posix.basename(relativePath),
+          relativePath,
+          extension,
+          size: null,
+          createdAt: new Date(owner.updatedAt).toISOString(),
+          modifiedAt: new Date(owner.updatedAt).toISOString(),
+          fileUrl: "",
+          kind: IMAGE_EXTENSIONS.has(extension)
+            ? "image"
+            : VIDEO_EXTENSIONS.has(extension)
+              ? "video"
+              : extension === ".pdf"
+                ? "pdf"
+                : "file",
+          remote: true,
+          agentId: owner.id,
+          agentName: owner.name,
+          agentKind: owner.kind,
+          agentNumber: owner.agentNumber
+        };
+      })
+      .sort((left, right) => Date.parse(right.modifiedAt) - Date.parse(left.modifiedAt))
+      .slice(0, 400);
+  }
+  const artifacts = await collectArtifacts(workspace.root);
   return artifacts
     .filter((artifact) => {
       const modifiedAt = Date.parse(artifact.modifiedAt || 0);
@@ -1086,7 +1302,10 @@ async function collectArtifactAttributions(workspaceId) {
     if (!metadata) continue;
     const reportedFiles = [
       ...(Array.isArray(metadata.relevantFiles) ? metadata.relevantFiles : []),
-      ...(Array.isArray(metadata.recentFiles) ? metadata.recentFiles : [])
+      ...(Array.isArray(metadata.recentFiles) ? metadata.recentFiles : []),
+      ...(typeof metadata.previewFile === "string" && metadata.previewFile.trim()
+        ? [metadata.previewFile.trim()]
+        : [])
     ];
     if (!reportedFiles.length) continue;
     const updatedAt = Date.parse(metadata.updatedAt || metadata.createdAt || 0) || 0;
@@ -1115,7 +1334,10 @@ function mimeTypeFor(extension) {
     ".jpeg": "image/jpeg",
     ".gif": "image/gif",
     ".webp": "image/webp",
-    ".svg": "image/svg+xml"
+    ".svg": "image/svg+xml",
+    ".mp4": "video/mp4",
+    ".mov": "video/quicktime",
+    ".webm": "video/webm"
   }[extension] || "application/octet-stream";
 }
 
@@ -1135,6 +1357,7 @@ async function describePreviewFile(absolutePath, relativePath = "") {
     const data = await fsp.readFile(absolutePath);
     return { ...base, kind: "image", dataUrl: `data:${mimeTypeFor(extension)};base64,${data.toString("base64")}` };
   }
+  if (VIDEO_EXTENSIONS.has(extension)) return { ...base, kind: "video" };
   if (TEXT_EXTENSIONS.has(extension) && stat.size <= 768 * 1024) {
     return { ...base, kind: "text", text: await fsp.readFile(absolutePath, "utf8") };
   }
@@ -1239,8 +1462,11 @@ async function showWorkspaceFileMenu(event, payload = {}) {
   const workspace = await getWorkspace(payload.workspaceId);
   const relativePath = String(payload.relativePath || "").replace(/\\/g, "/").replace(/^\/+/, "");
   const absolutePath = safeWorkspacePath(workspace.root, relativePath);
-  const stat = await fsp.stat(absolutePath);
-  const isDirectory = stat.isDirectory();
+  const cachedLocally = fs.existsSync(absolutePath);
+  const isRemote = workspace.type === "ssh" && workspace.remote;
+  const isDirectory = isRemote && ["directory", "file"].includes(payload.entryType)
+    ? payload.entryType === "directory"
+    : (await fsp.stat(absolutePath)).isDirectory();
   const copyPath = workspace.type === "ssh" && workspace.remote
     ? remoteChildPath(workspace.remote.root || workspace.remote.path || "~", relativePath)
     : absolutePath;
@@ -1265,10 +1491,15 @@ async function showWorkspaceFileMenu(event, payload = {}) {
   const menu = Menu.buildFromTemplate([
     {
       label: isDirectory ? "Open Folder" : "Open",
-      click: () => shell.openPath(absolutePath)
+      enabled: !isDirectory || cachedLocally,
+      click: async () => {
+        if (!isDirectory && isRemote) await mirrorRemoteFile(workspace, relativePath);
+        return shell.openPath(absolutePath);
+      }
     },
     {
       label: "Open in Visual Studio Code",
+      enabled: cachedLocally,
       click: openInCode
     },
     {
@@ -1277,6 +1508,7 @@ async function showWorkspaceFileMenu(event, payload = {}) {
         : process.platform === "win32"
           ? "Show in Explorer"
           : "Show in File Manager",
+      enabled: cachedLocally,
       click: () => shell.showItemInFolder(absolutePath)
     },
     { type: "separator" },
@@ -1295,6 +1527,7 @@ async function showWorkspaceFileMenu(event, payload = {}) {
     },
     {
       label: "Duplicate",
+      enabled: !isRemote || cachedLocally,
       click: async () => {
         try {
           const duplicate = await duplicateWorkspaceEntry(workspace, relativePath);
@@ -1343,6 +1576,21 @@ function openPathInCode(targetPath) {
   } catch (error) {
     return shell.openPath(targetPath);
   }
+}
+
+const APPLICATION_PATHS = Object.freeze({
+  chrome: "/Applications/Google Chrome.app",
+  openleaf: "/Applications/Openleaf.app",
+  spotify: "/Applications/Spotify.app"
+});
+
+async function openApplication(_event, application) {
+  const targetPath = APPLICATION_PATHS[String(application || "").toLowerCase()];
+  if (!targetPath) throw new Error("Unsupported application shortcut");
+  if (process.platform !== "darwin") throw new Error("Application shortcuts are available on macOS");
+  const errorMessage = await shell.openPath(targetPath);
+  if (errorMessage) throw new Error(errorMessage);
+  return true;
 }
 
 function resolveExecutable(name) {
@@ -1423,9 +1671,10 @@ function agentProtocol(metadataPath, workspaceRoot) {
     "Immediately, and whenever your task or progress changes, write valid JSON to that file.",
     'Use exactly these fields: {"name":"short task-specific name","tldr":"one sentence under 140 characters","status":"working|waiting|done|error","state":"planning|coding|waiting|failed|complete","model":"exact model name and effort","currentTask":"short current step","etaSeconds":number|null,"etaMinutes":number|null,"progressPercent":number,"checklist":[{"text":"short concrete step","status":"pending|working|done|blocked","etaSeconds":number|null}],"inputTokens":number|null,"outputTokens":number|null,"costUsd":number|null,"testsPassed":number|null,"testsFailed":number|null,"relevantFiles":["workspace-relative/path"],"previewFile":"workspace-relative/path"|null}.',
     "Keep the assigned name already present in the metadata unless the user explicitly renames you. Keep relevantFiles current, ordered most useful first, with only files the user is likely to want to open. Use workspace-relative paths and omit incidental implementation files.",
-    "Before executing any new task, first replace checklist with a concrete plan for that task, set exactly one item to working, and write the metadata file so the plan appears before implementation begins.",
-    "Keep model, currentTask, progressPercent, checklist, token counts, costUsd, test results, and state current. Keep checklist items short, mark them done immediately when finished, and mark exactly one active step working when possible. Give the working item an honest etaSeconds remaining; for pending items, etaSeconds is the estimated duration once that item starts. Use null when your runtime does not expose a metric; never invent usage, cost, or test results.",
-    "Set etaSeconds to your honest estimate of seconds remaining and etaMinutes to the same estimate rounded up to minutes. Re-estimate after every major step and at least once per minute. Do not rewrite an unchanged estimate just to refresh it. Use null while waiting for a task and 0 when done.",
+    "Treat every new user instruction, including follow-up prompts in the same terminal session, as a new task cycle. Before executing it, replace the previous checklist with a concrete plan for only that instruction, set exactly one item to working, reset progress and ETA, and write the metadata file so the new plan appears before implementation begins. Never append a new task to a stale checklist.",
+    "Keep model, currentTask, progressPercent, checklist, token counts, costUsd, test results, and state current. Keep checklist items short, mark them done immediately when finished, and mark exactly one active step working when possible. Give only the working item a live remaining etaSeconds; for pending items, etaSeconds is that step's estimated duration after it starts, not a countdown running in parallel. Use null when your runtime does not expose a metric; never invent usage, cost, or test results.",
+    "Estimate end-to-end wall-clock time, not just hands-on coding time. The session etaSeconds must include the remaining active step, every pending checklist step, transitions between steps, command and tool startup, queueing, SSH/network latency, dependency loading, builds, tests, renders, likely retry/debug buffer, file writes or transfers, output preview generation, final verification, and the final metadata/report update. Sum those durations and add realistic overhead before reporting the total.",
+    "Calibrate estimates from elapsed time and observed command speed as work proceeds. Re-estimate after every major step and at least once per minute, but never reset the countdown to a canned default or increase it merely because you rewrote metadata; change it only when new evidence changes the remaining work. Prefer a conservative realistic range's upper-middle value over an optimistic best case. Set etaMinutes to etaSeconds rounded up to minutes. Use null while waiting for a task and 0 when fully done.",
     "Set status to done immediately when the task is complete so BsCode can notify the user.",
     "Whenever you create or materially update a viewable output such as an image, PDF, HTML, SVG, Markdown, text report, chart, or data file, set previewFile to its workspace-relative path so BsCode opens it in the Agent Output pane.",
     "If the user asks you to make, render, plot, generate, or show anything visual, you must set previewFile to the finished visual artifact before reporting completion, even if the user did not explicitly ask you to open it.",
@@ -1450,6 +1699,7 @@ function initialAgentMetadata(id, kind, task, workspaceId, agentNumber, modelLab
     workspaceId,
     kind,
     agentNumber,
+    portraitIndex: Math.max(0, Number(agentNumber || 1) - 1) % AGENT_FACE_PRESENTATIONS.length,
     name: coolAgentName(id, agentNumber),
     tldr: task || "Waiting for a task.",
     status: task ? "working" : "waiting",
@@ -1540,8 +1790,12 @@ async function refreshRemoteSessionMetadata(session) {
 
 function ensureRemoteWorkspacePolling(workspace) {
   if (!workspace || workspace.type !== "ssh" || !workspace.remote || remoteWorkspaceSyncTimers.has(workspace.id)) return;
-  const poll = () => mirrorRemoteWorkspaceInBackground(workspace);
-  remoteWorkspaceSyncTimers.set(workspace.id, setInterval(poll, 30000));
+  const poll = () => sendToRenderer("workspace:changed", {
+    workspaceId: workspace.id,
+    relativePath: "",
+    remoteRefresh: true
+  });
+  remoteWorkspaceSyncTimers.set(workspace.id, setInterval(poll, 15000));
 }
 
 function cleanupRemoteWorkspacePolling(workspaceId) {
@@ -1551,7 +1805,6 @@ function cleanupRemoteWorkspacePolling(workspaceId) {
   const timer = remoteWorkspaceSyncTimers.get(workspaceId);
   if (timer) clearInterval(timer);
   remoteWorkspaceSyncTimers.delete(workspaceId);
-  remoteWorkspaceSyncBusy.delete(workspaceId);
   remoteSystemMetricsCache.delete(workspaceId);
   remoteSystemMetricsInFlight.delete(workspaceId);
 }
@@ -1768,30 +2021,30 @@ function ensureWorkspaceWatcher(workspace) {
   }
 }
 
-function findLatestFile(root, predicate) {
+async function findLatestFile(root, predicate) {
   let latest = null;
-  const visit = (directory, depth = 0) => {
+  const visit = async (directory, depth = 0) => {
     if (depth > 6) return;
     let entries = [];
     try {
-      entries = fs.readdirSync(directory, { withFileTypes: true });
+      entries = await fsp.readdir(directory, { withFileTypes: true });
     } catch (error) {
       return;
     }
     for (const entry of entries) {
       const absolutePath = path.join(directory, entry.name);
       if (entry.isDirectory()) {
-        visit(absolutePath, depth + 1);
+        await visit(absolutePath, depth + 1);
       } else if (predicate(absolutePath)) {
         try {
-          const modified = fs.statSync(absolutePath).mtimeMs;
+          const modified = (await fsp.stat(absolutePath)).mtimeMs;
           if (!latest || modified > latest.modified) latest = { path: absolutePath, modified };
         } catch (error) {
         }
       }
     }
   };
-  visit(root);
+  await visit(root);
   return latest && latest.path;
 }
 
@@ -1804,7 +2057,7 @@ function cpuSample() {
   }, { idle: 0, total: 0 });
 }
 
-async function localSystemMetrics() {
+async function localSystemMetrics(root = os.homedir()) {
   const next = cpuSample();
   let cpuPercent = null;
   if (previousCpuSample) {
@@ -1831,12 +2084,22 @@ async function localSystemMetrics() {
     } catch (error) {
     }
   }
+  let storageUsedBytes = null;
+  let storageTotalBytes = null;
+  try {
+    const storage = await fsp.statfs(root || os.homedir());
+    storageTotalBytes = Number(storage.blocks) * Number(storage.bsize);
+    storageUsedBytes = storageTotalBytes - Number(storage.bavail) * Number(storage.bsize);
+  } catch (error) {
+  }
   return {
     source: "local",
     label: os.hostname(),
     cpuPercent,
     memoryUsedBytes,
     memoryTotalBytes: os.totalmem(),
+    storageUsedBytes,
+    storageTotalBytes,
     gpus: []
   };
 }
@@ -1862,9 +2125,12 @@ async function remoteSystemMetrics(workspace) {
     "  out=result.stdout",
     "  for row in out.strip().splitlines():",
     "    p=[x.strip() for x in row.split(',')]",
-    "    if len(p)>=6: gpus.append({'index':int(p[0]),'uuid':p[1],'name':p[2],'utilizationPercent':number(p[3]),'memoryUsedMiB':number(p[4]),'memoryTotalMiB':number(p[5]),'metricsAvailable':True,'users':[],'processes':[]})",
+    "    if len(p)>=6: gpus.append({'index':int(p[0]),'uuid':p[1],'name':p[2],'utilizationPercent':number(p[3]),'memoryUsedMiB':number(p[4]),'memoryTotalMiB':number(p[5]),'metricsAvailable':True,'processMetricsAvailable':False,'processError':None,'users':[],'processes':[]})",
     "  try:",
     "    apps=subprocess.run(['nvidia-smi','--query-compute-apps=gpu_uuid,pid,process_name,used_gpu_memory','--format=csv,noheader,nounits'],text=True,capture_output=True,timeout=5)",
+    "    for gpu in gpus:",
+    "      gpu['processMetricsAvailable']=apps.returncode == 0",
+    "      gpu['processError']=None if apps.returncode == 0 else (apps.stderr or apps.stdout or 'process query failed').strip()",
     "    if apps.returncode == 0:",
     "      by_uuid={gpu['uuid']:gpu for gpu in gpus}",
     "      for row in apps.stdout.strip().splitlines():",
@@ -1878,7 +2144,10 @@ async function remoteSystemMetrics(workspace) {
     "        by_uuid[p[0]]['processes'].append(process)",
     "        if username not in by_uuid[p[0]]['users']: by_uuid[p[0]]['users'].append(username)",
     "      for gpu in gpus: gpu['users'].sort()",
-    "  except Exception: pass",
+    "  except Exception as app_error:",
+    "    for gpu in gpus:",
+    "      gpu['processMetricsAvailable']=False",
+    "      gpu['processError']=str(app_error)",
     "except Exception as error:",
     "  gpu_error=str(error)",
     "  try:",
@@ -1889,11 +2158,14 @@ async function remoteSystemMetrics(workspace) {
     "        if ':' in line:",
     "          key,value=line.split(':',1); info[key.strip()]=value.strip()",
     "      index=int(info.get('Device Minor',len(gpus)))",
-    "      gpus.append({'index':index,'name':info.get('Model','NVIDIA GPU'),'utilizationPercent':None,'memoryUsedMiB':None,'memoryTotalMiB':None,'metricsAvailable':False,'users':[],'processes':[]})",
+    "      gpus.append({'index':index,'name':info.get('Model','NVIDIA GPU'),'utilizationPercent':None,'memoryUsedMiB':None,'memoryTotalMiB':None,'metricsAvailable':False,'processMetricsAvailable':False,'processError':gpu_error,'users':[],'processes':[]})",
     "    gpus.sort(key=lambda gpu:gpu['index'])",
     "  except Exception: pass",
     "total=mem.get('MemTotal',0); available=mem.get('MemAvailable',mem.get('MemFree',0))",
-    "print(json.dumps({'cpuPercent':(1-(i2-i1)/max(1,t2-t1))*100,'memoryUsedBytes':total-available,'memoryTotalBytes':total,'gpus':gpus,'gpuError':gpu_error}))"
+    "storage=os.statvfs('.')",
+    "storage_total=storage.f_blocks*storage.f_frsize",
+    "storage_used=storage_total-storage.f_bavail*storage.f_frsize",
+    "print(json.dumps({'cpuPercent':(1-(i2-i1)/max(1,t2-t1))*100,'memoryUsedBytes':total-available,'memoryTotalBytes':total,'storageUsedBytes':storage_used,'storageTotalBytes':storage_total,'gpus':gpus,'gpuError':gpu_error}))"
   ].join("\n");
   const { stdout } = await execFileAsync(
     resolveExecutable("ssh"),
@@ -1931,10 +2203,10 @@ async function getSystemMetrics(_event, workspaceId) {
     try {
       return await request;
     } catch (error) {
-      return { ...(await localSystemMetrics()), source: "ssh-error", label: remoteTarget(workspace.remote), error: error.message };
+      return { ...(await localSystemMetrics(workspace.root)), source: "ssh-error", label: remoteTarget(workspace.remote), error: error.message };
     }
   }
-  return await localSystemMetrics();
+  return await localSystemMetrics(workspace?.root);
 }
 
 async function getWorkspaceDiagnostics(_event, workspaceId) {
@@ -2002,7 +2274,8 @@ if (!spotify.running()) {
       album: track.album(),
       artworkUrl: track.artworkUrl(),
       position: spotify.playerPosition(),
-      duration: track.duration()
+      duration: track.duration(),
+      shuffling: Boolean(spotify.shuffling())
     });
   } catch (error) {
     JSON.stringify({ running: true, state: String(spotify.playerState()) });
@@ -2053,7 +2326,8 @@ async function controlSpotify(_event, action) {
   const commands = {
     previous: "previousTrack()",
     playpause: "playpause()",
-    next: "nextTrack()"
+    next: "nextTrack()",
+    shuffle: "shuffling = !spotify.shuffling()"
   };
   if (process.platform !== "darwin" || !commands[action]) {
     throw new Error("Unsupported Spotify control");
@@ -2066,18 +2340,18 @@ async function controlSpotify(_event, action) {
   return getSpotifyStatus();
 }
 
-function readLastCodexRateLimit() {
+async function readLastCodexRateLimit() {
   const sessionsRoot = path.join(os.homedir(), ".codex", "sessions");
-  const latestFile = findLatestFile(sessionsRoot, (filePath) => filePath.endsWith(".jsonl"));
+  const latestFile = await findLatestFile(sessionsRoot, (filePath) => filePath.endsWith(".jsonl"));
   if (!latestFile) return null;
+  let descriptor = null;
   try {
-    const stat = fs.statSync(latestFile);
+    const stat = await fsp.stat(latestFile);
     const length = Math.min(stat.size, 1024 * 1024);
     const buffer = Buffer.alloc(length);
-    const descriptor = fs.openSync(latestFile, "r");
-    fs.readSync(descriptor, buffer, 0, length, stat.size - length);
-    fs.closeSync(descriptor);
-    const lines = buffer.toString("utf8").split(/\r?\n/).reverse();
+    descriptor = await fsp.open(latestFile, "r");
+    const { bytesRead } = await descriptor.read(buffer, 0, length, Math.max(0, stat.size - length));
+    const lines = buffer.subarray(0, bytesRead).toString("utf8").split(/\r?\n/).reverse();
     for (const line of lines) {
       if (!line.includes("rate_limits")) continue;
       try {
@@ -2088,12 +2362,14 @@ function readLastCodexRateLimit() {
       }
     }
   } catch (error) {
+  } finally {
+    await descriptor?.close().catch(() => {});
   }
   return null;
 }
 
 async function getUsage() {
-  const codexLimits = readLastCodexRateLimit();
+  const codexLimits = await readLastCodexRateLimit();
   const primary = codexLimits && codexLimits.primary;
   const codexUsed = primary ? Math.max(0, Math.min(100, Number(primary.used_percent) || 0)) : null;
   return {
@@ -2110,6 +2386,38 @@ async function getUsage() {
 
 function sendToRenderer(channel, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
+}
+
+function setCinematicWindowFullScreen(event, enabled) {
+  const window = BrowserWindow.fromWebContents(event.sender) || mainWindow;
+  if (!window || window.isDestroyed()) return false;
+  const active = Boolean(enabled);
+  if (active) {
+    if (!cinematicFullScreenRestore || cinematicFullScreenRestore.windowId !== window.id) {
+      cinematicFullScreenRestore = {
+        windowId: window.id,
+        wasFullScreen: window.isFullScreen(),
+        wasSimpleFullScreen: process.platform === "darwin" && window.isSimpleFullScreen()
+      };
+    }
+    if (process.platform === "darwin") {
+      if (!window.isFullScreen() && !window.isSimpleFullScreen()) window.setSimpleFullScreen(true);
+    } else if (!window.isFullScreen()) {
+      window.setFullScreen(true);
+    }
+  } else {
+    const restore = cinematicFullScreenRestore;
+    cinematicFullScreenRestore = null;
+    if (restore?.windowId === window.id) {
+      if (process.platform === "darwin" && !restore.wasSimpleFullScreen && window.isSimpleFullScreen()) {
+        window.setSimpleFullScreen(false);
+      } else if (!restore.wasFullScreen && window.isFullScreen()) {
+        window.setFullScreen(false);
+      }
+    }
+  }
+  sendToRenderer("window:full-screen", active);
+  return active;
 }
 
 function showAgentFinishedNotification(_event, payload = {}) {
@@ -2148,7 +2456,7 @@ function createWindow() {
     ...(process.platform === "darwin"
       ? {
           titleBarStyle: "hiddenInset",
-          trafficLightPosition: { x: 14, y: 14 },
+          trafficLightPosition: { x: 14, y: 16 },
           vibrancy: "under-window",
           visualEffectState: "active"
         }
@@ -2171,6 +2479,7 @@ function createWindow() {
     return { action: "deny" };
   });
   mainWindow.on("closed", () => {
+    cinematicFullScreenRestore = null;
     for (const session of terminalSessions.values()) {
       fs.unwatchFile(session.metadataPath);
       if (session.remoteMetadataTimer) clearInterval(session.remoteMetadataTimer);
@@ -2201,13 +2510,21 @@ app.whenReady().then(() => {
   ipcMain.handle("workspace:import-paths", importWorkspacePaths);
   ipcMain.handle("workspace:import-data", importWorkspaceData);
   ipcMain.handle("workspace:rename-entry", renameWorkspaceEntry);
+  ipcMain.handle("workspace:read-notes", readWorkspaceNotes);
+  ipcMain.handle("workspace:write-notes", writeWorkspaceNotes);
   ipcMain.handle("workspace:files", listWorkspaceFiles);
+  ipcMain.handle("workspace:list-directory", listWorkspaceDirectory);
   ipcMain.handle("workspace:artifacts", listArtifacts);
   ipcMain.handle("workspace:read-artifact", readArtifact);
   ipcMain.handle("workspace:read-preview-path", readPreviewPath);
   ipcMain.handle("workspace:open-file", openWorkspaceFile);
   ipcMain.handle("workspace:show-file-menu", showWorkspaceFileMenu);
   ipcMain.handle("workspace:open-code", openWorkspaceInCode);
+  ipcMain.handle("application:open", openApplication);
+  ipcMain.handle("clipboard:write-text", (_event, value) => {
+    clipboard.writeText(String(value || "").slice(0, 500000));
+    return true;
+  });
   ipcMain.handle("agent:create", createAgent);
   ipcMain.handle("agent:kill", killAgent);
   ipcMain.handle("agent:rename", renameAgent);
@@ -2220,7 +2537,12 @@ app.whenReady().then(() => {
   ipcMain.handle("spotify:status", getSpotifyStatus);
   ipcMain.handle("spotify:control", controlSpotify);
   ipcMain.handle("notification:agent-finished", showAgentFinishedNotification);
-  ipcMain.handle("window:is-full-screen", () => Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.isFullScreen()));
+  ipcMain.handle("window:is-full-screen", () => Boolean(
+    mainWindow
+    && !mainWindow.isDestroyed()
+    && (mainWindow.isFullScreen() || (process.platform === "darwin" && mainWindow.isSimpleFullScreen()))
+  ));
+  ipcMain.handle("window:set-cinematic-full-screen", setCinematicWindowFullScreen);
   createWindow();
 
   app.on("activate", () => {

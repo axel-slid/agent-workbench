@@ -8,15 +8,40 @@
   let currentFloor = 1;
   let replayTimer = 0;
   let livePreviewTimer = 0;
-  let previewCycleActive = false;
+  let pixelModeVisible = false;
   let petPreferenceReceived = false;
   let petsEnabled = true;
-  let selectedPet = "gitcat";
-  const petBaseNames = ["Claudio", "Gitcat", "Scout", "Pixel"];
-  const petVariantNames = ["", " Mint", " Amber", " Violet", " Sky", " Rose"];
-  const petNames = petVariantNames.flatMap(
-    (suffix) => petBaseNames.map((name) => `${name}${suffix}`),
-  );
+  let selectedPet = "hamster";
+  let petClickSequence = 0;
+  let petPointerSnapshot = null;
+  const petNames = [
+    "Claudio",
+    "Nibbles",
+    "Scout",
+    "Pixel",
+    "Mochi",
+    "Atlas",
+    "Ribbit",
+    "Piper",
+    "Pippin",
+    "Bandit",
+    "Waddles",
+    "Maple",
+  ];
+  const petIds = [
+    "claudio",
+    "hamster",
+    "dog",
+    "lizard",
+    "rabbit",
+    "tortoise",
+    "frog",
+    "cockatiel",
+    "hedgehog",
+    "raccoon",
+    "penguin",
+    "red-panda",
+  ];
   const bridgeState = {
     currentFloor: 1,
     enhancedLayouts: 0,
@@ -24,17 +49,6 @@
     lastCarpetCount: 0,
   };
   window.__workbenchPixelBridge = bridgeState;
-
-  function parentIsRefreshingPreviews() {
-    if (previewCycleActive) return true;
-    try {
-      return window.parent.document
-        .getElementById("pixelModeView")
-        ?.classList.contains("refreshing-floor-previews");
-    } catch (error) {
-      return false;
-    }
-  }
 
   function inferFloor(layout) {
     const explicit = Number(layout?.workbenchFloor);
@@ -46,19 +60,8 @@
     return 1;
   }
 
-  function isWalkable(layout, column, row) {
-    const index = row * layout.cols + column;
-    const tile = layout.tiles[index];
-    return tile !== 0 && tile !== 255 && tile !== undefined;
-  }
-
   function petTypeForFloor(floor) {
-    const preferredOffset = {
-      claudio: 0,
-      gitcat: 1,
-      dog: 2,
-      lizard: 3,
-    }[selectedPet] ?? 1;
+    const preferredOffset = Math.max(0, petIds.indexOf(selectedPet));
     return (Math.max(1, Number(floor) || 1) - 1 + preferredOffset) % petNames.length;
   }
 
@@ -66,26 +69,62 @@
     return petNames[petTypeForFloor(floor)];
   }
 
-  function addRoomCarpet(layout, floor, fromColumn, toColumn, fromRow, toRow, variant, order) {
-    for (let row = fromRow; row <= toRow; row += 1) {
-      for (let column = fromColumn; column <= toColumn; column += 1) {
-        if (!isWalkable(layout, column, row)) continue;
-        const index = row * layout.cols + column;
-        if (layout.carpetTiles[index]) continue;
-        const edge =
-          column === fromColumn ||
-          column === toColumn ||
-          row === fromRow ||
-          row === toRow;
-        const checker = (column + row + floor) % 5 === 0;
-        if (!edge || checker) {
-          layout.carpetTiles[index] = {
-            variant,
-            order,
-          };
-        }
-      }
+  function appearanceValue(value, fallback) {
+    const normalized = String(value || "").trim();
+    return normalized && normalized.length <= 512 ? normalized : fallback;
+  }
+
+  function applyAppearanceConfig(config = {}) {
+    const root = document.documentElement;
+    const background = appearanceValue(config.background, config.bg || "#10141c");
+    const bg = appearanceValue(config.bg, "#10141c");
+    const panel = appearanceValue(config.panel, bg);
+    const elevated = appearanceValue(config.elevated, panel);
+    const hover = appearanceValue(config.hover, elevated);
+    const active = appearanceValue(config.active, hover);
+    const border = appearanceValue(config.border, "#465465");
+    const text = appearanceValue(config.text, "#eef2f7");
+    const muted = appearanceValue(config.muted, "#99a5b3");
+    const accent = appearanceValue(config.accent, "#69a8ff");
+    const status = appearanceValue(config.status, accent);
+    const variables = {
+      "--workbench-pixel-background": background,
+      "--workbench-pixel-bg": bg,
+      "--color-bg": panel,
+      "--color-bg-dark": bg,
+      "--color-bg-thumb": elevated,
+      "--color-border": border,
+      "--color-accent": accent,
+      "--color-text": text,
+      "--color-text-muted": muted,
+      "--color-btn-bg": elevated,
+      "--color-btn-hover": hover,
+      "--color-active-bg": active,
+      "--color-accent-bright": status,
+      "--color-reset-text": text,
+    };
+    for (const [name, value] of Object.entries(variables)) {
+      root.style.setProperty(name, value);
     }
+    root.dataset.workbenchAppearanceTone = config.tone === "light" ? "light" : "dark";
+    root.dataset.workbenchTheme = String(config.theme || "dark-plus");
+    root.style.colorScheme = config.tone === "light" ? "light" : "dark";
+    let style = document.getElementById("workbench-pixel-appearance");
+    if (!style) {
+      style = document.createElement("style");
+      style.id = "workbench-pixel-appearance";
+      style.textContent = `
+        html, body, #root {
+          background: var(--workbench-pixel-background, var(--workbench-pixel-bg)) !important;
+        }
+        canvas {
+          background-color: var(--workbench-pixel-bg) !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    bridgeState.appearanceTheme = root.dataset.workbenchTheme;
+    bridgeState.appearanceTone = root.dataset.workbenchAppearanceTone;
   }
 
   function decorateLayout(source) {
@@ -97,29 +136,6 @@
 
     if (!Array.isArray(layout.carpetTiles) || layout.carpetTiles.length !== layout.tiles.length) {
       layout.carpetTiles = Array(layout.tiles.length).fill(null);
-      const leftInset = 2 + (floor % 2);
-      const rightInset = Math.max(11, layout.cols - 9 - (floor % 3));
-      const upperRow = Math.max(11, layout.rows - 11);
-      addRoomCarpet(
-        layout,
-        floor,
-        leftInset,
-        Math.min(layout.cols - 2, leftInset + 6),
-        upperRow,
-        Math.min(layout.rows - 2, upperRow + 5),
-        (floor - 1) % 3,
-        floor * 2,
-      );
-      addRoomCarpet(
-        layout,
-        floor,
-        rightInset,
-        Math.min(layout.cols - 2, rightInset + 6),
-        Math.min(layout.rows - 3, upperRow + (floor % 2)),
-        Math.min(layout.rows - 2, upperRow + 6),
-        floor % 3,
-        floor * 2 + 1,
-      );
     }
 
     // BsCode's Pixel pets setting is the source of truth once houseConfig has
@@ -201,11 +217,13 @@
       created: { type: "agentCreated", id },
       team: null,
       status: null,
+      speech: null,
       tools: [],
     };
     if (message.type === "agentCreated") record.created = { ...message };
     else if (message.type === "agentTeamInfo") record.team = { ...message };
     else if (message.type === "agentStatus") record.status = { ...message };
+    else if (message.type === "agentSpeech") record.speech = { ...message };
     else if (message.type === "agentToolsClear") record.tools = [];
     else if (message.type === "agentToolStart") {
       record.tools = record.tools.filter((tool) => tool.toolId !== message.toolId);
@@ -231,6 +249,7 @@
         dispatchToPixelAgents(record.created);
         if (record.team) dispatchToPixelAgents(record.team);
         if (record.status) dispatchToPixelAgents(record.status);
+        if (record.speech) dispatchToPixelAgents(record.speech);
         for (const tool of record.tools) dispatchToPixelAgents(tool);
       }
     }, 55);
@@ -287,29 +306,132 @@
     );
   }
 
+  function petSpeechSnapshot() {
+    const pets = window.__pixelAgentsTestHooks?.getPets?.() || [];
+    return new Map(
+      pets.map((pet) => [
+        pet.id,
+        {
+          bubbleType: pet.bubbleType || "",
+          speechText: pet.speechText || "",
+          speechTimer: Number(pet.speechTimer) || 0,
+        },
+      ]),
+    );
+  }
+
+  function openPetProfileDirect(pet) {
+    if (!pet || !pet.id) return false;
+    petClickSequence += 1;
+    bridgeState.lastSelectedPet = pet.id;
+    window.parent.postMessage(
+      {
+        source: "agent-workbench-pixel-mode",
+        message: {
+          type: "pixelPetSelected",
+          floor: currentFloor,
+          pet: {
+            id: pet.id,
+            name: pet.name,
+            petType: pet.petType,
+            state: pet.state,
+          },
+        },
+      },
+      "*",
+    );
+    return true;
+  }
+  window.__workbenchOpenPetProfile = openPetProfileDirect;
+
+  function publishClickedPetProfile(sequence, before) {
+    if (sequence !== petClickSequence) return false;
+    const pets = window.__pixelAgentsTestHooks?.getPets?.() || [];
+    const changedPet = pets
+      .map((pet) => {
+        const previous = before.get(pet.id) || {
+          bubbleType: "",
+          speechText: "",
+          speechTimer: 0,
+        };
+        const timer = Number(pet.speechTimer) || 0;
+        const changed =
+          (pet.bubbleType || "") !== previous.bubbleType
+          || (pet.speechText || "") !== previous.speechText
+          || timer > previous.speechTimer + 0.25;
+        return {
+          pet,
+          changed,
+          score: changed
+            ? Math.max(0, timer - previous.speechTimer)
+              + ((pet.bubbleType || "") !== previous.bubbleType ? 5 : 0)
+              + ((pet.speechText || "") !== previous.speechText ? 2 : 0)
+            : -1,
+        };
+      })
+      .filter((candidate) => candidate.changed)
+      .sort((first, second) => second.score - first.score)[0]?.pet;
+    if (!changedPet) return false;
+
+    return openPetProfileDirect(changedPet);
+  }
+
+  // Capture the pet state before Pixel Agents handles pointer-down. Some pet
+  // sprites react before the later click event, so a click-only snapshot can
+  // miss the exact pet that changed.
+  nativeAddEventListener(
+    "pointerdown",
+    (event) => {
+      if (event.target?.tagName !== "CANVAS") return;
+      petPointerSnapshot = petSpeechSnapshot();
+    },
+    true,
+  );
+
+  // Pixel Agents owns the canvas interaction. Watch the pet speech-bubble
+  // state that its click handler changes, then tell BsCode which pet was hit.
+  nativeAddEventListener(
+    "click",
+    (event) => {
+      if (event.target?.tagName !== "CANVAS") return;
+      const before = petPointerSnapshot?.size ? petPointerSnapshot : petSpeechSnapshot();
+      petPointerSnapshot = null;
+      if (!before.size) return;
+      const sequence = ++petClickSequence;
+      for (const delay of [0, 40, 120, 260]) {
+        window.setTimeout(() => publishClickedPetProfile(sequence, before), delay);
+      }
+    },
+    true,
+  );
+
   nativeAddEventListener(
     "message",
     (event) => {
       const message = event.data;
       if (!message || typeof message !== "object") return;
       if (message.__workbenchReplay || message.__workbenchEnhanced) return;
-      if (message.type === "previewCycle") {
-        previewCycleActive = Boolean(message.active);
-        if (!previewCycleActive) replayAgentsIntoRoom();
+      if (message.type === "appearanceConfig") {
+        applyAppearanceConfig(message.appearance);
+        return;
+      }
+      if (message.type === "pixelModeVisibility") {
+        pixelModeVisible = Boolean(message.active);
+        bridgeState.pixelModeVisible = pixelModeVisible;
         return;
       }
       if (message.type === "houseConfig") {
         petPreferenceReceived = true;
         petsEnabled = message.petsEnabled !== false;
-        selectedPet = ["claudio", "gitcat", "dog", "lizard"].includes(message.pet)
+        selectedPet = petIds.includes(message.pet)
           ? message.pet
-          : "gitcat";
+          : "hamster";
         bridgeState.petsEnabled = petsEnabled;
         bridgeState.selectedPet = selectedPet;
       }
       if (message.type === "captureFloorPreview") {
         const floor = Math.max(1, Number(message.floor) || currentFloor);
-        window.setTimeout(() => publishRoomState(floor), 90);
+        window.setTimeout(() => publishRoomState(floor), 30);
       }
 
       if (
@@ -317,6 +439,7 @@
           "agentCreated",
           "agentTeamInfo",
           "agentStatus",
+          "agentSpeech",
           "agentToolsClear",
           "agentToolStart",
           "agentToolDone",
@@ -331,7 +454,6 @@
       const layout = decorateLayout(message.layout);
       currentFloor = inferFloor(layout);
       bridgeState.currentFloor = currentFloor;
-      if (parentIsRefreshingPreviews()) replayAgentsIntoRoom();
     },
     false,
   );
@@ -339,12 +461,12 @@
   function scheduleLivePreview() {
     window.clearInterval(livePreviewTimer);
     livePreviewTimer = window.setInterval(() => {
-      if (document.visibilityState !== "visible" || parentIsRefreshingPreviews()) return;
+      if (!pixelModeVisible || document.visibilityState !== "visible") return;
       if (typeof window.captureFloorPreview === "function") {
         window.captureFloorPreview(currentFloor);
-        window.setTimeout(() => publishRoomState(currentFloor), 90);
+        window.setTimeout(() => publishRoomState(currentFloor), 30);
       }
-    }, 4000);
+    }, 15000);
   }
 
   window.addEventListener("DOMContentLoaded", scheduleLivePreview, { once: true });

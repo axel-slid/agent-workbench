@@ -8,9 +8,24 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <video id="sceneBackground" class="scene-background" muted loop playsinline preload="none" aria-hidden="true"></video>
+  <canvas id="sceneBackgroundCanvas" class="scene-background-canvas" aria-hidden="true"></canvas>
+  <div class="scene-atmosphere" aria-hidden="true"></div>
+  <button id="cinematicExitButton" class="cinematic-exit-button" type="button" title="Exit cinematic mode" aria-label="Exit cinematic mode" hidden>×</button>
+  <button id="cinematicNextSceneButton" class="cinematic-next-scene-button" type="button" title="Next animated scene" aria-label="Next animated scene" hidden>
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M3 14.5 7.2 10l2.8 2.8 2.1-2.1 4.9 4.8"/>
+      <path d="M13.5 4.5h3v3M16.2 4.8 12.8 8"/>
+      <circle cx="7" cy="6.5" r="1.5"/>
+    </svg>
+  </button>
+  <div id="cinematicResizeReadout" class="cinematic-resize-readout" hidden>
+    <strong>600 × 285</strong>
+    <span>all panes</span>
+  </div>
   <div class="app-shell">
     <header class="titlebar">
-      <div id="spotifyNowPlaying" class="spotify-now-playing titlebar-spotify" hidden>
+      <div id="spotifyNowPlaying" class="spotify-now-playing titlebar-spotify no-track">
         <img id="spotifyArtwork" class="spotify-artwork" alt="Album cover" hidden>
         <button id="spotifyPreviousButton" class="spotify-control" type="button" title="Previous track" aria-label="Previous track">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3v10M12.5 3.5 5.5 8l7 4.5z"/></svg>
@@ -22,15 +37,26 @@
         <button id="spotifyNextButton" class="spotify-control" type="button" title="Next track" aria-label="Next track">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 3.5 7 4.5-7 4.5zM12.5 3v10"/></svg>
         </button>
+        <button id="spotifyShuffleButton" class="spotify-control spotify-shuffle-control" type="button" title="Turn shuffle on" aria-label="Turn shuffle on" aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h2.2c3.8 0 3.6 8 7.6 8H14M11.5 9.5 14 12l-2.5 2.5M2 12h2.2c1.3 0 2.1-.9 2.8-2M9 6c.7-1.2 1.5-2 2.8-2H14M11.5 1.5 14 4l-2.5 2.5"/></svg>
+        </button>
         <div class="spotify-track-copy">
           <div class="spotify-track-name-clip">
             <strong id="spotifyTrackName">Spotify</strong>
           </div>
-          <span id="spotifyTrackDetail"></span>
+          <span id="spotifyTrackDetail">Open Spotify</span>
         </div>
+        <button id="spotifyOpenButton" class="spotify-open-button" type="button" title="Open Spotify" aria-label="Open Spotify">
+          <img src="assets/spotify-symbol.svg" alt="">
+        </button>
       </div>
-      <div id="commandCenter" class="command-center" role="button" tabindex="0" title="Command Palette (⌘P)" aria-label="Open Command Palette">
-        <span id="activeWorkspaceName">No workspace selected</span>
+      <div class="workspace-address-shell">
+        <button id="workspaceBackButton" class="workspace-history-button" type="button" title="Home" aria-label="Go home">←</button>
+        <button id="workspaceForwardButton" class="workspace-history-button" type="button" title="Return to workspace" aria-label="Return to workspace">→</button>
+        <div id="commandCenter" class="command-center" role="button" tabindex="0" title="Command Palette (⌘P)" aria-label="Open Command Palette">
+          <span id="activeWorkspaceName">No workspace selected</span>
+          <span class="command-center-spark" aria-hidden="true">✦</span>
+        </div>
       </div>
       <div class="titlebar-actions">
         <button id="homeButton" class="top-action" type="button" title="Home" aria-label="Home" aria-pressed="false">
@@ -38,20 +64,32 @@
             <path d="m3 9 7-6 7 6v8h-5v-5H8v5H3z"/>
           </svg>
         </button>
-        <button id="newCodexButton" class="top-action accent-action" type="button" title="New Codex agent" aria-label="New Codex agent"><img class="brand-symbol" src="assets/openai-blossom.svg" alt=""></button>
-        <button id="newClaudeButton" class="top-action claude-action" type="button" title="New Claude agent" aria-label="New Claude agent"><img class="brand-symbol" src="assets/claude-symbol.svg" alt=""></button>
+        <button id="openChromeButton" class="top-action application-shortcut" type="button" title="Open Google Chrome" aria-label="Open Google Chrome"><img class="brand-symbol" src="assets/chrome-symbol.svg" alt=""></button>
+        <button id="openOpenleafButton" class="top-action application-shortcut" type="button" title="Open Openleaf" aria-label="Open Openleaf"><img class="brand-symbol" src="assets/openleaf-symbol.svg" alt=""></button>
         <button id="openCodeButton" class="top-action" type="button" title="Open workspace in Visual Studio Code" aria-label="Open workspace in Visual Studio Code"><img class="vscode-symbol" src="assets/vscode.svg" alt=""></button>
+        <button id="openNotepadButton" class="top-action" type="button" title="Workspace Notes" aria-label="Open workspace notes">
+          <svg class="notepad-symbol" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 3.5h12v13H4zM7 2v3M13 2v3M7 8h6M7 11h6M7 14h4"/>
+          </svg>
+        </button>
         <button id="globalZenButton" class="top-action global-zen-button" type="button" title="Zen view for all agents" aria-label="Zen view for all agents" aria-pressed="false">
           <svg class="global-zen-symbol" viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M7 3.5H4.5a1 1 0 0 0-1 1V7M13 3.5h2.5a1 1 0 0 1 1 1V7M7 16.5H4.5a1 1 0 0 1-1-1V13M13 16.5h2.5a1 1 0 0 0 1-1V13"/>
-            <path d="m6.4 10 2.1 2.1 5-5.1"/>
+            <circle cx="4" cy="5" r="1"/>
+            <circle cx="4" cy="10" r="1"/>
+            <circle cx="4" cy="15" r="1"/>
+            <path d="M7 5h10M7 10h10M7 15h10"/>
+          </svg>
+        </button>
+        <button id="cinematicModeButton" class="top-action cinematic-mode-button" type="button" title="Cinematic mode" aria-label="Cinematic mode" aria-pressed="false">
+          <svg class="yin-yang-symbol" viewBox="0 0 20 20" aria-hidden="true">
+            <circle class="yin-yang-outline" cx="10" cy="10" r="8"/>
+            <path class="yin-yang-half" d="M10 2A8 8 0 0 0 10 18a4 4 0 0 0 0-8 4 4 0 0 1 0-8Z"/>
+            <circle class="yin-yang-dark-dot" cx="10" cy="6" r="1.3"/>
+            <circle class="yin-yang-light-dot" cx="10" cy="14" r="1.3"/>
           </svg>
         </button>
         <button id="pixelModeButton" class="top-action pixel-mode-button" type="button" title="Pixel mode" aria-label="Pixel mode" aria-pressed="false">
-          <svg viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M2.2 10s2.8-5 7.8-5 7.8 5 7.8 5-2.8 5-7.8 5-7.8-5-7.8-5Z"/>
-            <circle cx="10" cy="10" r="2.4"/>
-          </svg>
+          <img class="pixel-mode-agent-face" src="assets/agent-face-0.png" alt="">
         </button>
         <div class="notification-control">
           <button id="notificationButton" class="top-action notification-button" type="button" title="No unread agent notifications" aria-label="Agent notifications" aria-expanded="false">
@@ -77,6 +115,11 @@
         </button>
         <div class="titlebar-system-status" aria-label="Time and battery">
           <time id="titlebarTime">--:--</time>
+          <section id="calendarPopover" class="calendar-popover" hidden>
+            <header><strong id="calendarMonth"></strong><span id="calendarFullDate"></span></header>
+            <div class="calendar-weekdays" aria-hidden="true"><b>S</b><b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b>S</b></div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </section>
           <span id="titlebarBattery" class="titlebar-battery" title="Battery unavailable">
             <svg viewBox="0 0 20 12" aria-hidden="true">
               <path class="battery-outline" d="M1.5 1.5h14v9h-14zM17.5 4v4"/>
@@ -103,7 +146,7 @@
       <div class="home-content">
         <header class="home-heading">
           <div>
-            <span>BsCode</span>
+            <span class="home-brand"><img src="assets/app-icon.png" alt="">BsCode</span>
             <h1>Pick up where you left off</h1>
             <p>Recent local and remote workspaces stay ready here.</p>
           </div>
@@ -252,8 +295,26 @@
           </div>
         </div>
         <section id="agentGrid" class="agent-grid" aria-label="Agent terminals"></section>
-        <section id="pixelModeView" class="pixel-mode-view" aria-label="Pixel Agents office" hidden>
+        <section id="pixelModeView" class="pixel-mode-view background-warm" aria-label="Pixel Agents office" aria-hidden="true">
           <iframe id="pixelModeFrame" title="Pixel Agents office" src="pixel-agents-mode/index.html"></iframe>
+          <div class="pixel-scene-divider" aria-hidden="true"></div>
+          <div id="pixelViewLoader" class="pixel-view-loader" role="status" aria-live="polite" hidden>
+            <video id="pixelLoaderAnimation" class="pixel-loader-animation" src="assets/bscode-loading-transparent.webm" muted playsinline loop preload="auto" aria-hidden="true"></video>
+            <span id="pixelViewLoaderStatus" class="pixel-loader-status">Loading visual view</span>
+          </div>
+          <div id="pixelFloorLauncher" class="pixel-floor-launcher" hidden>
+            <span id="pixelFloorLauncherNumber" class="pixel-floor-launcher-number">1</span>
+            <textarea id="pixelFloorTaskInput" rows="3" placeholder="Task for Agent 1…" aria-label="Task for Agent 1"></textarea>
+            <div class="pixel-floor-launcher-buttons">
+              <button type="button" data-agent-kind="codex" title="Start Codex" aria-label="Start Codex">
+                <img src="assets/openai-blossom.svg" alt="">
+              </button>
+              <button type="button" data-agent-kind="claude" title="Start Claude" aria-label="Start Claude">
+                <img src="assets/claude-symbol.svg" alt="">
+              </button>
+              <button type="button" data-agent-kind="shell" title="Start terminal" aria-label="Start terminal">›_</button>
+            </div>
+          </div>
           <nav id="pixelFloorStack" class="pixel-floor-stack" aria-label="Pixel Agents floors">
             <div class="pixel-tower-roof" aria-hidden="true">
               <i></i><i></i><i></i>
@@ -282,6 +343,11 @@
               <span></span><span></span><i></i>
             </div>
           </nav>
+          <button id="pixelSkyToggleButton" class="pixel-sky-toggle-button" type="button" title="Switch tower sky" aria-label="Switch tower sky">
+            <span class="pixel-sky-toggle-glyph" aria-hidden="true"></span>
+          </button>
+          <button id="pixelRefreshButton" class="pixel-refresh-button" type="button" title="Refresh visual view" aria-label="Refresh visual view"><span aria-hidden="true">↻</span></button>
+          <button id="pixelExitButton" class="pixel-exit-button" type="button" title="Return to terminals" aria-label="Exit Pixel mode">›_</button>
           <button id="pixelDeleteFloorButton" class="pixel-delete-floor-button" type="button" title="Delete current floor" aria-label="Delete current floor">−</button>
           <button id="pixelAddFloorButton" class="pixel-add-floor-button" type="button" title="Add floor" aria-label="Add floor">+</button>
           <button id="pixelAgentClipboardButton" class="pixel-agent-clipboard-button" type="button" title="Agent clipboard" aria-label="Open agent clipboard" aria-expanded="false">
@@ -297,6 +363,58 @@
             </header>
             <div id="pixelAgentRosterList" class="pixel-agent-roster-list"></div>
           </aside>
+          <aside id="pixelAgentDetail" class="pixel-agent-detail" aria-label="Agent details" hidden>
+            <header>
+              <span id="pixelAgentDetailAvatar" class="pixel-agent-detail-avatar" aria-hidden="true"></span>
+              <span class="pixel-agent-detail-title">
+                <strong id="pixelAgentDetailName">Agent</strong>
+                <small id="pixelAgentDetailMeta">Waiting</small>
+              </span>
+              <button id="closePixelAgentDetailButton" type="button" title="Close agent details" aria-label="Close agent details">×</button>
+            </header>
+            <section>
+              <p id="pixelAgentDetailTask" class="pixel-agent-detail-task"></p>
+              <div id="pixelAgentDetailChecklist" class="pixel-agent-detail-checklist"></div>
+              <div id="pixelAgentDetailFiles" class="pixel-agent-detail-files"></div>
+            </section>
+            <footer>
+              <textarea id="pixelAgentDetailPrompt" rows="2" placeholder="Send another instruction…" aria-label="Send another instruction"></textarea>
+              <button id="pixelAgentDetailSendButton" type="button" title="Send instruction" aria-label="Send instruction">↵</button>
+              <button id="pixelAgentDetailStatusButton" type="button" title="Ask for status" aria-label="Ask for status">?</button>
+              <button id="pixelAgentDetailInterruptButton" type="button" title="Interrupt agent" aria-label="Interrupt agent">■</button>
+              <button id="pixelAgentDetailTerminalButton" type="button" title="Open terminal" aria-label="Open agent terminal">›_</button>
+            </footer>
+          </aside>
+          <aside id="pixelPetDetail" class="pixel-pet-detail" aria-label="Pet details" hidden>
+            <header>
+              <span id="pixelPetDetailAvatar" class="pixel-pet-detail-avatar" aria-hidden="true"></span>
+              <span class="pixel-pet-detail-title">
+                <strong id="pixelPetDetailName">Pet</strong>
+                <small id="pixelPetDetailMeta">Tower companion</small>
+              </span>
+              <button id="closePixelPetDetailButton" type="button" title="Close pet details" aria-label="Close pet details">×</button>
+            </header>
+            <section>
+              <div class="pixel-pet-vital">
+                <span>HP</span>
+                <span class="pixel-pet-vital-track"><i id="pixelPetHpFill"></i></span>
+                <strong id="pixelPetHpText">0/0</strong>
+              </div>
+              <div class="pixel-pet-vital">
+                <span>Energy</span>
+                <span class="pixel-pet-vital-track energy"><i id="pixelPetEnergyFill"></i></span>
+                <strong id="pixelPetEnergyText">0%</strong>
+              </div>
+              <dl class="pixel-pet-attributes">
+                <div><dt>Level</dt><dd id="pixelPetLevel">1</dd></div>
+                <div><dt>Mood</dt><dd id="pixelPetMood">Happy</dd></div>
+                <div><dt>Favorite food</dt><dd id="pixelPetSnack">Treats</dd></div>
+                <div><dt>Hobbies</dt><dd id="pixelPetHobbies">Exploring</dd></div>
+                <div><dt>Trait</dt><dd id="pixelPetTrait">Friendly</dd></div>
+                <div><dt>Talent</dt><dd id="pixelPetTalent">Moral support</dd></div>
+              </dl>
+            </section>
+          </aside>
         </section>
         <section id="outputViewer" class="output-viewer" aria-label="Expanded output" hidden>
           <header class="output-viewer-header">
@@ -309,6 +427,14 @@
           </header>
           <div id="outputViewerContent" class="output-viewer-content"></div>
         </section>
+        <form id="cinematicPromptDock" class="cinematic-prompt-dock" hidden>
+          <div id="cinematicMentionMenu" class="cinematic-mention-menu" role="listbox" aria-label="Mention a model or agent" hidden></div>
+          <button id="cinematicMentionButton" class="cinematic-mention-button" type="button" title="Mention an agent" aria-label="Mention an agent">@</button>
+          <input id="cinematicPromptInput" type="text" autocomplete="off" placeholder="Tell the selected agent what to do…" aria-label="Cinematic agent instruction">
+          <button id="cinematicResultsButton" class="cinematic-results-button" type="button" title="View generated results" aria-label="View generated results">Results</button>
+          <kbd class="cinematic-prompt-shortcut" aria-label="Command K">⌘K</kbd>
+          <button id="cinematicPromptSendButton" type="submit" title="Send instruction" aria-label="Send instruction">↵</button>
+        </form>
       </main>
 
       <div id="artifactResizeHandle" class="resize-handle" role="separator" aria-label="Resize output panel"></div>
@@ -356,6 +482,7 @@
         <svg viewBox="0 0 18 18" aria-hidden="true">
           <path d="m7 4-4 5 4 5M11 4l4 5-4 5"/>
         </svg>
+        <span id="remoteStatusLabel" class="remote-status-label"></span>
       </button>
       <div class="usage-brand">
         <span class="usage-logo codex-logo"><img class="brand-symbol" src="assets/openai-blossom.svg" alt=""></span>
@@ -370,6 +497,7 @@
         <span id="metricSource" class="metric-source">Local</span>
         <span>Processor <strong id="cpuUsageText">—</strong></span>
         <span>Memory <strong id="memoryUsageText">—</strong></span>
+        <span>Storage <strong id="storageUsageText">—</strong></span>
         <span id="gpuMetrics" class="gpu-metrics"></span>
       </div>
       <div class="footer-spacer"></div>
@@ -447,6 +575,53 @@
           <div class="theme-option" data-category="Dark Contrast" data-theme="graphite-contrast" role="button" tabindex="0"><i style="--theme-a:#050505;--theme-b:#d0d0d0"></i><span>Graphite Contrast</span><b>✓</b></div>
         </div>
 
+        <div class="scene-theme-setting">
+          <h2>Living backgrounds</h2>
+          <p>Looping scenes behind translucent agent panes. Only the selected scene plays.</p>
+          <div class="scene-theme-grid" role="radiogroup" aria-label="Living background">
+            <button class="scene-theme-option" type="button" data-scene-theme="none" role="radio" aria-checked="false">
+              <span class="scene-theme-preview scene-theme-none" aria-hidden="true"></span>
+              <strong>None<small>Theme color</small></strong>
+              <b aria-hidden="true">✓</b>
+            </button>
+            <button class="scene-theme-option" type="button" data-scene-theme="forest" role="radio" aria-checked="false" style="--scene-preview:url('assets/scenes/forest.jpg')">
+              <span class="scene-theme-preview" aria-hidden="true"></span>
+              <strong>Forest River<small>Quiet green canopy</small></strong>
+              <b aria-hidden="true">✓</b>
+            </button>
+            <button class="scene-theme-option" type="button" data-scene-theme="ocean" role="radio" aria-checked="false" style="--scene-preview:url('assets/scenes/ocean.jpg')">
+              <span class="scene-theme-preview" aria-hidden="true"></span>
+              <strong>Ocean Dusk<small>Illustrated violet coast</small></strong>
+              <b aria-hidden="true">✓</b>
+            </button>
+            <button class="scene-theme-option" type="button" data-scene-theme="rain" role="radio" aria-checked="false" style="--scene-preview:url('assets/scenes/rain.jpg')">
+              <span class="scene-theme-preview" aria-hidden="true"></span>
+              <strong>Forest Rain<small>Painted mountain storm</small></strong>
+              <b aria-hidden="true">✓</b>
+            </button>
+            <button class="scene-theme-option active" type="button" data-scene-theme="sky" role="radio" aria-checked="true" style="--scene-preview:url('assets/scenes/sky.jpg')">
+              <span class="scene-theme-preview" aria-hidden="true"></span>
+              <strong>Cloud Canopy<small>Illustrated alpine sky</small></strong>
+              <b aria-hidden="true">✓</b>
+            </button>
+            <button class="scene-theme-option" type="button" data-scene-theme="architecture" role="radio" aria-checked="false" style="--scene-preview:url('assets/scenes/architecture.jpg')">
+              <span class="scene-theme-preview" aria-hidden="true"></span>
+              <strong>Afterlight<small>Monumental architecture</small></strong>
+              <b aria-hidden="true">✓</b>
+            </button>
+            <button class="scene-theme-option" type="button" data-scene-theme="lookout" role="radio" aria-checked="false" style="--scene-preview:url('assets/scenes/lookout.jpg')">
+              <span class="scene-theme-preview" aria-hidden="true"></span>
+              <strong>Ember Lookout<small>Warm wilderness ridges</small></strong>
+              <b aria-hidden="true">✓</b>
+            </button>
+            <button class="scene-theme-option" type="button" data-scene-theme="sunset" role="radio" aria-checked="false" style="--scene-preview:url('assets/scenes/sunset.jpg')">
+              <span class="scene-theme-preview" aria-hidden="true"></span>
+              <strong>Last Light<small>Coastal sunset</small></strong>
+              <b aria-hidden="true">✓</b>
+            </button>
+          </div>
+        </div>
+
         <div class="pdf-setting">
           <h2>Dark document rendering</h2>
           <div class="pdf-options">
@@ -459,11 +634,10 @@
 
       <section class="settings-page" data-settings-page="workspace" hidden>
         <div class="settings-controls">
-          <div><span>Current workspace</span><strong id="settingsWorkspacePath">No workspace selected</strong></div>
-          <label><span>Default layout<small>Used for newly added workspaces</small></span><select id="settingsDefaultLayout"><option value="1">1×1</option><option value="2">1×2</option><option value="4">2×2</option></select></label>
           <label><span>Remember sidebar widths<small>Restore both resize positions on launch</small></span><input id="settingsRememberWidths" type="checkbox"></label>
           <label><span>Snap sidebars closed<small>Collapse Files or Outputs while a divider is dragged past its edge</small></span><input id="settingsAutoCollapsePanes" type="checkbox"></label>
-          <div><span>Connections</span><strong>Local + remote</strong></div>
+          <label><span>Compact workspace tabs<small>Use shorter tabs when many projects are open</small></span><input id="settingsCompactTabs" type="checkbox"></label>
+          <label><span>Show agent ETAs in tabs<small>Display live remaining time beside each running agent</small></span><input id="settingsShowTabEtas" type="checkbox"></label>
         </div>
       </section>
 
@@ -475,7 +649,8 @@
           <label><span>System completion banners<small>Send a desktop notification when an agent finishes</small></span><input id="settingsAgentNotifications" type="checkbox"></label>
           <label><span>Recent file history<small>Scrollable files retained in each agent footer</small></span><select id="settingsRecentFilesLimit"><option value="8">8 files</option><option value="20">20 files</option><option value="40">40 files</option></select></label>
           <label><span>Pixel pets<small>Give every tower floor its own walking companion</small></span><input id="settingsPixelPets" type="checkbox"></label>
-          <label><span>First-floor pet<small>Choose the first companion; higher floors rotate through distinct walking sprites and color variants</small></span><select id="settingsPixelPetChoice"><option value="gitcat">Gitcat</option><option value="claudio">Claudio</option><option value="dog">Scout</option><option value="lizard">Pixel</option></select></label>
+          <label><span>First-floor pet<small>Choose the first companion; higher floors rotate through distinct species sprites</small></span><select id="settingsPixelPetChoice"><option value="hamster">Nibbles · hamster</option><option value="claudio">Claudio · cat</option><option value="dog">Scout · dog</option><option value="lizard">Pixel · lizard</option><option value="rabbit">Mochi · rabbit</option><option value="tortoise">Atlas · tortoise</option><option value="frog">Ribbit · frog</option><option value="cockatiel">Piper · cockatiel</option><option value="hedgehog">Pippin · hedgehog</option><option value="raccoon">Bandit · raccoon</option><option value="penguin">Waddles · penguin</option><option value="red-panda">Maple · red panda</option></select></label>
+          <label><span>Pixel status labels<small>Show colored Idle, Planning, Running, Waiting, Failed, and Done labels</small></span><input id="settingsPixelStatusLabels" type="checkbox"></label>
         </div>
       </section>
 
@@ -485,7 +660,6 @@
           <label><span>Line spacing<small>Increase vertical room between terminal lines</small></span><span class="range-control"><input id="settingsTerminalLineHeight" type="range" min="1" max="1.5" step="0.05"><output id="settingsTerminalLineHeightValue">1.15×</output></span></label>
           <label><span>Scrollback<small>Maximum lines retained per terminal</small></span><select id="settingsTerminalScrollback"><option value="1000">1,000 lines</option><option value="3000">3,000 lines</option><option value="6000">6,000 lines</option><option value="10000">10,000 lines</option></select></label>
           <label><span>Blinking cursor<small>Animate the active terminal cursor</small></span><input id="settingsTerminalCursorBlink" type="checkbox"></label>
-          <div><span>Shell</span><strong>Login shell</strong></div>
         </div>
       </section>
 
@@ -493,8 +667,6 @@
         <div class="settings-controls">
           <label><span>Open pane for previews<small>Expand Outputs when an agent reports a preview file</small></span><input id="settingsAutoOpenOutput" type="checkbox"></label>
           <label><span>Compact file rows<small>Use dense Visual Studio Code-style generated-file rows</small></span><input id="settingsCompactOutputs" type="checkbox"></label>
-          <div><span>File attribution</span><strong>Agent icon + number + name</strong></div>
-          <div><span>Preview support</span><strong>Images, documents, web pages, text, data</strong></div>
         </div>
       </section>
 
@@ -502,17 +674,66 @@
         <div class="settings-controls">
           <label><span>System metrics refresh<small>Processor, memory, and remote graphics polling</small></span><select id="settingsMetricsInterval"><option value="2000">2 seconds</option><option value="5000">5 seconds</option><option value="10000">10 seconds</option></select></label>
           <label><span>Reduce motion<small>Disable glow and transition animation</small></span><input id="settingsReduceMotion" type="checkbox"></label>
-          <div><span>Remote workspace sync</span><strong>Every 4 seconds while agents run</strong></div>
-          <div><span>Terminal renderer</span><strong>xterm.js</strong></div>
+          <label><span>Music-reactive cinematic effects<small>Sync glow, particles, and atmosphere to the currently playing Spotify track</small></span><input id="settingsMusicReactive" type="checkbox"></label>
+          <label><span>Cinematic effect strength<small>Control music-synced glow and movement</small></span><span class="range-control"><input id="settingsCinematicEffectStrength" type="range" min="0" max="100" step="5"><output id="settingsCinematicEffectStrengthValue">45%</output></span></label>
+          <label><span>Cinematic panel opacity<small>Let more or less of the animated scene show through</small></span><span class="range-control"><input id="settingsCinematicPanelOpacity" type="range" min="35" max="95" step="5"><output id="settingsCinematicPanelOpacityValue">55%</output></span></label>
+          <label><span>Scene frame rate<small>Balance animation smoothness and battery life</small></span><select id="settingsSceneFrameRate"><option value="15">15 fps</option><option value="24">24 fps</option><option value="30">30 fps</option><option value="45">45 fps</option></select></label>
         </div>
       </section>
 
       <section class="settings-page" data-settings-page="profile" hidden>
-        <div class="settings-details">
-          <div><span>Codex</span><strong id="settingsCodexUsage">Checking usage…</strong></div>
-          <div><span>System metrics</span><strong>Visible in the bottom bar</strong></div>
+        <div class="profile-card">
+          <div class="profile-avatar" aria-hidden="true">
+            <img id="settingsProfileAvatar" src="assets/agent-face-0.png" alt="">
+            <span></span>
+          </div>
+          <div class="profile-copy">
+            <span class="eyebrow">BsCode profile</span>
+            <h2 id="settingsProfileName">Alex</h2>
+            <p>Your local-first workspace identity. It stays on this computer and is shown to your agents.</p>
+          </div>
+          <button id="settingsCycleProfileAvatar" type="button">Change avatar</button>
+        </div>
+        <div class="settings-controls profile-controls">
+          <label><span>Display name<small>Used in notes and workspace handoffs</small></span><input id="settingsProfileNameInput" type="text" maxlength="40" value="Alex"></label>
+          <label><span>Role<small>A short description agents can use for context</small></span><input id="settingsProfileRoleInput" type="text" maxlength="80" placeholder="Builder, researcher, student…"></label>
+          <label><span>Focus message<small>Shown at the top of Workspace Notes</small></span><input id="settingsProfileFocusInput" type="text" maxlength="120" placeholder="What matters today?"></label>
         </div>
       </section>
+      </main>
+    </section>
+  </div>
+
+  <div id="notepadBackdrop" class="notepad-backdrop" hidden>
+    <section class="notepad-window" role="dialog" aria-modal="true" aria-labelledby="notepadTitle">
+      <aside class="notepad-sidebar">
+        <div class="notepad-brand"><img src="assets/app-icon.png" alt=""><span>Workspace Notes</span></div>
+        <button class="notepad-section-button active" type="button" data-notepad-section="notes">Notes</button>
+        <button class="notepad-section-button" type="button" data-notepad-section="todos">To-do list</button>
+        <button class="notepad-section-button" type="button" data-notepad-section="sketch">Sketch</button>
+        <small>Saved as <strong>.bscode-notes.md</strong> so every agent in this workspace can read it.</small>
+      </aside>
+      <main class="notepad-main">
+        <header>
+          <div><span class="eyebrow">Shared with agents</span><h2 id="notepadTitle">Workspace Notes</h2></div>
+          <span id="notepadSaveState">Saved</span>
+          <button id="closeNotepadButton" type="button" title="Close notes" aria-label="Close notes">×</button>
+        </header>
+        <section id="notepadNotesSection" class="notepad-section">
+          <textarea id="notepadText" placeholder="Write anything your agents should remember…"></textarea>
+        </section>
+        <section id="notepadTodosSection" class="notepad-section" hidden>
+          <form id="notepadTodoForm"><input id="notepadTodoInput" type="text" placeholder="Add a task…"><button type="submit">Add</button></form>
+          <div id="notepadTodoList" class="notepad-todo-list"></div>
+        </section>
+        <section id="notepadSketchSection" class="notepad-section" hidden>
+          <div class="notepad-sketch-toolbar">
+            <label>Ink <input id="notepadSketchColor" type="color" value="#f0b84b"></label>
+            <label>Size <input id="notepadSketchSize" type="range" min="1" max="18" value="4"></label>
+            <button id="notepadSketchClear" type="button">Clear</button>
+          </div>
+          <canvas id="notepadSketchCanvas" width="1200" height="720" aria-label="Sketch canvas"></canvas>
+        </section>
       </main>
     </section>
   </div>

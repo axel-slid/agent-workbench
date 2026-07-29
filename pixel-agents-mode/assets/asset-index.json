@@ -22,9 +22,17 @@
   ],
   "pets": [
     { "id": "claudio", "name": "Claudio" },
-    { "id": "gitcat", "name": "Gitcat" },
+    { "id": "hamster", "name": "Nibbles" },
     { "id": "dog", "name": "Scout" },
-    { "id": "lizard", "name": "Pixel" }
+    { "id": "lizard", "name": "Pixel" },
+    { "id": "rabbit", "name": "Mochi" },
+    { "id": "tortoise", "name": "Atlas" },
+    { "id": "frog", "name": "Ribbit" },
+    { "id": "cockatiel", "name": "Piper" },
+    { "id": "hedgehog", "name": "Pippin" },
+    { "id": "raccoon", "name": "Bandit" },
+    { "id": "penguin", "name": "Waddles" },
+    { "id": "red-panda", "name": "Maple" }
   ],
   "defaultLayout": "default-layout-1.json"
 }
