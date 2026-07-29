@@ -60,6 +60,12 @@ See [Cross-platform builds](docs/cross-platform.md) for prerequisites, output
 paths, feature availability, signing guidance, and a release smoke-test
 checklist.
 
+## Documentation
+
+- [Full feature reference](docs/features.md)
+- [Cross-platform builds](docs/cross-platform.md)
+- [Pixel Agents integration notes](pixel-agents-mode/AGENT-WORKBENCH-INTEGRATION.md)
+
 BsCode launches Codex with its approvals and sandbox bypass flag.
 Review the launch configuration in `main.js` before using untrusted
 workspaces.
