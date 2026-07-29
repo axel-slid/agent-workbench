@@ -130,9 +130,12 @@ available in the remote login shell and reports a useful error when it is not.
 - Every runtime is hosted in a real pseudoterminal through `node-pty`.
 - The terminal resizes when its card or the application window changes.
 - ANSI color and full interactive input are supported through xterm.js.
-- Terminal output is queued and rendered in bounded animation-frame batches to
-  keep the interface responsive during large output bursts.
-- Scroll position is preserved when follow-up prompts are sent.
+- Original PTY chunks flow directly through xterm's ordered, time-sliced write
+  buffer so escape sequences cannot be dropped or merged incorrectly.
+- Hidden, detached, and actively resized panes keep their last valid PTY
+  dimensions; xterm owns scroll anchoring and reflow.
+- Native resizing settles once before terminals refit. The responsive layout
+  stays usable down to 900 × 600 and restores saved pane widths when enlarged.
 - An exited session exposes a reconnect action.
 
 ### Per-agent identity and metadata
@@ -322,14 +325,14 @@ runtime under its MIT license.
 
 - The floor count grows up to 20.
 - Each active agent is assigned a distinct floor.
-- Each floor button shows a captured room preview.
-- The active floor is captured first (roughly one render frame after its room
-  settles); remaining tower thumbnails refresh in the background. Changing
-  floors cancels the stale sweep so it cannot restore the wrong room.
+- Each floor button shows one of 20 bundled 640 × 320 preview PNGs generated
+  from the real Pixel room compositor before release.
+- The running app never cycles hidden floors or captures thumbnails in the
+  background. This keeps tab changes stable and makes the tower update
+  immediately.
 - The active room opens beside the tower.
 - Floors can be added, deleted when safe, selected, and refreshed.
 - Floor layouts persist per workspace.
-- Floor previews are cached per workspace.
 - The visual iframe remains laid out invisibly in Terminal view so switching
   back to Pixel Mode can be immediate.
 - Initial visual warmup uses the bundled BsCode assembly animation as a
@@ -415,6 +418,8 @@ The first-floor species is selectable in Settings.
 Clicking a pet in the room bypasses Pixel Agents' speech bubble and opens its
 character sheet directly with its name, species, floor, HP, energy, level,
 mood, favorite food, hobbies, trait, and talent.
+The sheet anchors beside the clicked sprite, flips sides near the viewport
+edge, and keeps its pointer aligned to the pet.
 Pet wandering uses short nearby paths, a slower step speed, and path updates
 only between steps to avoid sliding or snapping.
 
@@ -423,7 +428,8 @@ only between steps to avoid sliding or snapping.
 - Left-drag the room to pan.
 - Use the mouse wheel to zoom.
 - Use the room `+` and `−` controls as an alternative.
-- Use the tower refresh control to regenerate live floor previews.
+- Use Up/Down arrows to move one floor at a time while Pixel Mode is active.
+- Use the tower refresh control to reload the selected premade preview.
 - Use the clipboard control to browse active agents. Clicking a clipboard
   entry switches to that agent's assigned floor before opening their details.
 
@@ -484,7 +490,7 @@ The bottom status bar can show:
 - CPU usage.
 - Memory usage.
 - NVIDIA GPU usage and memory.
-- GPU process ownership details on hover.
+- GPU user, memory used, and utilization on hover.
 
 Remote metrics are explicitly cleared when a remote workspace disconnects.
 
@@ -510,12 +516,14 @@ search filters the catalog by name and category.
 
 The yin-yang Cinematic Mode button recreates the agent grid as floating,
 translucent panes over a full-window scene. The button stays visually stable;
-music-reactive effects are applied to the scene only when the user enables
-them in Settings. Cinematic Mode hides the complete
-top bar, Files, Outputs, workspace tabs, status chrome, and each terminal's
-model/usage strip. It also enters the operating system's native fullscreen
-state, covering the macOS menu/notch strip, and restores the prior window state
-on exit. A small exit button remains in the top-right. A single command box
+when enabled in Settings, Spotify playback drives only a faint outer-edge
+glow. It does not pulse the agent panes, command dock, center artwork, or
+compact player. Cinematic Mode hides
+Files, Outputs, workspace tabs, status
+chrome, and each terminal's model/usage strip. The Spotify player alone floats
+in the top-left. It also enters the operating system's native fullscreen state,
+covering the macOS menu/notch strip, and restores the prior window state on
+exit. A small exit button remains in the top-right. A single command box
 remains centered below the grid; `Command/Ctrl+K` opens the mode and places the
 cursor in that box from anywhere:
 
@@ -523,11 +531,8 @@ cursor in that box from anywhere:
 - Otherwise an idle agent is preferred.
 - If no agent is available, the default runtime starts in the next empty slot.
 - If every slot is occupied, the command is sent to the first live agent.
-- Type `@` for a keyboard-navigable routing menu.
-- `@codex`, `@claude`, and `@shell` address that provider, starting it in an
-  empty pane when necessary.
-- `@1` through `@4` address a pane, while `@AgentName` addresses a named live
-  agent.
+- Type `@` for a keyboard-navigable picker containing only named, active
+  agents. The menu stays closed at every other time.
 
 The four panes remain visible with generous outer margins and gutters even
 when the workspace layout is smaller or no agents are running. The floating
@@ -536,37 +541,36 @@ scene; the floating close button remains in the top-right. Dragging the resize
 grip on any pane changes the width and height of all four panes together with a
 mirrored spring animation.
 
-Appearance settings provide 20 bundled 1080p animated backgrounds:
+Appearance settings provide 15 bundled 2560 × 1440 artist-made backgrounds:
 
 | Scene | Artist |
 | --- | --- |
-| Aurora Peak | bellergy |
-| Desert Dunes | bellergy |
-| Infinity Pool | dan25000 |
-| Fog Forest | Phile-Rain |
-| Ocean Moon | cgepic |
-| Ocean Sunrise | cgepic |
-| Starry Room | Dantegráfico |
-| Storm Lighthouse | mariamargarit1998 |
-| River Sunset | Monoar_CGI_Artist |
-| Astronaut Night | spacetrip |
-| Powerline Desert | carl_watermark |
-| Abandoned House | Yashobanta |
-| Winter Cabin | Joe_hackney |
-| Underwater Wreck | mdherren |
-| Mountain Galaxy | bellergy |
-| Winter Mountain | bellergy |
-| Wind-Carved Desert | bellergy |
-| Open Ocean | telza |
-| Solar Desert | bellergy |
-| Japan Lake | Qika_Nugroho |
+| Copenhagen Harbor by Moonlight | Johan Christian Dahl |
+| Distant View of Niagara Falls | Thomas Cole |
+| View of Cotopaxi | Frederic Edwin Church |
+| Pastoral Landscape: The Roman Campagna | Claude Lorrain |
+| A Colonnade in Ruins | Hubert Robert |
+| Paris Street; Rainy Day | Gustave Caillebotte |
+| Parthenon Afterlight | Frederic Edwin Church |
+| Arches in Ruins | Hubert Robert |
+| Tivoli Morning | Thomas Cole |
+| The Aegean Sea | Frederic Edwin Church |
+| Heart of the Andes | Frederic Edwin Church |
+| The Oxbow | Thomas Cole |
+| The Mountain Ford | Thomas Cole |
+| Catskill Autumn | Thomas Cole |
+| Rocky Mountains | Albert Bierstadt |
 
-These are credited, artist-made CGI and Blender animations—not AI-generated
-images, photographic footage, or artificial pans across still pictures.
-BsCode decodes only the selected local video and keeps the other 19 dormant.
-Reduce Motion pauses scene playback. Optional Spotify-reactive mode changes
-the atmosphere without moving or bouncing the yin-yang control. Complete
-source URLs and license details are recorded in
+Every work is Public Domain and distributed through The Met Open Access or the
+Art Institute of Chicago CC0 program. The base art never pans, zooms, or
+scrolls. A transparent canvas adds one slow, localized atmosphere effect per
+scene, with independently phased motion rather than a short repeating clip.
+BsCode decodes only the selected local WebP.
+Reduce Motion stops all atmosphere, hidden windows stop scheduling frames, and
+the scene frame-rate setting is capped at 30 fps. Optional Spotify-reactive
+mode anchors its restrained perimeter pulse to Spotify playback position,
+stops cleanly on pause, and never moves the underlying artwork.
+Complete source URLs and license details are recorded in
 [`assets/scenes/README.md`](../assets/scenes/README.md).
 
 PDF rendering has three independent modes:
@@ -613,6 +617,7 @@ vibrancy. Other platforms use an opaque application background.
 - Line spacing.
 - Scrollback limit.
 - Blinking cursor.
+- Live typography preview while font size and line spacing are adjusted.
 
 ### Outputs
 
@@ -636,6 +641,9 @@ vibrancy. Other platforms use an opaque application background.
 - Current focus message.
 
 Settings are searchable and most visual/terminal changes apply immediately.
+The sticky Settings header includes **Reset to defaults**, which restores
+workbench preferences without deleting workspaces, notes, profile data, or
+project files.
 
 ## Keyboard shortcuts
 
@@ -798,7 +806,8 @@ BsCode uses several live surfaces that can consume CPU/GPU time:
 - Remote workspace and metadata polling.
 - Static premade tower preview compositing.
 - Transparent/vibrant macOS window compositing.
-- One local 1080p scene video when Cinematic Mode is active.
+- One local 1440p scene image plus a restrained transparent atmosphere canvas
+  when Cinematic Mode is active.
 
 Controls that reduce load:
 

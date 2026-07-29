@@ -362,7 +362,14 @@ test("Home view DOM and renderer navigation stay wired together", () => {
   const allIds = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
   assert.equal(new Set(allIds).size, allIds.length, "index.html must not contain duplicate IDs");
 
-  for (const id of ["homeButton", "homeView", "homeWorkspaceGrid", "homeAddWorkspaceButton"]) {
+  for (const id of [
+    "homeButton",
+    "homeView",
+    "homeWorkspaceGrid",
+    "homeAddWorkspaceButton",
+    "homeCommandPaletteButton",
+    "homeReturnWorkspaceButton"
+  ]) {
     assert.ok(allIds.includes(id), `Home view is missing #${id}`);
     assert.match(
       rendererSource,
@@ -376,6 +383,10 @@ test("Home view DOM and renderer navigation stay wired together", () => {
     /<section\s+id="homeView"[^>]*\shidden(?:\s|>)/,
     "Home must not cover the workspace on startup"
   );
+  assert.match(html, /class="home-logo-stage"[\s\S]*?assets\/home-b-logo\.png/);
+  assert.doesNotMatch(html, /class="home-logo-orbit"/);
+  assert.doesNotMatch(html, /Open a workspace, jump to a command/);
+  assert.ok(fs.existsSync(path.join(projectRoot, "assets/home-b-logo.png")));
   assert.match(html, /id="homeWorkspaceGrid"[^>]*aria-label="Recent workspaces"/);
 
   const renderHomeViewSource = extractFunction(rendererSource, "renderHomeView");
@@ -410,6 +421,8 @@ test("Home view DOM and renderer navigation stay wired together", () => {
     /homeAddWorkspaceButton\.addEventListener\("click",[\s\S]*?setWorkspaceAddMenu\(true\);[\s\S]*?\}\);/,
     "Home's add button must open the workspace picker"
   );
+  assert.match(rendererSource, /!homeView\.hidden[\s\S]*?event\.key\.toLowerCase\(\)\s*===\s*"o"/);
+  assert.match(rendererSource, /if\s*\(!homeView\.hidden\)\s*\{[\s\S]*?setHomeView\(false\)/);
 });
 
 test("application shortcuts stay in the titlebar while agent launchers keep provider controls", () => {
@@ -495,6 +508,12 @@ test("settings controls have matching DOM IDs, bindings, initialization, and lis
     /appearanceCategories\.forEach\(\(category\)\s*=>\s*makeInteractive\(category,\s*\(\)\s*=>\s*selectAppearanceCategory\(category\.textContent\.trim\(\)\)\)\)/,
     "Appearance categories must be selectable"
   );
+  assert.match(html, /id="settingsResetDefaultsButton"/);
+  assert.match(html, /id="settingsTerminalPreview"[^>]*aria-label="Live terminal preview"/);
+  assert.match(rendererSource, /settingsResetDefaultsButton\.addEventListener\("click",\s*resetWorkbenchSettings\)/);
+  const terminalPreferencesSource = extractFunction(rendererSource, "applyTerminalPreferences");
+  assert.match(terminalPreferencesSource, /settingsTerminalPreview\.style\.setProperty\("--preview-font-size"/);
+  assert.match(terminalPreferencesSource, /settingsTerminalPreview\.style\.setProperty\("--preview-line-height"/);
 });
 
 test("Pixelized appearance maps catalog, category, dataset, and CSS consistently", () => {
@@ -736,6 +755,11 @@ test("Pixel floors keep one live agent, a distinct pet, and a sprite portrait", 
     assert.equal(png.readUInt32BE(16), 96, `${id} sprite width must match upstream topology`);
     assert.equal(png.readUInt32BE(20), 96, `${id} sprite height must match upstream topology`);
   }
+  assert.match(
+    browserMockSource,
+    /readSprite\(\s*png,\s*PET_SIDE_FRAME_WIDTH,\s*PET_FRAME_HEIGHT,[\s\S]*?PET_FRAME_HEIGHT \* 2/,
+    "Pet side frames must come only from the side-facing atlas row"
+  );
   const petProfiles = extractArray(rendererSource, "pixelPetProfiles");
   assert.equal(petProfiles.length, 12, "Every bundled pet needs an attribute profile");
   assert.deepEqual(
@@ -749,13 +773,15 @@ test("Pixel floors keep one live agent, a distinct pet, and a sprite portrait", 
     }
   }
   assert.match(html, /id="pixelPetDetail"[\s\S]*?id="pixelPetHpText"[\s\S]*?id="pixelPetHobbies"/);
-  assert.match(rendererSource, /function openPixelPetDetail\(pet,\s*floor\s*=\s*activePixelFloor\)/);
+  assert.match(rendererSource, /function openPixelPetDetail\(pet,\s*floor\s*=\s*activePixelFloor,\s*anchor\s*=\s*null\)/);
   assert.match(rendererSource, /message\.type\s*===\s*"pixelPetSelected"/);
   assert.match(bridgeSource, /function openPetProfileDirect\(pet\)/);
   assert.match(bridgeSource, /window\.__workbenchOpenPetProfile\s*=\s*openPetProfileDirect/);
   assert.match(bridgeSource, /function publishClickedPetProfile\(sequence,\s*before\)/);
   assert.match(bridgeSource, /"pointerdown"[\s\S]*?petPointerSnapshot\s*=\s*petSpeechSnapshot\(\)/);
+  assert.match(bridgeSource, /petPointerAnchor\s*=\s*\{[\s\S]*?event\.clientX[\s\S]*?event\.clientY/);
   assert.match(bridgeSource, /type:\s*"pixelPetSelected"/);
+  assert.match(bridgeSource, /anchor:\s*petPointerAnchor/);
   assert.match(bridgeSource, /getPets\?\.\(\)/);
   assert.match(styles, /\.pixel-pet-detail\s*\{[\s\S]*?left:\s*calc\(var\(--pixel-tower-zone\) \+ 18px\)/);
   assert.match(rendererSource, /pixelPetDetailAvatar\.style\.setProperty\([\s\S]*?"--pixel-pet-image"/);
@@ -785,6 +811,20 @@ test("Pixel floors keep one live agent, a distinct pet, and a sprite portrait", 
   }
   assert.ok(pixelRuntime.includes("Cheeks full, build clean."), "Nibbles needs species-specific dialogue");
   assert.ok(pixelRuntime.includes("e.moveProgress+=.72*t"), "Pet steps should use the slower natural pace");
+  assert.ok(
+    pixelRuntime.includes(
+      "function Hi(e,t){for(e.frameTimer+=t;e.frameTimer>=Nt;)e.frameTimer-=Nt,e.frame=(e.frame+1)%4}"
+    ),
+    "Pet animation must advance on the same cadence it subtracts so frames never jitter"
+  );
+  assert.ok(
+    !pixelRuntime.includes("e.frameTimer>=.15&&(e.frameTimer-=Nt"),
+    "Pet animation must not drive its timer negative with mismatched frame durations"
+  );
+  assert.ok(
+    pixelRuntime.includes("idleRight:[c[1],c[1],c[1]],idleLeft:[d[1],d[1],d[1]]"),
+    "Side-facing pets must remain side-facing when a walk cycle becomes idle"
+  );
   assert.ok(
     pixelRuntime.includes("n.length>0&&0===e.moveProgress&&(e.path=n)"),
     "Pet follow paths must not reset in the middle of a step"
@@ -847,7 +887,10 @@ test("Pixel floors keep one live agent, a distinct pet, and a sprite portrait", 
   );
   assert.match(rendererSource, /Math\.min\(20,\s*Number\(localStorage\.getItem\("agentWorkbenchPixelFloorCount"\)/);
   assert.match(rendererSource, /if\s*\(pixelFloorCount\s*>=\s*20\)/);
-  assert.match(rendererSource, /function buildPixelRoomLayout\(baseLayout,\s*floor\)/);
+  assert.match(
+    rendererSource,
+    /function buildPixelRoomLayout\(baseLayout,\s*floor,\s*furnitureCatalog\s*=\s*new Map\(\)\)/
+  );
   assert.match(html, /id="pixelPetDetail"[\s\S]*?Favorite food/);
   assert.match(html, /id="pixelSkyToggleButton"/);
   assert.match(rendererSource, /function timeBasedPixelSkyPhase\([\s\S]*?"sunrise"[\s\S]*?"sunset"/);
@@ -856,9 +899,14 @@ test("Pixel floors keep one live agent, a distinct pet, and a sprite portrait", 
   assert.match(styles, /\.pixel-mode-view\[data-sky-phase="sunrise"\]/);
   assert.match(styles, /\.pixel-mode-view\[data-sky-phase="sunset"\]/);
   assert.match(styles, /body\.cinematic-mode \.agent-slot,[\s\S]*?border:\s*0;/);
-  assert.match(
-    styles,
-    /body\.cinematic-mode \.terminal-host \.xterm-viewport[\s\S]*?bottom:\s*0[\s\S]*?top:\s*7px/
+  const cinematicViewportRules = [
+    ...styles.matchAll(/body\.cinematic-mode \.terminal-host \.xterm-viewport\s*\{([^}]*)\}/g)
+  ].map((match) => match[1]).join("\n");
+  assert.match(cinematicViewportRules, /scrollbar-color/);
+  assert.doesNotMatch(
+    cinematicViewportRules,
+    /\b(?:top|bottom|left|right|height)\s*:/,
+    "Cinematic mode must let xterm own its viewport geometry"
   );
   assert.match(
     styles,
@@ -1027,6 +1075,7 @@ test("workspace tabs show portraits only for running agents", () => {
   assert.doesNotMatch(styles, /\.workspace-editor-tab \.agent-eta\[data-agent-count=/);
   assert.match(styles, /\.workspace-editor-tab \.agent-eta > span\s*\{[\s\S]*?border:\s*0;/);
   assert.match(styles, /\.agent-eta > span\.has-agent-face::before\s*\{[\s\S]*?background-image:\s*var\(--agent-face\)/);
+  assert.match(styles, /\.agent-eta > span\.has-agent-face::before\s*\{[\s\S]*?background-position:\s*center 38%;[\s\S]*?background-size:\s*18px 24px/);
   assert.match(styles, /\.workspace-editor-tab \.workspace-editor-label\s*\{[\s\S]*?text-overflow:\s*ellipsis;/);
 });
 
@@ -1110,42 +1159,36 @@ test("metadata writes are serialized and use collision-proof temporary files", a
   assert.ok(renames.every(([, destination]) => destination === "/tmp/agent.json"));
 });
 
-test("terminal output stays bounded and yields between animation frames", () => {
+test("terminal output preserves original PTY chunks and delegates flow control to xterm", () => {
   const rendererSource = read("renderer.js");
   const styles = read("styles.css");
-  const source = [
-    extractFunction(rendererSource, "flushTerminalOutput"),
-    extractFunction(rendererSource, "queueTerminalOutput")
-  ].join("\n");
-  const frames = [];
+  const source = extractFunction(rendererSource, "queueTerminalOutput");
   const writes = [];
-  const context = {
-    requestAnimationFrame(callback) {
-      frames.push(callback);
-    }
-  };
+  const context = {};
   vm.createContext(context);
   vm.runInContext(`${source}\nthis.queueTerminalOutput = queueTerminalOutput;`, context);
   const session = {
-    terminalWriteScheduled: false,
-    pendingTerminalOutput: [],
-    pendingTerminalOutputBytes: 0,
-    term: { write(chunk) { writes.push(chunk); } }
+    term: {
+      write(chunk) {
+        writes.push(chunk);
+      }
+    }
   };
-  for (let index = 0; index < 5200; index += 1) {
-    context.queueTerminalOutput(session, "x".repeat(1024));
-  }
-  assert.equal(frames.length, 1, "A burst should schedule only one animation frame");
-  assert.equal(writes.length, 0, "Output must not block the input turn with synchronous writes");
-  assert.ok(session.pendingTerminalOutputBytes <= 4 * 1024 * 1024 + 1024);
-  frames.shift()();
-  assert.equal(writes.length, 1, "Only one queued chunk may render per frame");
-  assert.equal(frames.length, 1, "Remaining output should yield to another frame");
+  const originalChunks = ["\u001b[", "31mred", "\u001b[0m", "\r\n"];
+  originalChunks.forEach((chunk) => context.queueTerminalOutput(session, chunk));
+  assert.deepEqual(
+    writes,
+    originalChunks,
+    "ANSI parser state and PTY ordering require every original chunk to reach xterm unchanged"
+  );
+  assert.doesNotMatch(source, /join\(|shift\(|splice\(|scrollToLine|viewportY|requestAnimationFrame/);
+  assert.doesNotMatch(rendererSource, /function flushTerminalOutput\(/);
+  assert.doesNotMatch(rendererSource, /pendingTerminalOutput(?:Bytes)?/);
   assert.match(styles, /\.agent-card \.terminal-host\s*\{\s*padding:\s*0;/);
   assert.match(styles, /\.agent-card \.terminal-host > \.xterm\s*\{[\s\S]*?padding:\s*5px 4px 16px 7px;/);
 });
 
-test("follow-up prompts replace the checklist without forcing terminal scroll", () => {
+test("follow-up prompts and terminal fits use normal xterm scrolling semantics", () => {
   const mainSource = read("main.js");
   const rendererSource = read("renderer.js");
   assert.match(
@@ -1156,12 +1199,51 @@ test("follow-up prompts replace the checklist without forcing terminal scroll", 
   assert.match(beginTaskSource, /session\.checklistEtaState\.clear\(\)/);
   assert.match(beginTaskSource, /checklist:\s*\[\{\s*text:\s*"Preparing task checklist",\s*status:\s*"working"/);
   assert.match(rendererSource, /session\.kind\s*!==\s*"shell"[\s\S]*?beginAgentTask\(session,\s*task\)/);
-  assert.match(rendererSource, /scrollOnUserInput:\s*false/);
+  const cardSource = extractFunction(rendererSource, "renderAgentCard");
+  assert.match(cardSource, /convertEol:\s*false/);
+  assert.match(cardSource, /scrollOnUserInput:\s*true/);
   assert.doesNotMatch(rendererSource, /session\.term\.scrollToBottom\(\)/);
-  assert.match(rendererSource, /if\s*\(!wasAtBottom\)\s*session\.term\.scrollToLine\(viewportY\)/);
+  const fitSource = extractFunction(rendererSource, "fitTerminalPreservingScroll");
+  assert.match(fitSource, /session\.terminalHost\.getBoundingClientRect\(\)/);
+  assert.match(fitSource, /!session\.terminalHost\.isConnected/);
+  assert.match(fitSource, /width\s*<\s*80/);
+  assert.match(fitSource, /height\s*<\s*48/);
+  assert.match(fitSource, /session\.fitAddon\.fit\(\)/);
+  assert.doesNotMatch(fitSource, /\.buffer\.active\.(?:viewportY|baseY)|\.scrollToLine\(/);
+  assert.match(cardSource, /window\.setTimeout\([\s\S]*?fitTerminalPreservingScroll\(session\)[\s\S]*?,\s*90\)/);
+  assert.match(cardSource, /new ResizeObserver\(scheduleTerminalFit\)/);
+  assert.doesNotMatch(cardSource, /new ResizeObserver\(\s*\(\)\s*=>/);
 });
 
-test("GPU hover cards identify users, processes, and VRAM", () => {
+test("terminal exits stay in the ordered xterm write path", () => {
+  const rendererSource = read("renderer.js");
+  const queueSource = extractFunction(rendererSource, "queueTerminalOutput");
+  assert.doesNotMatch(
+    queueSource,
+    /session\.exited/,
+    "The final process-exit marker must still be writable after the session is marked exited"
+  );
+  assert.match(
+    rendererSource,
+    /api\.onAgentExit\([\s\S]*?queueTerminalOutput\(\s*session,\s*`\s*\\r\\n\\x1b\[38;5;244m\[process exited:/
+  );
+  assert.doesNotMatch(rendererSource, /session\.term\.writeln\([^)]*process exited/);
+});
+
+test("the app keeps one profile-owning production instance", () => {
+  const mainSource = read("main.js");
+  assert.match(
+    mainSource,
+    /app\.setPath\("userData",\s*preservedUserDataPath\);[\s\S]*?app\.requestSingleInstanceLock\(\)/
+  );
+  assert.match(mainSource, /if\s*\(!hasSingleInstanceLock\)\s*\{[\s\S]*?app\.quit\(\)/);
+  assert.match(
+    mainSource,
+    /app\.on\("second-instance"[\s\S]*?mainWindow\.show\(\);[\s\S]*?mainWindow\.focus\(\)/
+  );
+});
+
+test("GPU hover cards show only user, used memory, and utilization", () => {
   const rendererSource = read("renderer.js");
   const styles = read("styles.css");
   const source = extractFunction(rendererSource, "refreshSystemMetrics");
@@ -1169,8 +1251,16 @@ test("GPU hover cards identify users, processes, and VRAM", () => {
   assert.match(source, /process\.memoryUsedMiB/);
   assert.match(source, /const userMemory\s*=\s*new Map\(\)/);
   assert.match(source, /userMemory\.set\(user,\s*total\s*\+/);
-  assert.match(source, /\+ \$\{hiddenProcesses\.length\} more process/);
-  assert.match(source, /Process ownership unavailable/);
+  assert.match(source, /`User: \$\{user\} · Memory used: \$\{/);
+  assert.match(source, /`Utilization: \$\{utilization\}`/);
+  assert.doesNotMatch(source, /process\.name/);
+  assert.doesNotMatch(source, /process\.pid/);
+  assert.doesNotMatch(source, /hiddenProcesses/);
+  assert.doesNotMatch(source, /Processes:/);
+  assert.doesNotMatch(source, /Process ownership unavailable/);
+  assert.doesNotMatch(source, /gpu\.name/);
+  assert.doesNotMatch(source, /gpu\.memoryTotalMiB/);
+  assert.doesNotMatch(source, /gpuMetrics\.title\s*=/);
   assert.match(source, /item\.dataset\.tooltip\s*=\s*gpuTooltip/);
   assert.match(source, /item\.setAttribute\("aria-label",\s*gpuTooltip\)/);
   assert.doesNotMatch(source, /item\.title\s*=\s*gpuTooltip/);
@@ -1208,7 +1298,7 @@ test("visual mode keeps the room unobstructed and agent prompts still submit", (
   assert.match(rendererSource, /function renderPixelFloorLauncher\(\)\s*\{[\s\S]*?pixelFloorLauncher\.hidden\s*=\s*true/);
   assert.match(styles, /\.pixel-mode-view \.pixel-floor-launcher\s*\{\s*display:\s*none\s*!important;/);
   assert.match(rendererSource, /pixelAgentDetailPrompt\.addEventListener\("keydown"/);
-  assert.match(rendererSource, /api\.writeAgent\(session\.id,\s*`\$\{message\}\\r`\)/);
+  assert.match(extractFunction(rendererSource, "sendPixelAgentDetailInstruction"), /writeAgentInstruction\(session,\s*message\)/);
   assert.doesNotMatch(extractFunction(rendererSource, "deletePixelFloor"), /window\.confirm/);
   assert.match(styles, /\.agent-launcher\s*\{[\s\S]*?align-content:\s*center;/);
   assert.match(styles, /\.launcher-button\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?border:\s*0;/);
@@ -1220,14 +1310,17 @@ test("visual mode keeps the room unobstructed and agent prompts still submit", (
   assert.match(styles, /@keyframes pixel-coffee-steam/);
 });
 
-test("Cinematic Mode layers efficient local scene loops behind one command dock", () => {
+test("Cinematic Mode uses licensed fixed artwork with restrained local atmosphere", () => {
   const html = read("index.html");
   const rendererSource = read("renderer.js");
   const preloadSource = read("preload.js");
   const mainSource = read("main.js");
   const styles = read("styles.css");
+  const sceneCatalog = JSON.parse(read("assets/scenes/catalog.json"));
   assert.match(html, /id="sceneBackgroundCanvas"[\s\S]*?aria-hidden="true"/);
-  assert.match(html, /id="sceneBackground"[\s\S]*?preload="none"/);
+  assert.match(html, /<img id="sceneBackground"[\s\S]*?decoding="async"/);
+  assert.doesNotMatch(html, /<video id="sceneBackground"/);
+  assert.doesNotMatch(html, /class="scene-atmosphere"/);
   assert.match(html, /id="cinematicModeButton"[\s\S]*?title="Cinematic mode"/);
   assert.match(html, /id="cinematicModeButton"[\s\S]*?class="yin-yang-symbol"/);
   assert.match(html, /id="cinematicExitButton"[\s\S]*?title="Exit cinematic mode"/);
@@ -1235,16 +1328,37 @@ test("Cinematic Mode layers efficient local scene loops behind one command dock"
   assert.match(html, /id="cinematicMentionMenu"[\s\S]*?role="listbox"/);
   assert.match(html, /id="cinematicPromptDock"[\s\S]*?id="cinematicPromptInput"[\s\S]*?⌘K[\s\S]*?id="cinematicPromptSendButton"/);
   const sceneCatalogSource = rendererSource.match(/const SCENE_THEMES\s*=\s*\{([\s\S]*?)\n\};/)?.[1] || "";
-  assert.ok(
-    [...sceneCatalogSource.matchAll(/\n\s*"?[a-z][a-z0-9-]*"?\s*:/g)].length >= 21,
-    "Cinematic mode should provide at least 20 animated scenes plus None"
+  const runtimeCatalog = vm.runInNewContext(`({${sceneCatalogSource}})`, Object.create(null));
+  assert.equal(sceneCatalog.length, 15);
+  assert.equal((sceneCatalogSource.match(/\bimage:\s*"assets\/scenes\//g) || []).length, 15);
+  for (const scene of sceneCatalog) {
+    assert.match(scene.id, /^[a-z][a-z0-9-]+$/);
+    assert.ok(scene.artist);
+    assert.match(scene.source, /^https:\/\//);
+    assert.ok(scene.license);
+    assert.ok(["clouds", "mist", "water", "stars", "fireflies", "dust", "light"].includes(scene.motion));
+    const assetPath = path.join(projectRoot, "assets", "scenes", scene.asset);
+    assert.ok(fs.existsSync(assetPath), `${scene.asset} is missing`);
+    assert.ok(fs.statSync(assetPath).size > 20_000, `${scene.asset} is unexpectedly small`);
+    assert.equal(runtimeCatalog[scene.id]?.image, `assets/scenes/${scene.asset}`);
+    assert.equal(runtimeCatalog[scene.id]?.artist, scene.artist);
+    assert.equal(runtimeCatalog[scene.id]?.source, scene.source);
+    assert.equal(runtimeCatalog[scene.id]?.license, scene.license);
+    assert.equal(runtimeCatalog[scene.id]?.motion, scene.motion);
+  }
+  assert.equal(
+    fs.readdirSync(path.join(projectRoot, "assets", "scenes")).filter((name) => /\.(?:mp4|mov|gif)$/i.test(name)).length,
+    0,
+    "Cinematic art must not reintroduce short video or GIF loops"
   );
   assert.match(rendererSource, /function drawLivingScene\(/);
-  assert.match(rendererSource, /function drawSceneClouds\(/);
-  assert.match(rendererSource, /function drawSceneMountains\(/);
-  assert.match(rendererSource, /function drawSceneParticles\(/);
+  assert.match(rendererSource, /function drawAmbientClouds\(/);
+  assert.match(rendererSource, /function drawAmbientMist\(/);
+  assert.match(rendererSource, /function drawAmbientWater\(/);
+  assert.match(rendererSource, /function drawAmbientLights\(/);
   const cinematicSource = extractFunction(rendererSource, "setCinematicMode");
   const scenePlaybackSource = extractFunction(rendererSource, "syncSceneBackgroundPlayback");
+  const sceneAnimationSource = extractFunction(rendererSource, "drawLivingScene");
   const promptSource = extractFunction(rendererSource, "submitCinematicPrompt");
   assert.match(cinematicSource, /cinematicPromptDock\.hidden\s*=\s*!cinematicModeEnabled/);
   assert.match(cinematicSource, /cinematicExitButton\.hidden\s*=\s*!cinematicModeEnabled/);
@@ -1252,27 +1366,35 @@ test("Cinematic Mode layers efficient local scene loops behind one command dock"
   assert.match(cinematicSource, /setPixelMode\(false\)/);
   assert.match(rendererSource, /agentWorkbenchReduceMotion/);
   assert.match(rendererSource, /document\.visibilityState\s*!==\s*"visible"/);
-  assert.match(scenePlaybackSource, /sceneBackground\.pause\(\)/);
-  assert.match(scenePlaybackSource, /sceneBackgroundCanvas\.classList\.toggle\("active",\s*reactive\)/);
+  assert.match(scenePlaybackSource, /sceneBackground\.src\s*=\s*config\.image/);
+  assert.match(scenePlaybackSource, /sceneBackground\.decode\?\.\(\)/);
+  assert.match(scenePlaybackSource, /sceneBackground\.removeAttribute\("src"\)/);
+  assert.doesNotMatch(scenePlaybackSource, /\.(?:play|pause|load)\(/);
+  assert.match(scenePlaybackSource, /sceneBackgroundCanvas\.classList\.toggle\("active",\s*animate\)/);
   assert.match(scenePlaybackSource, /cinematicModeEnabled\s*&&\s*homeView\.hidden/);
+  assert.match(sceneAnimationSource, /agentWorkbenchSceneFrameRate",\s*24,\s*15,\s*30/);
+  assert.match(sceneAnimationSource, /reduceMotion[\s\S]*?!cinematicModeEnabled[\s\S]*?!homeView\.hidden/);
   assert.match(rendererSource, /agentWorkbenchMusicReactive/);
   assert.match(rendererSource, /latestSpotifyStatus\?\.state\s*===\s*"playing"/);
   assert.match(promptSource, /sessions\.get\(selectedAgentId\)/);
   assert.match(promptSource, /firstEmptySlot\(\)/);
   assert.match(promptSource, /startAgent\(/);
-  assert.match(promptSource, /api\.writeAgent\(target\.id/);
+  assert.match(promptSource, /writeAgentInstruction\(target,\s*message\)/);
   assert.match(styles, /body\.cinematic-mode \.main-layout\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   assert.match(styles, /body\.cinematic-mode \.app-shell\s*\{[\s\S]*?display:\s*block;[\s\S]*?height:\s*100%/);
-  assert.match(styles, /body\.cinematic-mode \.agent-stage\s*\{[\s\S]*?padding:\s*54px 72px 112px/);
-  assert.match(styles, /body\.cinematic-mode \.agent-grid\s*\{[\s\S]*?gap:\s*34px 40px/);
+  assert.match(styles, /body\.cinematic-mode \.agent-stage\s*\{[\s\S]*?padding:\s*44px 58px 102px/);
+  assert.match(styles, /body\.cinematic-mode \.agent-grid\s*\{[\s\S]*?gap:\s*26px 30px/);
   assert.match(styles, /body\.cinematic-mode \.agent-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, var\(--cinematic-agent-width, 600px\)\)\)/);
   assert.match(styles, /body\.cinematic-mode \.agent-grid\s*\{[\s\S]*?grid-template-rows:\s*repeat\(2, minmax\(0, var\(--cinematic-agent-height, 285px\)\)\)/);
-  assert.match(styles, /body\.cinematic-mode \.agent-grid\[data-layout-count\] \.agent-slot\s*\{[\s\S]*?display:\s*block/);
+  assert.match(styles, /body\.cinematic-mode \.agent-grid\[data-layout-count\] \.agent-slot\s*\{[\s\S]*?display:\s*grid/);
+  assert.match(styles, /body\.cinematic-mode \.agent-card\s*\{[\s\S]*?height:\s*100%;[\s\S]*?min-height:\s*0/);
   assert.match(styles, /body\.cinematic-mode \.agent-task-input,[\s\S]*?rgba\(255,\s*255,\s*255,\s*0\.065\)/);
   assert.match(styles, /body\.cinematic-mode \.agent-card-header\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?border-bottom-color:\s*transparent/);
   assert.match(styles, /body\.cinematic-mode \.agent-card-header \.agent-action\s*\{[\s\S]*?opacity:\s*0\.58/);
   assert.match(styles, /body\.cinematic-mode \.agent-checklist-item,[\s\S]*?background:\s*transparent;[\s\S]*?border-color:\s*transparent/);
   assert.match(styles, /body\.cinematic-mode \.agent-checklist-item\.working \.agent-checklist-marker\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?box-shadow:\s*none/);
+  assert.match(styles, /body\.cinematic-mode \.agent-current-task-indicator\s*\{[\s\S]*?grid-row:\s*1/);
+  assert.match(styles, /body\.cinematic-mode \.agent-clean-compose\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\) 40px 40px/);
   assert.match(rendererSource, /function selectNextSceneTheme\(\)[\s\S]*?selectSceneTheme/);
   assert.match(rendererSource, /function resolveCinematicMention\([\s\S]*?\["codex", "claude", "shell"\]/);
   assert.match(rendererSource, /cinematicPromptInput\.addEventListener\("input"[\s\S]*?renderCinematicMentionMenu/);
@@ -1289,16 +1411,19 @@ test("Cinematic Mode layers efficient local scene loops behind one command dock"
   assert.match(styles, /\.cinematic-prompt-dock\s*\{[\s\S]*?bottom:\s*18px/);
   assert.match(styles, /\.cinematic-prompt-shortcut\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?border:\s*0;[\s\S]*?font:\s*680 15px/);
   assert.match(styles, /\.cinematic-prompt-dock > button\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?border:\s*0;[\s\S]*?font:\s*680 24px/);
-  assert.match(styles, /\.scene-atmosphere::before,[\s\S]*?will-change:\s*opacity, transform/);
-  assert.match(styles, /body\[data-scene-theme="rain"\] \.scene-atmosphere::before[\s\S]*?scene-rain-fall/);
-  assert.match(styles, /body\[data-scene-theme="lookout"\] \.scene-atmosphere::before[\s\S]*?scene-embers-rise/);
+  assert.match(styles, /\.scene-background\s*\{[\s\S]*?object-fit:\s*cover;[\s\S]*?transform:\s*none/);
   assert.match(styles, /body\.cinematic-mode \.agent-slot\.clean-mode \.agent-clean-view\s*\{[\s\S]*?grid-template-rows:\s*auto auto minmax\(0, 1fr\) auto auto/);
   assert.match(rendererSource, /function beginCinematicPaneResize\([\s\S]*?cinematic-resizing/);
   assert.match(rendererSource, /function finishCinematicPaneResize\([\s\S]*?agentWorkbenchCinematicPaneWidth/);
-  assert.match(styles, /body\.cinematic-resize-settling \.agent-slot\s*\{[\s\S]*?cinematic-pane-settle/);
+  assert.doesNotMatch(
+    styles,
+    /body\.cinematic-resize-settling \.agent-slot\s*\{[\s\S]*?cinematic-pane-settle/,
+    "A pane-resize animation must not force xterm through repeated reflow"
+  );
   assert.match(styles, /\.cinematic-mention-menu\s*\{[\s\S]*?bottom:\s*calc\(100% \+ 8px\)/);
   assert.match(styles, /\.cinematic-mention-choice\[aria-selected="true"\]/);
-  assert.match(styles, /body\.cinematic-mode \.titlebar\s*\{[\s\S]*?display:\s*none\s*!important/);
+  assert.match(styles, /body\.cinematic-mode \.titlebar > :not\(\.titlebar-spotify\)\s*\{[\s\S]*?display:\s*none\s*!important/);
+  assert.match(styles, /body\.cinematic-mode \.titlebar-spotify\s*\{[\s\S]*?left:\s*14px;[\s\S]*?position:\s*fixed;[\s\S]*?top:\s*12px/);
   assert.match(rendererSource, /api\.setWindowCinematicFullScreen\(cinematicModeEnabled\)/);
   assert.match(preloadSource, /setWindowCinematicFullScreen:[\s\S]*?window:set-cinematic-full-screen/);
   assert.match(mainSource, /function setCinematicWindowFullScreen\([\s\S]*?window\.setSimpleFullScreen\(true\)[\s\S]*?window\.setFullScreen\(true\)/);
@@ -1381,22 +1506,66 @@ test("pet clicks open a pixel RPG stat sheet instead of dialogue", () => {
   assert.match(petSource, /pixelPetHobbies\.textContent/);
   assert.match(styles, /\.pixel-pet-detail[\s\S]*?image-rendering:\s*pixelated/);
   assert.match(styles, /\.pixel-pet-detail,[\s\S]*?border-radius:\s*0\s*!important/);
+  assert.match(rendererSource, /function positionPixelPetDetail\(anchor\s*=\s*pixelPetDetailAnchor\)/);
+  assert.match(styles, /\.pixel-pet-detail\[data-anchored="true"\]/);
 });
 
 test("the tower uses an attached Art Deco crown and never captures previews live", () => {
   const rendererSource = read("renderer.js");
+  const html = read("index.html");
   const styles = read("styles.css");
   const refreshSource = extractFunction(rendererSource, "refreshPixelFloorPreviews");
   assert.doesNotMatch(refreshSource, /captureFloorPreview|requestPixelFloorPreview|setPixelVisibleSessionsForFloor/);
+  assert.match(html, /class="pixel-tower-antenna"[\s\S]*?class="pixel-tower-roof"/);
+  assert.match(styles, /\.pixel-tower-antenna\s*\{[\s\S]*?height:\s*54px;[\s\S]*?top:\s*-120px;/);
+  assert.match(styles, /\.pixel-tower-antenna::before\s*\{[\s\S]*?background:\s*#ff7667;/);
+  assert.match(styles, /\.pixel-tower-antenna::after\s*\{[\s\S]*?clip-path:\s*polygon/);
   assert.match(styles, /\.pixel-tower-roof[\s\S]*?clip-path:\s*polygon/);
   assert.match(styles, /\.pixel-tower-roof::after[\s\S]*?border-bottom/);
   assert.ok(fs.existsSync(path.join(projectRoot, "scripts/generate-tower-previews.mjs")));
+  assert.match(rendererSource, /const PIXEL_ROOM_DESIGN_VERSION\s*=\s*4/);
+  assert.match(rendererSource, /descriptor\.footprintW/);
+  assert.match(rendererSource, /reservePixelFurnitureFootprint/);
+  assert.match(rendererSource, /function traversePixelTower\(direction\)/);
 });
 
 test("Zen and bullet-point prompts send on Enter and expose a send control", () => {
   const rendererSource = read("renderer.js");
   const source = extractFunction(rendererSource, "sendAgentCleanInstruction");
-  assert.match(source, /api\.writeAgent\(session\.id,\s*`\$\{message\}\\r`\)/);
+  const writeSource = extractFunction(rendererSource, "writeAgentInstruction");
+  const timers = [];
+  const pasted = [];
+  const input = [];
+  const sessions = new Map();
+  const context = {
+    sessions,
+    window: {
+      setTimeout(callback, delay) {
+        timers.push({ callback, delay });
+        return timers.length;
+      }
+    }
+  };
+  vm.createContext(context);
+  vm.runInContext(`${writeSource}\nthis.writeAgentInstruction = writeAgentInstruction;`, context);
+  const session = {
+    id: "agent-1",
+    exited: false,
+    pendingAgentSubmitTimer: null,
+    term: {
+      paste(value) { pasted.push(value); },
+      input(value, wasUserInput) { input.push([value, wasUserInput]); }
+    }
+  };
+  sessions.set(session.id, session);
+  assert.equal(context.writeAgentInstruction(session, "hello"), true);
+  assert.deepEqual(pasted, ["hello"]);
+  assert.deepEqual(input, []);
+  assert.equal(timers[0].delay, 170);
+  assert.equal(context.writeAgentInstruction(session, "duplicate"), false);
+  timers[0].callback();
+  assert.deepEqual(input, [["\r", true]]);
+  assert.match(source, /writeAgentInstruction\(session,\s*message\)/);
   assert.match(rendererSource, /cleanComposeInput\.addEventListener\("keydown"[\s\S]*?event\.key\s*!==\s*"Enter"[\s\S]*?sendAgentCleanInstruction\(session\)/);
   assert.match(rendererSource, /cleanSendButton\.addEventListener\("click",\s*\(\)\s*=>\s*sendAgentCleanInstruction\(session\)\)/);
 });
@@ -1415,12 +1584,14 @@ test("workspace notes persist text, todos, and sketches for local and SSH agents
   assert.match(preloadSource, /readWorkspaceNotes/);
   assert.match(preloadSource, /writeWorkspaceNotes/);
   assert.match(rendererSource, /notepadSketchCanvas\.toDataURL\("image\/png"\)/);
+  assert.match(html, /id="notepadSketchUndo"[\s\S]*?id="notepadSketchRedo"/);
+  assert.match(rendererSource, /notepadActiveSection\s*!==\s*"sketch"[\s\S]*?event\.key\.toLowerCase\(\)\s*!==\s*"z"/);
 });
 
 test("Home owns startup and immersive modes are unavailable there", () => {
   const html = read("index.html");
   const rendererSource = read("renderer.js");
-  assert.match(html, /class="home-brand"[\s\S]*?assets\/app-icon\.png/);
+  assert.match(html, /class="home-logo-stage"[\s\S]*?assets\/home-b-logo\.png/);
   const homeSource = extractFunction(rendererSource, "setHomeView");
   assert.match(homeSource, /setCinematicMode\(false,\s*\{\s*persist:\s*false\s*\}\)/);
   assert.match(homeSource, /setPixelMode\(false,\s*\{\s*persist:\s*false\s*\}\)/);
@@ -1437,6 +1608,16 @@ test("the restored address bar shows local or SSH workspace context", () => {
   assert.match(rendererSource, /\[SSH: \$\{workspace\.remote\?\.host \|\| workspace\.name\}\]/);
   assert.match(styles, /\.workspace-address-shell[\s\S]*?grid-template-columns/);
   assert.match(styles, /\.command-center[\s\S]*?display:\s*flex\s*!important/);
+});
+
+test("the status bar never exposes the full workspace path", () => {
+  const html = read("index.html");
+  const rendererSource = read("renderer.js");
+  const footerSource = extractFunction(rendererSource, "setFooter");
+  assert.match(html, /id="footerStatus" class="footer-status" hidden/);
+  assert.doesNotMatch(footerSource, /remoteWorkspaceLabel|workspacePath|root|path/);
+  assert.match(footerSource, /footerStatus\.hidden\s*=\s*!status/);
+  assert.match(footerSource, /renderRemoteConnectionStatus\(workspace\)/);
 });
 
 test("workspace tabs show faces, live ETAs, and a compact plus control", () => {
@@ -1459,14 +1640,22 @@ test("agent state, current task, and checklist normalization stay synchronized",
   assert.match(rendererSource, /metadata\.currentTask/);
 });
 
-test("the cinematic mention picker lists models and running agent profiles", () => {
+test("the cinematic mention picker reveals only named active agents after typing @", () => {
   const html = read("index.html");
   const rendererSource = read("renderer.js");
-  assert.match(html, /id="cinematicMentionButton"[\s\S]*?aria-label="Mention an agent"/);
-  assert.match(html, /id="cinematicMentionMenu"[\s\S]*?role="listbox"/);
-  assert.match(rendererSource, /token:\s*"codex"[\s\S]*?token:\s*"claude"[\s\S]*?token:\s*"shell"/);
+  const choiceSource = extractFunction(rendererSource, "cinematicMentionChoices");
+  const renderSource = extractFunction(rendererSource, "renderCinematicMentionMenu");
+  assert.doesNotMatch(html, /id="cinematicMentionButton"/);
+  assert.match(html, /id="cinematicMentionMenu"[\s\S]*?role="listbox"[\s\S]*?aria-label="Mention an active agent"/);
+  assert.match(choiceSource, /activeWorkspaceSessions\(\)/);
+  assert.match(choiceSource, /session\.metadata\.name/);
+  assert.doesNotMatch(choiceSource, /OpenAI coding agent|Claude Code agent|Terminal session|slotChoices|modelChoices/);
+  assert.match(extractFunction(rendererSource, "resolveCinematicMention"), /\["codex", "claude", "shell"\]/);
   assert.match(rendererSource, /cinematic-mention-profile/);
   assert.match(rendererSource, /applyAgentFace\(avatar,\s*choice\.session\)/);
+  assert.match(renderSource, /const context\s*=\s*cinematicMentionContext\(\)/);
+  assert.match(renderSource, /if\s*\(!context\)\s*\{[\s\S]*?closeCinematicMentionMenu\(\)/);
+  assert.doesNotMatch(renderSource, /forceOpen/);
 });
 
 test("Cinematic cells are borderless, resizable as one grid, and have scene shuffle", () => {
@@ -1484,12 +1673,117 @@ test("Spotify integration exposes shuffle and optional music-reactive atmosphere
   const html = read("index.html");
   const mainSource = read("main.js");
   const rendererSource = read("renderer.js");
+  const styles = read("styles.css");
   assert.match(html, /id="spotifyShuffleButton"/);
+  assert.match(html, /id="spotifyShuffleButton"[\s\S]*?data-shuffle-state="off"/);
+  assert.match(html, /id="spotifyShuffleState"[\s\S]*?>OFF</);
   assert.match(html, /id="settingsMusicReactive"/);
   assert.match(html, /id="settingsCinematicEffectStrength"/);
   assert.match(mainSource, /shuffle:\s*"shuffling = !spotify\.shuffling\(\)"/);
+  assert.match(rendererSource, /function setSpotifyShuffleState\(shuffling,[\s\S]*?dataset\.shuffleState\s*=\s*state/);
+  assert.match(rendererSource, /spotifyShuffleState\.textContent\s*=\s*visibleState/);
+  assert.match(rendererSource, /setSpotifyShuffleState\(false,\s*\{\s*available:\s*false\s*\}\)/);
   assert.match(rendererSource, /agentWorkbenchMusicReactive/);
   assert.match(rendererSource, /--cinematic-beat/);
+  assert.match(rendererSource, /function musicReactivePlaybackActive\(/);
+  assert.match(rendererSource, /function applyMusicReactivePulse\(/);
+  assert.match(rendererSource, /function drawMusicReactiveAtmosphere\(/);
+  assert.match(rendererSource, /agentWorkbenchMusicReactive",\s*true/);
+  assert.match(rendererSource, /--cinematic-glow-opacity/);
+  assert.match(styles, /\.music-reactive-overlay\s*\{/);
+  assert.match(styles, /body\.cinematic-mode\.scene-background-active\.music-reactive-active \.music-reactive-overlay/);
+  assert.match(styles, /var\(--cinematic-glow-opacity,\s*0\)/);
+  assert.match(
+    rendererSource,
+    /musicReactiveOverlay\.style\.setProperty\([\s\S]*?"--cinematic-glow-opacity"/
+  );
+  assert.match(
+    rendererSource,
+    /spotifyNowPlaying\.style\.setProperty\([\s\S]*?"--cinematic-player-glow"/
+  );
+  assert.match(styles, /transparent 0 76%/);
+  assert.match(rendererSource, /createLinearGradient\(0,\s*0,\s*width \* 0\.1,\s*0\)/);
+  assert.doesNotMatch(styles, /music-reactive-active \.titlebar-spotify/);
+  assert.doesNotMatch(styles, /music-reactive-active \.agent-slot/);
+  assert.doesNotMatch(styles, /--cinematic-pane-glow/);
+  assert.match(styles, /\.spotify-shuffle-control\[data-shuffle-state="on"\]\s*\{[\s\S]*?color:\s*#1ed760/);
+  assert.match(styles, /\.spotify-shuffle-state\s*\{[\s\S]*?font-size:\s*7px/);
+  assert.match(styles, /grid-template-columns:\s*24px repeat\(3,\s*19px\) 42px/);
+});
+
+test("music-reactive playback produces a visible pulse and stops cleanly", () => {
+  const rendererSource = read("renderer.js");
+  const playbackSource = extractFunction(rendererSource, "musicReactivePlaybackActive");
+  const pulseSource = extractFunction(rendererSource, "musicReactivePulse");
+  const applySource = extractFunction(rendererSource, "applyMusicReactivePulse");
+  const classes = new Set();
+  const overlayProperties = new Map();
+  const playerProperties = new Map();
+  const preferences = {
+    agentWorkbenchReduceMotion: false,
+    agentWorkbenchMusicReactive: true,
+    agentWorkbenchCinematicEffectStrength: 60
+  };
+  const context = {
+    cinematicModeEnabled: true,
+    homeView: { hidden: true },
+    latestSpotifyStatus: {
+      state: "playing",
+      position: 0.3125,
+      retrievedAt: 1_000
+    },
+    Date: { now: () => 1_000 },
+    booleanPreference: (key, fallback) => key in preferences ? preferences[key] : fallback,
+    numericPreference: (key, fallback) => key in preferences ? preferences[key] : fallback,
+    musicReactiveOverlay: {
+      style: {
+        setProperty(name, value) {
+          overlayProperties.set(name, value);
+        }
+      }
+    },
+    spotifyNowPlaying: {
+      style: {
+        setProperty(name, value) {
+          playerProperties.set(name, value);
+        }
+      }
+    },
+    document: {
+      body: {
+        classList: {
+          toggle(name, active) {
+            if (active) classes.add(name);
+            else classes.delete(name);
+          }
+        }
+      }
+    },
+    Math,
+    Number,
+    String
+  };
+  vm.runInNewContext(
+    `${playbackSource}\n${pulseSource}\n${applySource}\n`
+      + "this.result = musicReactivePulse(); applyMusicReactivePulse(this.result);",
+    context
+  );
+  assert.ok(context.result >= 0.59, `expected a visible peak pulse, received ${context.result}`);
+  assert.ok(classes.has("music-reactive-active"));
+  assert.ok(Number(overlayProperties.get("--cinematic-glow-opacity")) >= 0.03);
+  assert.ok(Number(overlayProperties.get("--cinematic-glow-opacity")) <= 0.06);
+  assert.equal(playerProperties.get("--cinematic-player-glow"), "0");
+  assert.equal(playerProperties.get("--cinematic-player-scale"), "1");
+  assert.equal(overlayProperties.get("--cinematic-pulse-scale"), "1");
+
+  context.latestSpotifyStatus.state = "paused";
+  vm.runInNewContext("this.result = musicReactivePulse(); applyMusicReactivePulse(this.result);", context);
+  assert.equal(context.result, 0);
+  assert.ok(!classes.has("music-reactive-active"));
+  assert.equal(overlayProperties.get("--cinematic-glow-opacity"), "0");
+  assert.equal(overlayProperties.get("--cinematic-pulse-scale"), "1");
+  assert.equal(playerProperties.get("--cinematic-player-glow"), "0");
+  assert.equal(playerProperties.get("--cinematic-player-scale"), "1");
 });
 
 test("storage usage is reported for local and remote workspaces", () => {
@@ -1503,21 +1797,25 @@ test("storage usage is reported for local and remote workspaces", () => {
   assert.match(rendererSource, /storageUsageText\.textContent/);
 });
 
-test("opened output files remain available in the Files panel", () => {
+test("the Files panel never injects an Opened outputs section", () => {
   const rendererSource = read("renderer.js");
   const styles = read("styles.css");
+  const renderSource = extractFunction(rendererSource, "renderFileTree");
   assert.match(rendererSource, /openedOutputPaths/);
-  assert.match(rendererSource, /className\s*=\s*"opened-output-files"/);
-  assert.match(rendererSource, /previewWorkspaceFile\(entry\.workspaceId,\s*entry\.relativePath\)/);
-  assert.match(styles, /\.opened-output-files/);
+  assert.doesNotMatch(renderSource, /openedOutputPaths|opened-output-files|Opened outputs/);
+  assert.doesNotMatch(styles, /\.opened-output-files/);
 });
 
 test("the macOS titlebar, calendar, battery, and agent-face mode button are wired", () => {
   const html = read("index.html");
   const mainSource = read("main.js");
   const rendererSource = read("renderer.js");
-  assert.match(mainSource, /trafficLightPosition:\s*\{\s*x:\s*14,\s*y:\s*16\s*\}/);
+  assert.match(mainSource, /trafficLightPosition:\s*\{\s*x:\s*14,\s*y:\s*14\s*\}/);
   assert.match(html, /id="calendarPopover"/);
+  assert.match(html, /id="calendarPreviousMonth"/);
+  assert.match(html, /id="calendarNextMonth"/);
+  assert.match(rendererSource, /calendarCursor\.getMonth\(\) - 1/);
+  assert.match(rendererSource, /calendarCursor\.getMonth\(\) \+ 1/);
   assert.match(html, /id="titlebarBatteryCharge"/);
   assert.match(rendererSource, /titlebarBatteryCharge\.hidden\s*=\s*!charging/);
   assert.match(html, /class="pixel-mode-agent-face"/);
@@ -1536,17 +1834,104 @@ test("workspace handoff is a functional command-palette action", () => {
 
 test("light appearance keeps agent names and the workspace surface readable", () => {
   const styles = read("styles.css");
-  assert.match(styles, /html\[data-appearance-mode="light"\] \.agent-name-input,[\s\S]*?color:\s*#182232\s*!important/);
-  assert.match(styles, /html\[data-appearance-mode="light"\] \.agent-stage,[\s\S]*?background:\s*#eef2f7/);
+  assert.match(styles, /html\[data-appearance-tone="light"\] body:not\(\.cinematic-mode\) \.agent-name-input,[\s\S]*?color:\s*#182232\s*!important/);
+  assert.match(styles, /html\[data-appearance-tone="light"\] body:not\(\.cinematic-mode\) \.agent-stage,[\s\S]*?background:\s*#eef2f7/);
+  assert.match(styles, /body\.cinematic-mode \.agent-current-task-indicator > strong,[\s\S]*?color:\s*rgba\(247,\s*250,\s*252,\s*0\.94\)\s*!important/);
+});
+
+test("button hover keeps its resting surface and accents the glyph contour", () => {
+  const styles = read("styles.css");
+  assert.match(styles, /:where\(button,\s*\[role="button"\]\)\s*\{[\s\S]*?--button-rest-surface:\s*transparent/);
+  assert.match(styles, /:where\(button,\s*\[role="button"\]\):not\(:disabled\)[\s\S]*?:hover\s*\{[\s\S]*?background:\s*var\(--button-rest-surface\)\s*!important/);
+  assert.match(styles, /:where\(button,\s*\[role="button"\]\):not\(:disabled\):hover svg\s*\{[\s\S]*?color:\s*var\(--button-hover-contour\)/);
+  assert.match(styles, /\.settings-symbol\s*\{[\s\S]*?stroke:\s*currentColor/);
+  assert.match(styles, /outline:\s*0\s*!important/);
+  assert.match(styles, /\.editor-tab\.workspace-editor-tab:hover\s*\{[\s\S]*?outline:\s*0\s*!important/);
+});
+
+test("agent gutters follow the active theme without recoloring cells", () => {
+  const styles = read("styles.css");
+  assert.match(styles, /body:not\(\.cinematic-mode\) \.agent-grid\s*\{[\s\S]*?var\(--theme-bg\)\s*92%[\s\S]*?var\(--theme-accent\)/);
+  assert.doesNotMatch(styles, /body:not\(\.cinematic-mode\) \.agent-slot\s*\{[\s\S]*?var\(--theme-bg\)\s*92%/);
+});
+
+test("Pixelized appearance uses square workspace tabs", () => {
+  const styles = read("styles.css");
+  assert.match(styles, /html\[data-appearance-mode="pixelized"\] \.editor-tab\.workspace-editor-tab\s*\{[\s\S]*?border-radius:\s*0\s*!important;[\s\S]*?clip-path:\s*none\s*!important/);
+  assert.match(styles, /html\[data-appearance-mode="pixelized"\] \.workspace-tab-shape,[\s\S]*?display:\s*none\s*!important/);
+  assert.match(styles, /html\[data-appearance-mode="pixelized"\] :is\([\s\S]*?\.workspace-tab-close,[\s\S]*?\.workspace-tab-add[\s\S]*?border-radius:\s*0\s*!important/);
 });
 
 test("the release metadata and application icon are complete", () => {
   const packageJson = JSON.parse(read("package.json"));
-  assert.equal(packageJson.version, "0.2.0");
+  const iconSource = read("assets/app-icon-symbol.svg");
+  assert.equal(packageJson.version, "0.2.1");
   assert.equal(packageJson.productName, "BsCode");
   assert.equal(packageJson.scripts.test, "node tests/run.mjs");
+  assert.equal(packageJson.scripts["icon:mac"], "node scripts/generate-app-icon.mjs");
+  assert.match(iconSource, /<rect width="1024" height="1024" rx="238"/);
+  assert.match(iconSource, /scale\(1\.12\)/);
   assert.ok(fs.statSync(path.join(projectRoot, "assets/app-icon.png")).size > 100_000);
   assert.ok(fs.statSync(path.join(projectRoot, "assets/AppIcon.icns")).size > 100_000);
+});
+
+test("the right titlebar remains draggable and header details stay legible and continuous", () => {
+  const styles = read("styles.css");
+  const rendererSource = read("renderer.js");
+  assert.match(styles, /\.titlebar-actions\s*\{[\s\S]*?-webkit-app-region:\s*drag/);
+  assert.match(styles, /\.titlebar-actions\s*>\s*:is\([\s\S]*?\.notification-control,[\s\S]*?\.titlebar-system-status[\s\S]*?\)\s*\{[\s\S]*?-webkit-app-region:\s*no-drag/);
+  assert.match(styles, /\.notification-badge\s*\{[\s\S]*?color:\s*#090c10;[\s\S]*?font-size:\s*9px;[\s\S]*?height:\s*16px/);
+  assert.match(styles, /--workspace-chrome-height:\s*37px/);
+  assert.match(styles, /\.workspace-explorer\s*\{[\s\S]*?grid-template-rows:\s*var\(--workspace-chrome-height\)/);
+  assert.match(styles, /#fileResizeHandle\s*\{[\s\S]*?transparent\s+0\s+calc\(var\(--workspace-chrome-height\)\s*-\s*1px\),[\s\S]*?var\(--theme-border\)\s+calc\(var\(--workspace-chrome-height\)\s*-\s*1px\)/);
+  assert.match(styles, /\.notification-button\.has-unread\s+\.notification-symbol\s*\{[\s\S]*?drop-shadow/);
+  assert.match(rendererSource, /notificationButton\.setAttribute\("aria-label",\s*notificationButton\.title\)/);
+});
+
+test("the cinematic prompt uses relaxed, human wording", () => {
+  const html = read("index.html");
+  const rendererSource = read("renderer.js");
+  assert.match(html, /id="cinematicPromptInput"[\s\S]*?placeholder="What should we work on\?"/);
+  assert.match(rendererSource, /What’s next for \$\{session\.metadata\.name/);
+  assert.doesNotMatch(html, /Tell the selected agent what to do/);
+});
+
+test("native window resizing settles once before terminals refit", () => {
+  const mainSource = read("main.js");
+  const rendererSource = read("renderer.js");
+  const fitSource = extractFunction(rendererSource, "fitTerminalPreservingScroll");
+  const resizeSource = extractFunction(rendererSource, "handleWindowResize");
+  const settleSource = extractFunction(rendererSource, "settleResponsiveLayout");
+
+  assert.match(mainSource, /minWidth:\s*900/);
+  assert.match(mainSource, /minHeight:\s*600/);
+  assert.match(fitSource, /window-resizing/);
+  assert.match(fitSource, /is-resizing/);
+  assert.match(fitSource, /width\s*<\s*80/);
+  assert.match(fitSource, /height\s*<\s*48/);
+  assert.match(resizeSource, /requestAnimationFrame/);
+  assert.match(resizeSource, /setTimeout\([\s\S]*?140/);
+  assert.match(settleSource, /scheduleActiveTerminalFits\(\)/);
+  assert.match(rendererSource, /window\.addEventListener\("resize",\s*handleWindowResize\)/);
+});
+
+test("responsive breakpoints preserve panes, headers, Home, Pixel, and Cinematic geometry", () => {
+  const rendererSource = read("renderer.js");
+  const styles = read("styles.css");
+  const cinematicBoundsSource = extractFunction(rendererSource, "cinematicPaneBounds");
+  const context = { window: { innerWidth: 900, innerHeight: 600 }, bounds: null };
+  vm.runInNewContext(`${cinematicBoundsSource}; bounds = cinematicPaneBounds();`, context);
+
+  assert.ok(context.bounds.maxWidth <= (900 - 64 - 22) / 2);
+  assert.ok(context.bounds.maxHeight <= (600 - 130 - 22) / 2);
+  assert.match(styles, /Stable responsive geometry/);
+  assert.match(styles, /\.main-layout\s*\{[\s\S]*?minmax\(360px,\s*1fr\)/);
+  assert.match(styles, /\.agent-grid\[data-layout-count="4"\]\s*\{[\s\S]*?repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(styles, /@container \(max-width:\s*420px\)[\s\S]*?\.agent-wide,[\s\S]*?\.agent-tall/);
+  assert.match(styles, /@media \(max-width:\s*1100px\)[\s\S]*?body\.pixel-mode-active[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  assert.match(styles, /@media \(max-height:\s*680px\)[\s\S]*?\.home-workspace-grid\s*\{[\s\S]*?overflow:\s*hidden/);
+  assert.match(styles, /body\.window-resizing\.cinematic-mode[\s\S]*?backdrop-filter:\s*none\s*!important/);
+  assert.match(rendererSource, /document\.body\.classList\.toggle\("pixel-mode-active",\s*pixelModeEnabled\)/);
 });
 
 let failures = 0;

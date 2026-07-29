@@ -28,6 +28,7 @@ const preservedUserDataPath = process.env.AGENT_WORKBENCH_USER_DATA_DIR
   || path.join(app.getPath("appData"), "Agent Workbench");
 app.setName(process.env.AGENT_WORKBENCH_USER_DATA_DIR ? "BsCode Test" : "BsCode");
 app.setPath("userData", preservedUserDataPath);
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
 
 const execFileAsync = promisify(execFile);
 let mainWindow = null;
@@ -44,6 +45,17 @@ const workspaceOutputSessionStarts = new Map();
 const workspaceOutputSessionBaselines = new Map();
 const jsonWriteQueues = new Map();
 let previousCpuSample = null;
+
+if (!hasSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  });
+}
 
 const ARTIFACT_EXTENSIONS = new Set([
   ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".pdf",
@@ -2448,15 +2460,15 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1580,
     height: 1000,
-    minWidth: 1180,
-    minHeight: 720,
+    minWidth: 900,
+    minHeight: 600,
     title: process.env.AGENT_WORKBENCH_USER_DATA_DIR ? "BsCode Test" : "BsCode",
     backgroundColor: process.platform === "darwin" ? "#00000000" : "#15181f",
     transparent: process.platform === "darwin",
     ...(process.platform === "darwin"
       ? {
           titleBarStyle: "hiddenInset",
-          trafficLightPosition: { x: 14, y: 16 },
+          trafficLightPosition: { x: 14, y: 14 },
           vibrancy: "under-window",
           visualEffectState: "active"
         }
@@ -2494,7 +2506,7 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
+if (hasSingleInstanceLock) app.whenReady().then(() => {
   ipcMain.handle("workspace:list", listWorkspaces);
   ipcMain.handle("workspace:add", addWorkspace);
   ipcMain.handle("workspace:list-ssh-hosts", listSshHosts);

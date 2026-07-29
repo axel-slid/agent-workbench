@@ -1,182 +1,137 @@
 [
   {
-    "id": "aurora-peak",
-    "label": "Aurora Peak",
-    "artist": "bellergy",
-    "source": "https://pixabay.com/videos/mountain-mount-cliff-night-cloud-105285/",
-    "sourceId": 105285,
-    "license": "Pixabay Content License",
-    "colors": ["#07111d", "#24506a", "#89d8c9"]
+    "id": "copenhagen-moonlight",
+    "label": "Copenhagen Moonlight",
+    "asset": "copenhagen-moonlight.webp",
+    "artist": "Johan Christian Dahl",
+    "source": "https://www.metmuseum.org/art/collection/search/439343",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "stars"
   },
   {
-    "id": "desert-dunes",
-    "label": "Desert Dunes",
-    "artist": "bellergy",
-    "source": "https://pixabay.com/videos/desert-sand-dune-landscape-loop-108420/",
-    "sourceId": 108420,
-    "license": "Pixabay Content License",
-    "colors": ["#28170f", "#a85d32", "#f1c27b"]
+    "id": "niagara-falls",
+    "label": "Niagara Falls",
+    "asset": "niagara-falls.webp",
+    "artist": "Thomas Cole",
+    "source": "https://www.artic.edu/artworks/90048/distant-view-of-niagara-falls",
+    "license": "Public Domain · Art Institute of Chicago CC0",
+    "motion": "mist"
   },
   {
-    "id": "infinity-pool",
-    "label": "Infinity Pool",
-    "artist": "dan25000",
-    "source": "https://pixabay.com/videos/pool-water-calm-quiet-sky-render-110962/",
-    "sourceId": 110962,
-    "license": "Pixabay Content License",
-    "colors": ["#0d2736", "#4b87a0", "#e9cfa4"]
+    "id": "cotopaxi",
+    "label": "View of Cotopaxi",
+    "asset": "cotopaxi.webp",
+    "artist": "Frederic Edwin Church",
+    "source": "https://www.artic.edu/artworks/76571/view-of-cotopaxi",
+    "license": "Public Domain · Art Institute of Chicago CC0",
+    "motion": "clouds"
   },
   {
-    "id": "fog-forest",
-    "label": "Fog Forest",
-    "artist": "Phile-Rain",
-    "source": "https://pixabay.com/videos/house-building-fog-forest-wild-123855/",
-    "sourceId": 123855,
-    "license": "Pixabay Content License",
-    "colors": ["#101d18", "#3f5e47", "#a8b79b"]
+    "id": "roman-campagna",
+    "label": "Roman Campagna",
+    "asset": "roman-campagna.webp",
+    "artist": "Claude Lorrain",
+    "source": "https://www.metmuseum.org/art/collection/search/435906",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "water"
   },
   {
-    "id": "ocean-moon",
-    "label": "Ocean Moon",
-    "artist": "cgepic",
-    "source": "https://pixabay.com/videos/ocean-waves-sea-sunrise-sun-3d-129673/",
-    "sourceId": 129673,
-    "license": "Pixabay Content License",
-    "colors": ["#071725", "#315e7c", "#f2d2a4"]
+    "id": "colonnade-ruins",
+    "label": "Colonnade in Ruins",
+    "asset": "colonnade-ruins.webp",
+    "artist": "Hubert Robert",
+    "source": "https://www.metmuseum.org/art/collection/search/437475",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "dust"
   },
   {
-    "id": "ocean-sunrise",
-    "label": "Ocean Sunrise",
-    "artist": "cgepic",
-    "source": "https://pixabay.com/videos/ocean-waves-sea-sunrise-sun-3d-129788/",
-    "sourceId": 129788,
-    "license": "Pixabay Content License",
-    "colors": ["#13273a", "#497aa0", "#ffbd72"]
+    "id": "paris-rain",
+    "label": "Paris Street; Rainy Day",
+    "asset": "paris-rain.webp",
+    "artist": "Gustave Caillebotte",
+    "source": "https://www.artic.edu/artworks/20684/paris-street-rainy-day",
+    "license": "Public Domain · Art Institute of Chicago CC0",
+    "motion": "water"
   },
   {
-    "id": "starry-room",
-    "label": "Starry Room",
-    "artist": "Dantegráfico",
-    "source": "https://pixabay.com/videos/starry-night-bedroom-room-131539/",
-    "sourceId": 131539,
-    "license": "Pixabay Content License",
-    "colors": ["#07101e", "#233858", "#9cb7d7"]
+    "id": "parthenon-afterlight",
+    "label": "Parthenon Afterlight",
+    "asset": "parthenon-afterlight.webp",
+    "artist": "Frederic Edwin Church",
+    "source": "https://www.metmuseum.org/art/collection/search/10482",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "light"
   },
   {
-    "id": "storm-lighthouse",
-    "label": "Storm Lighthouse",
-    "artist": "mariamargarit1998",
-    "source": "https://pixabay.com/videos/ocean-sea-waves-storm-blender-147972/",
-    "sourceId": 147972,
-    "license": "Pixabay Content License",
-    "colors": ["#05111c", "#25435e", "#e55d4d"]
+    "id": "arches-in-ruins",
+    "label": "Arches in Ruins",
+    "asset": "arches-in-ruins.webp",
+    "artist": "Hubert Robert",
+    "source": "https://www.metmuseum.org/art/collection/search/437472",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "dust"
   },
   {
-    "id": "river-sunset",
-    "label": "River Sunset",
-    "artist": "Monoar_CGI_Artist",
-    "source": "https://pixabay.com/videos/boat-river-sunset-3d-cgi-blender-168195/",
-    "sourceId": 168195,
-    "license": "Pixabay Content License",
-    "colors": ["#211113", "#98532e", "#ffd17e"]
+    "id": "tivoli-morning",
+    "label": "Tivoli Morning",
+    "asset": "tivoli-morning.webp",
+    "artist": "Thomas Cole",
+    "source": "https://www.metmuseum.org/art/collection/search/10500",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "mist"
   },
   {
-    "id": "astronaut-night",
-    "label": "Astronaut Night",
-    "artist": "spacetrip",
-    "source": "https://pixabay.com/videos/astronaut-walking-night-landscape-171365/",
-    "sourceId": 171365,
-    "license": "Pixabay Content License",
-    "colors": ["#090811", "#34233f", "#bd7b95"]
+    "id": "aegean-sea",
+    "label": "The Aegean Sea",
+    "asset": "aegean-sea.webp",
+    "artist": "Frederic Edwin Church",
+    "source": "https://www.metmuseum.org/art/collection/search/10480",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "light"
   },
   {
-    "id": "powerline-desert",
-    "label": "Powerline Desert",
-    "artist": "carl_watermark",
-    "source": "https://pixabay.com/videos/desert-power-lines-3d-2392/",
-    "sourceId": 2392,
-    "license": "CC0",
-    "colors": ["#3c3028", "#b99d7c", "#f5e6ca"]
+    "id": "heart-of-andes",
+    "label": "Heart of the Andes",
+    "asset": "heart-of-andes.webp",
+    "artist": "Frederic Edwin Church",
+    "source": "https://www.metmuseum.org/art/collection/search/10481",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "mist"
   },
   {
-    "id": "abandoned-house",
-    "label": "Abandoned House",
-    "artist": "Yashobanta",
-    "source": "https://pixabay.com/videos/house-home-scene-landscape-render-246255/",
-    "sourceId": 246255,
-    "license": "Pixabay Content License",
-    "colors": ["#111513", "#4b5042", "#a69b79"]
+    "id": "oxbow-storm",
+    "label": "The Oxbow",
+    "asset": "oxbow-storm.webp",
+    "artist": "Thomas Cole",
+    "source": "https://www.metmuseum.org/art/collection/search/10497",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "clouds"
   },
   {
-    "id": "winter-cabin",
-    "label": "Winter Cabin",
-    "artist": "Joe_hackney",
-    "source": "https://pixabay.com/videos/nature-winter-landscape-cabin-104116/",
-    "sourceId": 104116,
-    "license": "Pixabay Content License",
-    "colors": ["#101823", "#425265", "#e8eef4"]
+    "id": "mountain-ford",
+    "label": "The Mountain Ford",
+    "asset": "mountain-ford.webp",
+    "artist": "Thomas Cole",
+    "source": "https://www.metmuseum.org/art/collection/search/10496",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "fireflies"
   },
   {
-    "id": "underwater-wreck",
-    "label": "Underwater Wreck",
-    "artist": "mdherren",
-    "source": "https://pixabay.com/videos/water-ocean-ship-wreck-sea-nature-38861/",
-    "sourceId": 38861,
-    "license": "Pixabay Content License",
-    "colors": ["#04141b", "#175364", "#6ab7ae"]
+    "id": "catskill-autumn",
+    "label": "Catskill Autumn",
+    "asset": "catskill-autumn.webp",
+    "artist": "Thomas Cole",
+    "source": "https://www.metmuseum.org/art/collection/search/10501",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "water"
   },
   {
-    "id": "mountain-galaxy",
-    "label": "Mountain Galaxy",
-    "artist": "bellergy",
-    "source": "https://pixabay.com/videos/mountain-fog-galaxy-milkyway-night-91757/",
-    "sourceId": 91757,
-    "license": "Pixabay Content License",
-    "colors": ["#050b18", "#273553", "#c6b2d9"]
-  },
-  {
-    "id": "winter-mountain",
-    "label": "Winter Mountain",
-    "artist": "bellergy",
-    "source": "https://pixabay.com/videos/mountain-fog-morning-camping-93848/",
-    "sourceId": 93848,
-    "license": "Pixabay Content License",
-    "colors": ["#0b1521", "#526b7f", "#efcf9b"]
-  },
-  {
-    "id": "wind-carved-desert",
-    "label": "Wind-Carved Desert",
-    "artist": "bellergy",
-    "source": "https://pixabay.com/videos/desert-sand-wind-nature-landscape-94399/",
-    "sourceId": 94399,
-    "license": "Pixabay Content License",
-    "colors": ["#24130d", "#9b4f2c", "#f3bb73"]
-  },
-  {
-    "id": "open-ocean",
-    "label": "Open Ocean",
-    "artist": "telza",
-    "source": "https://pixabay.com/videos/ocean-sea-waves-clouds-horizon-85523/",
-    "sourceId": 85523,
-    "license": "Pixabay Content License",
-    "colors": ["#061a2a", "#24738f", "#d7eff2"]
-  },
-  {
-    "id": "solar-desert",
-    "label": "Solar Desert",
-    "artist": "bellergy",
-    "source": "https://pixabay.com/videos/sun-desert-sand-energy-99464/",
-    "sourceId": 99464,
-    "license": "Pixabay Content License",
-    "colors": ["#2a1208", "#9c3f1e", "#ffbc45"]
-  },
-  {
-    "id": "japan-lake",
-    "label": "Japan Lake",
-    "artist": "Qika_Nugroho",
-    "source": "https://pixabay.com/videos/lake-sunset-trees-leaves-japan-91562/",
-    "sourceId": 91562,
-    "license": "Pixabay Content License",
-    "colors": ["#130b18", "#793848", "#ffc06a"]
+    "id": "rocky-mountains",
+    "label": "Rocky Mountains",
+    "asset": "rocky-mountains.webp",
+    "artist": "Albert Bierstadt",
+    "source": "https://www.metmuseum.org/art/collection/search/10154",
+    "license": "Public Domain · The Met Open Access",
+    "motion": "mist"
   }
 ]

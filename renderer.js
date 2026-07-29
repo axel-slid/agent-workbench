@@ -117,7 +117,6 @@ const cinematicPromptDock = document.getElementById("cinematicPromptDock");
 const cinematicPromptInput = document.getElementById("cinematicPromptInput");
 const cinematicPromptSendButton = document.getElementById("cinematicPromptSendButton");
 const cinematicMentionMenu = document.getElementById("cinematicMentionMenu");
-const cinematicMentionButton = document.getElementById("cinematicMentionButton");
 const cinematicResultsButton = document.getElementById("cinematicResultsButton");
 const cinematicResizeReadout = document.getElementById("cinematicResizeReadout");
 const refreshArtifactsButton = document.getElementById("refreshArtifactsButton");
@@ -140,6 +139,8 @@ const homeButton = document.getElementById("homeButton");
 const homeView = document.getElementById("homeView");
 const homeWorkspaceGrid = document.getElementById("homeWorkspaceGrid");
 const homeAddWorkspaceButton = document.getElementById("homeAddWorkspaceButton");
+const homeCommandPaletteButton = document.getElementById("homeCommandPaletteButton");
+const homeReturnWorkspaceButton = document.getElementById("homeReturnWorkspaceButton");
 const openSettingsButton = document.getElementById("openSettingsButton");
 const notificationButton = document.getElementById("notificationButton");
 const notificationBadge = document.getElementById("notificationBadge");
@@ -150,6 +151,8 @@ const calendarPopover = document.getElementById("calendarPopover");
 const calendarMonth = document.getElementById("calendarMonth");
 const calendarFullDate = document.getElementById("calendarFullDate");
 const calendarGrid = document.getElementById("calendarGrid");
+const calendarPreviousMonth = document.getElementById("calendarPreviousMonth");
+const calendarNextMonth = document.getElementById("calendarNextMonth");
 const titlebarBattery = document.getElementById("titlebarBattery");
 const titlebarBatteryFill = document.getElementById("titlebarBatteryFill");
 const titlebarBatteryCharge = document.getElementById("titlebarBatteryCharge");
@@ -158,6 +161,7 @@ const settingsOverlay = document.getElementById("settingsOverlay");
 const closeSettingsButton = document.getElementById("closeSettingsButton");
 const settingsTitle = document.getElementById("settingsTitle");
 const settingsSearchInput = document.getElementById("settingsSearchInput");
+const settingsResetDefaultsButton = document.getElementById("settingsResetDefaultsButton");
 const settingsRememberWidths = document.getElementById("settingsRememberWidths");
 const settingsAutoCollapsePanes = document.getElementById("settingsAutoCollapsePanes");
 const settingsCompactTabs = document.getElementById("settingsCompactTabs");
@@ -174,6 +178,7 @@ const settingsTerminalFontSize = document.getElementById("settingsTerminalFontSi
 const settingsTerminalFontSizeValue = document.getElementById("settingsTerminalFontSizeValue");
 const settingsTerminalLineHeight = document.getElementById("settingsTerminalLineHeight");
 const settingsTerminalLineHeightValue = document.getElementById("settingsTerminalLineHeightValue");
+const settingsTerminalPreview = document.getElementById("settingsTerminalPreview");
 const settingsTerminalScrollback = document.getElementById("settingsTerminalScrollback");
 const settingsTerminalCursorBlink = document.getElementById("settingsTerminalCursorBlink");
 const settingsAutoOpenOutput = document.getElementById("settingsAutoOpenOutput");
@@ -194,6 +199,7 @@ const settingsProfileFocusInput = document.getElementById("settingsProfileFocusI
 const settingsCycleProfileAvatar = document.getElementById("settingsCycleProfileAvatar");
 const sceneBackground = document.getElementById("sceneBackground");
 const sceneBackgroundCanvas = document.getElementById("sceneBackgroundCanvas");
+const musicReactiveOverlay = document.querySelector(".music-reactive-overlay");
 const sceneThemeOptions = Array.from(document.querySelectorAll("[data-scene-theme]"));
 const settingsNavItems = Array.from(document.querySelectorAll("[data-settings-target]"));
 const settingsPages = Array.from(document.querySelectorAll("[data-settings-page]"));
@@ -232,6 +238,7 @@ const spotifyPreviousButton = document.getElementById("spotifyPreviousButton");
 const spotifyPlayPauseButton = document.getElementById("spotifyPlayPauseButton");
 const spotifyNextButton = document.getElementById("spotifyNextButton");
 const spotifyShuffleButton = document.getElementById("spotifyShuffleButton");
+const spotifyShuffleState = document.getElementById("spotifyShuffleState");
 const spotifyOpenButton = document.getElementById("spotifyOpenButton");
 const spotifyTrackName = document.getElementById("spotifyTrackName");
 const spotifyTrackDetail = document.getElementById("spotifyTrackDetail");
@@ -245,7 +252,13 @@ const notepadTodoList = document.getElementById("notepadTodoList");
 const notepadSketchCanvas = document.getElementById("notepadSketchCanvas");
 const notepadSketchColor = document.getElementById("notepadSketchColor");
 const notepadSketchSize = document.getElementById("notepadSketchSize");
+const notepadSketchSizeOutput = document.getElementById("notepadSketchSizeOutput");
+const notepadSketchPen = document.getElementById("notepadSketchPen");
+const notepadSketchEraser = document.getElementById("notepadSketchEraser");
+const notepadSketchUndo = document.getElementById("notepadSketchUndo");
+const notepadSketchRedo = document.getElementById("notepadSketchRedo");
 const notepadSketchClear = document.getElementById("notepadSketchClear");
+const notepadSketchSwatches = Array.from(document.querySelectorAll("[data-sketch-color]"));
 const notepadSectionButtons = Array.from(document.querySelectorAll("[data-notepad-section]"));
 const notepadSections = {
   notes: document.getElementById("notepadNotesSection"),
@@ -283,12 +296,17 @@ let sshConnectionHistory = [];
 let systemMetricsTimer = null;
 let spotifyTimer = null;
 let titlebarClockTimer = null;
+let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let sceneAnimationFrame = 0;
 let sceneLastFrameAt = 0;
 let latestSpotifyStatus = null;
 let notepadSaveTimer = null;
 let notepadSketchDrawing = false;
 let notepadSketchLastPoint = null;
+let notepadSketchTool = "pen";
+let notepadSketchUndoStack = [];
+let notepadSketchRedoStack = [];
+let notepadActiveSection = "notes";
 let notepadTodos = [];
 let powerStatusTimer = null;
 let etaTimer = null;
@@ -301,6 +319,8 @@ let cinematicPaneSize = { width: 600, height: 285 };
 let cinematicResizeState = null;
 let cinematicResizeFrame = 0;
 let cinematicResizeSettleTimer = 0;
+let windowResizeFrame = 0;
+let windowResizeSettleTimer = 0;
 let pixelFrameReady = false;
 let pixelViewReady = false;
 let pixelWarmupPromise = null;
@@ -311,6 +331,7 @@ let pixelFloorCount = Math.max(
 );
 let pixelSkyManualPhase = null;
 let pixelBaseLayout = null;
+let pixelFurnitureCatalogPromise = null;
 let pixelPreviewGenerationBusy = false;
 let pixelPreviewRefreshNeeded = true;
 let pixelPreviewRefreshTimer = null;
@@ -324,6 +345,7 @@ const pendingPixelPreviewRequests = new Map();
 let globalCleanMode = localStorage.getItem("agentWorkbenchGlobalCleanMode") === "1";
 let selectedAgentId = null;
 let selectedPixelDetailAgentId = null;
+let pixelPetDetailAnchor = null;
 const pixelPetProfiles = [
   {
     id: "claudio",
@@ -458,7 +480,7 @@ const pixelPetProfiles = [
     talent: "Branch inspection"
   }
 ];
-const PIXEL_ROOM_DESIGN_VERSION = 3;
+const PIXEL_ROOM_DESIGN_VERSION = 4;
 const PIXEL_ROOM_THEMES = [
   {
     name: "Code Library",
@@ -993,26 +1015,21 @@ const THEME_CATEGORY_DEFAULTS = {
 };
 const SCENE_THEMES = {
   none: null,
-  "aurora-peak": { label: "Aurora Peak", detail: "bellergy · artist-made CGI", src: "assets/scenes/aurora-peak.mp4", poster: "assets/scenes/aurora-peak.jpg", source: "https://pixabay.com/videos/mountain-mount-cliff-night-cloud-105285/", artist: "bellergy", license: "Pixabay Content License", colors: ["#07111d", "#24506a", "#89d8c9"] },
-  "desert-dunes": { label: "Desert Dunes", detail: "bellergy · artist-made CGI", src: "assets/scenes/desert-dunes.mp4", poster: "assets/scenes/desert-dunes.jpg", source: "https://pixabay.com/videos/desert-sand-dune-landscape-loop-108420/", artist: "bellergy", license: "Pixabay Content License", colors: ["#28170f", "#a85d32", "#f1c27b"] },
-  "infinity-pool": { label: "Infinity Pool", detail: "dan25000 · artist-made CGI", src: "assets/scenes/infinity-pool.mp4", poster: "assets/scenes/infinity-pool.jpg", source: "https://pixabay.com/videos/pool-water-calm-quiet-sky-render-110962/", artist: "dan25000", license: "Pixabay Content License", colors: ["#0d2736", "#4b87a0", "#e9cfa4"] },
-  "fog-forest": { label: "Fog Forest", detail: "Phile-Rain · artist-made CGI", src: "assets/scenes/fog-forest.mp4", poster: "assets/scenes/fog-forest.jpg", source: "https://pixabay.com/videos/house-building-fog-forest-wild-123855/", artist: "Phile-Rain", license: "Pixabay Content License", colors: ["#101d18", "#3f5e47", "#a8b79b"] },
-  "ocean-moon": { label: "Ocean Moon", detail: "cgepic · artist-made CGI", src: "assets/scenes/ocean-moon.mp4", poster: "assets/scenes/ocean-moon.jpg", source: "https://pixabay.com/videos/ocean-waves-sea-sunrise-sun-3d-129673/", artist: "cgepic", license: "Pixabay Content License", colors: ["#071725", "#315e7c", "#f2d2a4"] },
-  "ocean-sunrise": { label: "Ocean Sunrise", detail: "cgepic · artist-made CGI", src: "assets/scenes/ocean-sunrise.mp4", poster: "assets/scenes/ocean-sunrise.jpg", source: "https://pixabay.com/videos/ocean-waves-sea-sunrise-sun-3d-129788/", artist: "cgepic", license: "Pixabay Content License", colors: ["#13273a", "#497aa0", "#ffbd72"] },
-  "starry-room": { label: "Starry Room", detail: "Dantegráfico · artist-made CGI", src: "assets/scenes/starry-room.mp4", poster: "assets/scenes/starry-room.jpg", source: "https://pixabay.com/videos/starry-night-bedroom-room-131539/", artist: "Dantegráfico", license: "Pixabay Content License", colors: ["#07101e", "#233858", "#9cb7d7"] },
-  "storm-lighthouse": { label: "Storm Lighthouse", detail: "mariamargarit1998 · artist-made CGI", src: "assets/scenes/storm-lighthouse.mp4", poster: "assets/scenes/storm-lighthouse.jpg", source: "https://pixabay.com/videos/ocean-sea-waves-storm-blender-147972/", artist: "mariamargarit1998", license: "Pixabay Content License", colors: ["#05111c", "#25435e", "#e55d4d"] },
-  "river-sunset": { label: "River Sunset", detail: "Monoar_CGI_Artist · artist-made CGI", src: "assets/scenes/river-sunset.mp4", poster: "assets/scenes/river-sunset.jpg", source: "https://pixabay.com/videos/boat-river-sunset-3d-cgi-blender-168195/", artist: "Monoar_CGI_Artist", license: "Pixabay Content License", colors: ["#211113", "#98532e", "#ffd17e"] },
-  "astronaut-night": { label: "Astronaut Night", detail: "spacetrip · artist-made CGI", src: "assets/scenes/astronaut-night.mp4", poster: "assets/scenes/astronaut-night.jpg", source: "https://pixabay.com/videos/astronaut-walking-night-landscape-171365/", artist: "spacetrip", license: "Pixabay Content License", colors: ["#090811", "#34233f", "#bd7b95"] },
-  "powerline-desert": { label: "Powerline Desert", detail: "carl_watermark · artist-made CGI", src: "assets/scenes/powerline-desert.mp4", poster: "assets/scenes/powerline-desert.jpg", source: "https://pixabay.com/videos/desert-power-lines-3d-2392/", artist: "carl_watermark", license: "CC0", colors: ["#3c3028", "#b99d7c", "#f5e6ca"] },
-  "abandoned-house": { label: "Abandoned House", detail: "Yashobanta · artist-made CGI", src: "assets/scenes/abandoned-house.mp4", poster: "assets/scenes/abandoned-house.jpg", source: "https://pixabay.com/videos/house-home-scene-landscape-render-246255/", artist: "Yashobanta", license: "Pixabay Content License", colors: ["#111513", "#4b5042", "#a69b79"] },
-  "winter-cabin": { label: "Winter Cabin", detail: "Joe_hackney · artist-made CGI", src: "assets/scenes/winter-cabin.mp4", poster: "assets/scenes/winter-cabin.jpg", source: "https://pixabay.com/videos/nature-winter-landscape-cabin-104116/", artist: "Joe_hackney", license: "Pixabay Content License", colors: ["#101823", "#425265", "#e8eef4"] },
-  "underwater-wreck": { label: "Underwater Wreck", detail: "mdherren · artist-made CGI", src: "assets/scenes/underwater-wreck.mp4", poster: "assets/scenes/underwater-wreck.jpg", source: "https://pixabay.com/videos/water-ocean-ship-wreck-sea-nature-38861/", artist: "mdherren", license: "Pixabay Content License", colors: ["#04141b", "#175364", "#6ab7ae"] },
-  "mountain-galaxy": { label: "Mountain Galaxy", detail: "bellergy · artist-made CGI", src: "assets/scenes/mountain-galaxy.mp4", poster: "assets/scenes/mountain-galaxy.jpg", source: "https://pixabay.com/videos/mountain-fog-galaxy-milkyway-night-91757/", artist: "bellergy", license: "Pixabay Content License", colors: ["#050b18", "#273553", "#c6b2d9"] },
-  "winter-mountain": { label: "Winter Mountain", detail: "bellergy · artist-made CGI", src: "assets/scenes/winter-mountain.mp4", poster: "assets/scenes/winter-mountain.jpg", source: "https://pixabay.com/videos/mountain-fog-morning-camping-93848/", artist: "bellergy", license: "Pixabay Content License", colors: ["#0b1521", "#526b7f", "#efcf9b"] },
-  "wind-carved-desert": { label: "Wind-Carved Desert", detail: "bellergy · artist-made CGI", src: "assets/scenes/wind-carved-desert.mp4", poster: "assets/scenes/wind-carved-desert.jpg", source: "https://pixabay.com/videos/desert-sand-wind-nature-landscape-94399/", artist: "bellergy", license: "Pixabay Content License", colors: ["#24130d", "#9b4f2c", "#f3bb73"] },
-  "open-ocean": { label: "Open Ocean", detail: "telza · artist-made CGI", src: "assets/scenes/open-ocean.mp4", poster: "assets/scenes/open-ocean.jpg", source: "https://pixabay.com/videos/ocean-sea-waves-clouds-horizon-85523/", artist: "telza", license: "Pixabay Content License", colors: ["#061a2a", "#24738f", "#d7eff2"] },
-  "solar-desert": { label: "Solar Desert", detail: "bellergy · artist-made CGI", src: "assets/scenes/solar-desert.mp4", poster: "assets/scenes/solar-desert.jpg", source: "https://pixabay.com/videos/sun-desert-sand-energy-99464/", artist: "bellergy", license: "Pixabay Content License", colors: ["#2a1208", "#9c3f1e", "#ffbc45"] },
-  "japan-lake": { label: "Japan Lake", detail: "Qika_Nugroho · artist-made CGI", src: "assets/scenes/japan-lake.mp4", poster: "assets/scenes/japan-lake.jpg", source: "https://pixabay.com/videos/lake-sunset-trees-leaves-japan-91562/", artist: "Qika_Nugroho", license: "Pixabay Content License", colors: ["#130b18", "#793848", "#ffc06a"] }
+  "copenhagen-moonlight": { label: "Copenhagen Moonlight", detail: "Johan Christian Dahl · 1846", image: "assets/scenes/copenhagen-moonlight.webp", source: "https://www.metmuseum.org/art/collection/search/439343", artist: "Johan Christian Dahl", license: "Public Domain · The Met Open Access", motion: "stars", colors: ["#111826", "#4b5a67", "#c1b69c"] },
+  "niagara-falls": { label: "Niagara Falls", detail: "Thomas Cole · 1830", image: "assets/scenes/niagara-falls.webp", source: "https://www.artic.edu/artworks/90048/distant-view-of-niagara-falls", artist: "Thomas Cole", license: "Public Domain · Art Institute of Chicago CC0", motion: "mist", colors: ["#1d2b26", "#718578", "#d4d5c1"] },
+  "cotopaxi": { label: "View of Cotopaxi", detail: "Frederic Edwin Church · 1857", image: "assets/scenes/cotopaxi.webp", source: "https://www.artic.edu/artworks/76571/view-of-cotopaxi", artist: "Frederic Edwin Church", license: "Public Domain · Art Institute of Chicago CC0", motion: "clouds", colors: ["#403a31", "#998a6e", "#e7d2a5"] },
+  "roman-campagna": { label: "Roman Campagna", detail: "Claude Lorrain · ca. 1639", image: "assets/scenes/roman-campagna.webp", source: "https://www.metmuseum.org/art/collection/search/435906", artist: "Claude Lorrain", license: "Public Domain · The Met Open Access", motion: "water", colors: ["#322d25", "#80745d", "#dac9a2"] },
+  "colonnade-ruins": { label: "Colonnade in Ruins", detail: "Hubert Robert · Roman ruins", image: "assets/scenes/colonnade-ruins.webp", source: "https://www.metmuseum.org/art/collection/search/437475", artist: "Hubert Robert", license: "Public Domain · The Met Open Access", motion: "dust", colors: ["#514438", "#a68b66", "#e8d3ac"] },
+  "paris-rain": { label: "Paris Street; Rainy Day", detail: "Gustave Caillebotte · 1877", image: "assets/scenes/paris-rain.webp", source: "https://www.artic.edu/artworks/20684/paris-street-rainy-day", artist: "Gustave Caillebotte", license: "Public Domain · Art Institute of Chicago CC0", motion: "water", colors: ["#3a3c3c", "#88877e", "#d0c9bd"] },
+  "parthenon-afterlight": { label: "Parthenon Afterlight", detail: "Frederic Edwin Church · 1871", image: "assets/scenes/parthenon-afterlight.webp", source: "https://www.metmuseum.org/art/collection/search/10482", artist: "Frederic Edwin Church", license: "Public Domain · The Met Open Access", motion: "light", colors: ["#564535", "#b98a5f", "#efd9ad"] },
+  "arches-in-ruins": { label: "Arches in Ruins", detail: "Hubert Robert · Roman ruins", image: "assets/scenes/arches-in-ruins.webp", source: "https://www.metmuseum.org/art/collection/search/437472", artist: "Hubert Robert", license: "Public Domain · The Met Open Access", motion: "dust", colors: ["#3e352c", "#9d8260", "#e4d1ad"] },
+  "tivoli-morning": { label: "Tivoli Morning", detail: "Thomas Cole · Italian landscape", image: "assets/scenes/tivoli-morning.webp", source: "https://www.metmuseum.org/art/collection/search/10500", artist: "Thomas Cole", license: "Public Domain · The Met Open Access", motion: "mist", colors: ["#3a3427", "#8f836b", "#d8c8a6"] },
+  "aegean-sea": { label: "The Aegean Sea", detail: "Frederic Edwin Church · ca. 1877", image: "assets/scenes/aegean-sea.webp", source: "https://www.metmuseum.org/art/collection/search/10480", artist: "Frederic Edwin Church", license: "Public Domain · The Met Open Access", motion: "light", colors: ["#302821", "#9a7653", "#e6c983"] },
+  "heart-of-andes": { label: "Heart of the Andes", detail: "Frederic Edwin Church · 1859", image: "assets/scenes/heart-of-andes.webp", source: "https://www.metmuseum.org/art/collection/search/10481", artist: "Frederic Edwin Church", license: "Public Domain · The Met Open Access", motion: "mist", colors: ["#223126", "#688260", "#d3d8b7"] },
+  "oxbow-storm": { label: "The Oxbow", detail: "Thomas Cole · 1836", image: "assets/scenes/oxbow-storm.webp", source: "https://www.metmuseum.org/art/collection/search/10497", artist: "Thomas Cole", license: "Public Domain · The Met Open Access", motion: "clouds", colors: ["#393a35", "#8e866c", "#d9d1b0"] },
+  "mountain-ford": { label: "The Mountain Ford", detail: "Thomas Cole · 1846", image: "assets/scenes/mountain-ford.webp", source: "https://www.metmuseum.org/art/collection/search/10496", artist: "Thomas Cole", license: "Public Domain · The Met Open Access", motion: "fireflies", colors: ["#242820", "#766c4b", "#c9b780"] },
+  "catskill-autumn": { label: "Catskill Autumn", detail: "Thomas Cole · 1836–37", image: "assets/scenes/catskill-autumn.webp", source: "https://www.metmuseum.org/art/collection/search/10501", artist: "Thomas Cole", license: "Public Domain · The Met Open Access", motion: "water", colors: ["#2d3425", "#7a7952", "#dfc58c"] },
+  "rocky-mountains": { label: "Rocky Mountains", detail: "Albert Bierstadt · 1863", image: "assets/scenes/rocky-mountains.webp", source: "https://www.metmuseum.org/art/collection/search/10154", artist: "Albert Bierstadt", license: "Public Domain · The Met Open Access", motion: "mist", colors: ["#26372f", "#748574", "#d9d5b6"] }
 };
 
 function hydrateSceneThemes() {
@@ -1031,7 +1048,7 @@ function hydrateSceneThemes() {
       option.style.setProperty("--scene-a", scene.colors[0]);
       option.style.setProperty("--scene-b", scene.colors[1]);
       option.style.setProperty("--scene-c", scene.colors[2]);
-      option.style.setProperty("--scene-preview", `url("${scene.poster}")`);
+      option.style.setProperty("--scene-preview", `url("${scene.image}")`);
       option.title = `${scene.label} — ${scene.artist}; ${scene.license}`;
     }
     option.innerHTML = `
@@ -1288,9 +1305,10 @@ function setRemoteConnectionState(workspaceId, connectionState) {
 
 function setFooter(message) {
   const workspace = activeWorkspace();
-  const workspacePath = workspace ? remoteWorkspaceLabel(workspace) : "";
-  footerStatus.textContent = workspacePath || message || "No workspace";
-  footerStatus.title = workspacePath || message || "No workspace";
+  const status = String(message || "").trim();
+  footerStatus.textContent = status;
+  footerStatus.title = status;
+  footerStatus.hidden = !status;
   renderRemoteConnectionStatus(workspace);
 }
 
@@ -1354,6 +1372,7 @@ function renderNotificationBell() {
   notificationButton.title = count
     ? `${count} unread agent ${count === 1 ? "notification" : "notifications"}`
     : "No unread agent notifications";
+  notificationButton.setAttribute("aria-label", notificationButton.title);
 }
 
 function recordAgentNotification(session, kind, title, detail) {
@@ -1722,7 +1741,6 @@ function renderPixelAgentRoster() {
         <i></i><i></i><i></i>
       </span>
       <strong>Seems pretty empty in here...</strong>
-      <small>Fresh coffee is waiting for your agents.</small>
     `;
     pixelAgentRosterList.appendChild(empty);
     return;
@@ -1776,10 +1794,50 @@ function pixelRosterEtaText(session, now = Date.now()) {
 
 function closePixelPetDetail() {
   pixelPetDetail.hidden = true;
+  pixelPetDetailAnchor = null;
   delete pixelPetDetail.dataset.petId;
+  delete pixelPetDetail.dataset.anchored;
+  delete pixelPetDetail.dataset.anchorSide;
+  pixelPetDetail.style.removeProperty("--pixel-pet-left");
+  pixelPetDetail.style.removeProperty("--pixel-pet-top");
 }
 
-function openPixelPetDetail(pet, floor = activePixelFloor) {
+function positionPixelPetDetail(anchor = pixelPetDetailAnchor) {
+  if (!anchor || pixelPetDetail.hidden || !pixelModeEnabled) return;
+  const viewBounds = pixelModeView.getBoundingClientRect();
+  const frameBounds = pixelModeFrame.getBoundingClientRect();
+  const panelBounds = pixelPetDetail.getBoundingClientRect();
+  const anchorX = frameBounds.left - viewBounds.left
+    + Math.max(0, Math.min(1, Number(anchor.x) || 0)) * frameBounds.width;
+  const anchorY = frameBounds.top - viewBounds.top
+    + Math.max(0, Math.min(1, Number(anchor.y) || 0)) * frameBounds.height;
+  const gap = 18;
+  const edge = 16;
+  let side = "right";
+  let left = anchorX + gap;
+  if (left + panelBounds.width > pixelModeView.clientWidth - edge) {
+    side = "left";
+    left = anchorX - panelBounds.width - gap;
+  }
+  left = Math.max(edge, Math.min(
+    pixelModeView.clientWidth - panelBounds.width - edge,
+    left
+  ));
+  const top = Math.max(edge, Math.min(
+    pixelModeView.clientHeight - panelBounds.height - edge,
+    anchorY - Math.min(86, panelBounds.height * 0.24)
+  ));
+  pixelPetDetail.style.setProperty("--pixel-pet-left", `${Math.round(left)}px`);
+  pixelPetDetail.style.setProperty("--pixel-pet-top", `${Math.round(top)}px`);
+  pixelPetDetail.style.setProperty(
+    "--pixel-pet-pointer-top",
+    `${Math.round(Math.max(28, Math.min(panelBounds.height - 28, anchorY - top)))}px`
+  );
+  pixelPetDetail.dataset.anchored = "true";
+  pixelPetDetail.dataset.anchorSide = side;
+}
+
+function openPixelPetDetail(pet, floor = activePixelFloor, anchor = null) {
   const reportedType = Number(pet?.petType);
   const matchingType = Number.isInteger(reportedType)
     ? reportedType
@@ -1796,6 +1854,11 @@ function openPixelPetDetail(pet, floor = activePixelFloor) {
   setPixelAgentClipboard(false);
   closePixelAgentDetail();
   pixelPetDetail.hidden = false;
+  pixelPetDetailAnchor = anchor
+    && Number.isFinite(Number(anchor.x))
+    && Number.isFinite(Number(anchor.y))
+    ? { x: Number(anchor.x), y: Number(anchor.y) }
+    : null;
   pixelPetDetail.dataset.petId = String(pet?.id || profile.id);
   pixelPetDetailAvatar.style.backgroundImage = "none";
   pixelPetDetailAvatar.style.setProperty(
@@ -1814,6 +1877,9 @@ function openPixelPetDetail(pet, floor = activePixelFloor) {
   pixelPetHobbies.textContent = profile.hobbies;
   pixelPetTrait.textContent = profile.trait;
   pixelPetTalent.textContent = profile.talent;
+  if (pixelPetDetailAnchor) {
+    requestAnimationFrame(() => positionPixelPetDetail());
+  }
 }
 
 function closePixelAgentDetail() {
@@ -1889,12 +1955,12 @@ function sendPixelAgentDetailInstruction() {
   const session = sessions.get(selectedPixelDetailAgentId);
   const message = pixelAgentDetailPrompt.value.trim();
   if (!session || !message) return;
+  if (!writeAgentInstruction(session, message)) return;
   lastTerminalInputAt = Date.now();
   resumeSessionEta(session);
   session.pausedByUser = false;
   beginAgentTask(session, message);
   updateRuntimeStatus();
-  api.writeAgent(session.id, `${message}\r`);
   pixelAgentDetailPrompt.value = "";
   renderPixelAgentDetail(session);
   showToast(`Sent to Agent ${session.slotIndex + 1}`);
@@ -2330,29 +2396,99 @@ function pixelRoomTileColor(plan, theme, tile) {
   };
 }
 
-function nearestPixelRoomFurnitureSpot(layout, targetColumn, targetRow, preferWall, occupied) {
+function pixelFurnitureTypeId(type) {
+  return String(type || "").split(":")[0];
+}
+
+async function pixelFurnitureCatalog() {
+  if (!pixelFurnitureCatalogPromise) {
+    pixelFurnitureCatalogPromise = fetch("pixel-agents-mode/assets/furniture-catalog.json")
+      .then((response) => response.json())
+      .then((items) => new Map(items.map((item) => [item.id, item])))
+      .catch(() => new Map());
+  }
+  return pixelFurnitureCatalogPromise;
+}
+
+function pixelFurnitureFits(
+  layout,
+  column,
+  row,
+  width,
+  height,
+  preferWall,
+  occupied,
+  clearance = 0
+) {
+  const firstTile = layout.tiles[row * layout.cols + column];
+  if (preferWall ? firstTile !== 0 : firstTile === 0 || firstTile === 255 || firstTile === undefined) {
+    return false;
+  }
+  for (let offsetRow = 0; offsetRow < height; offsetRow += 1) {
+    for (let offsetColumn = 0; offsetColumn < width; offsetColumn += 1) {
+      const nextColumn = column + offsetColumn;
+      const nextRow = row + offsetRow;
+      if (nextColumn < 0 || nextColumn >= layout.cols || nextRow < 0 || nextRow >= layout.rows) {
+        return false;
+      }
+      const tile = layout.tiles[nextRow * layout.cols + nextColumn];
+      if (tile === 255 || tile === undefined || (!preferWall && tile === 0)) return false;
+      if (occupied.has(`${nextColumn},${nextRow}`)) return false;
+    }
+  }
+  for (let checkRow = row - clearance; checkRow < row + height + clearance; checkRow += 1) {
+    for (let checkColumn = column - clearance; checkColumn < column + width + clearance; checkColumn += 1) {
+      if (occupied.has(`${checkColumn},${checkRow}`)) return false;
+    }
+  }
+  return true;
+}
+
+function reservePixelFurnitureFootprint(occupied, column, row, width, height) {
+  for (let offsetRow = 0; offsetRow < height; offsetRow += 1) {
+    for (let offsetColumn = 0; offsetColumn < width; offsetColumn += 1) {
+      occupied.add(`${column + offsetColumn},${row + offsetRow}`);
+    }
+  }
+}
+
+function nearestPixelRoomFurnitureSpot(
+  layout,
+  targetColumn,
+  targetRow,
+  preferWall,
+  occupied,
+  width = 1,
+  height = 1,
+  clearance = 0
+) {
   const candidates = [];
   for (let row = 0; row < layout.rows; row += 1) {
     for (let column = 0; column < layout.cols; column += 1) {
-      const tile = layout.tiles[row * layout.cols + column];
-      const valid = preferWall ? tile === 0 : tile !== 0 && tile !== 255 && tile !== undefined;
-      if (!valid) continue;
-      const key = `${column},${row}`;
+      if (!pixelFurnitureFits(
+        layout,
+        column,
+        row,
+        width,
+        height,
+        preferWall,
+        occupied,
+        clearance
+      )) continue;
       candidates.push({
         column,
         row,
         score:
           Math.abs(column - targetColumn)
           + Math.abs(row - targetRow) * 1.35
-          + (occupied.has(key) ? 1000 : 0)
       });
     }
   }
   candidates.sort((first, second) => first.score - second.score);
-  return candidates[0] || { column: targetColumn, row: targetRow };
+  return candidates[0] || null;
 }
 
-function buildPixelRoomFurniture(floor, theme, plan, layout) {
+function buildPixelRoomFurniture(floor, theme, plan, layout, furnitureCatalog) {
   const pieces = [
     ...(PIXEL_WORKSTATION_KITS[theme.workstations] || PIXEL_WORKSTATION_KITS["north-row"]),
     ...theme.decor
@@ -2360,8 +2496,14 @@ function buildPixelRoomFurniture(floor, theme, plan, layout) {
   const [left, right, top, bottom] = plan.bounds;
   const occupied = new Set();
   const wallMounted = /BOOKSHELF|PAINTING|CLOCK|WHITEBOARD|HANGING_PLANT/;
-  return pieces.map(([type, col, row], index) => {
+  const placed = [];
+  pieces.forEach(([type, col, row], index) => {
+    const descriptor = furnitureCatalog.get(pixelFurnitureTypeId(type)) || {};
+    if (descriptor.canPlaceOnSurfaces) return;
     const preferWall = wallMounted.test(type);
+    const width = Math.max(1, Number(descriptor.footprintW) || 1);
+    const height = Math.max(1, Number(descriptor.footprintH) || 1);
+    const clearance = !preferWall && (descriptor.isDesk || width > 1 || height > 1) ? 1 : 0;
     const horizontalRange = Math.max(1, right - left - 2);
     const verticalRange = Math.max(1, bottom - top - 2);
     const targetColumn = Math.round(
@@ -2377,19 +2519,40 @@ function buildPixelRoomFurniture(floor, theme, plan, layout) {
       targetColumn,
       targetRow,
       preferWall,
-      occupied
+      occupied,
+      width,
+      height,
+      clearance
     );
-    occupied.add(`${spot.column},${spot.row}`);
-    return {
+    const fallbackSpot = spot || nearestPixelRoomFurnitureSpot(
+      layout,
+      targetColumn,
+      targetRow,
+      preferWall,
+      occupied,
+      width,
+      height,
+      0
+    );
+    if (!fallbackSpot) return;
+    reservePixelFurnitureFootprint(
+      occupied,
+      fallbackSpot.column,
+      fallbackSpot.row,
+      width,
+      height
+    );
+    placed.push({
       uid: `f${floor}-${theme.topology}-${index + 1}`,
       type,
-      col: spot.column,
-      row: spot.row
-    };
+      col: fallbackSpot.column,
+      row: fallbackSpot.row
+    });
   });
+  return placed;
 }
 
-function buildPixelRoomLayout(baseLayout, floor) {
+function buildPixelRoomLayout(baseLayout, floor, furnitureCatalog = new Map()) {
   const themeIndex = (Math.max(1, Number(floor) || 1) - 1) % PIXEL_ROOM_THEMES.length;
   const theme = PIXEL_ROOM_THEMES[themeIndex];
   const plan = PIXEL_ROOM_PLANS[themeIndex];
@@ -2417,7 +2580,7 @@ function buildPixelRoomLayout(baseLayout, floor) {
       layout.tileColors[index] = pixelRoomTileColor(plan, theme, tile);
     }
   }
-  layout.furniture = buildPixelRoomFurniture(floor, theme, plan, layout);
+  layout.furniture = buildPixelRoomFurniture(floor, theme, plan, layout, furnitureCatalog);
   delete layout.carpetTiles;
   delete layout.areaTiles;
   layout.areas = [];
@@ -2441,7 +2604,7 @@ async function pixelLayoutForFloor(floor) {
     const response = await fetch("pixel-agents-mode/assets/default-layout-1.json");
     pixelBaseLayout = await response.json();
   }
-  return buildPixelRoomLayout(pixelBaseLayout, floor);
+  return buildPixelRoomLayout(pixelBaseLayout, floor, await pixelFurnitureCatalog());
 }
 
 async function applyPixelFloor(floor, { persist = true, showLoader = false } = {}) {
@@ -2470,6 +2633,19 @@ async function applyPixelFloor(floor, { persist = true, showLoader = false } = {
     if (showLoader) setPixelViewLoading(false);
     showToast("Could not open that floor.");
   }
+}
+
+function traversePixelTower(direction) {
+  const nextFloor = Math.max(
+    1,
+    Math.min(pixelFloorCount, activePixelFloor + (direction > 0 ? 1 : -1))
+  );
+  if (nextFloor === activePixelFloor) return;
+  applyPixelFloor(nextFloor);
+  const button = pixelFloorButtons.find(
+    (candidate) => Number(candidate.dataset.pixelFloor) === nextFloor
+  );
+  button?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function syncPixelMode(reset = false, { showLoader = true } = {}) {
@@ -2653,6 +2829,7 @@ function setPixelMode(enabled, { persist = true } = {}) {
     return;
   }
   pixelModeEnabled = Boolean(enabled);
+  document.body.classList.toggle("pixel-mode-active", pixelModeEnabled);
   agentGrid.hidden = pixelModeEnabled;
   pixelModeView.hidden = false;
   pixelModeView.classList.toggle("background-warm", !pixelModeEnabled);
@@ -2684,7 +2861,7 @@ function setPixelMode(enabled, { persist = true } = {}) {
     requestAnimationFrame(() => {
       for (const session of activePixelSessions()) {
         try {
-          session.fitAddon.fit();
+          fitTerminalPreservingScroll(session);
         } catch (error) {
         }
       }
@@ -2697,22 +2874,21 @@ function setPixelMode(enabled, { persist = true } = {}) {
 }
 
 function normalizedAgentState(metadata = {}) {
-  const explicit = String(metadata.state || "").toLowerCase();
-  if (["planning", "coding", "waiting", "failed", "complete"].includes(explicit)) return explicit;
   const status = String(metadata.status || "working").toLowerCase();
   if (status === "done") return "complete";
   if (status === "error") return "failed";
   if (status === "waiting") return "waiting";
+  const explicit = String(metadata.state || "").toLowerCase();
+  if (["planning", "coding", "waiting", "failed", "complete"].includes(explicit)) return explicit;
   return Number(metadata.progressPercent) < 12 ? "planning" : "coding";
 }
 
 function agentStateLabel(state, metadata = {}) {
   if (state === "planning") return "Planning";
   if (state === "coding") return "Running";
-  if (state === "waiting") return "Waiting";
+  if (state === "waiting" || state === "complete") return "Idle";
   if (state === "failed") return "Failed";
-  if (state === "complete") return "Done";
-  return String(metadata.status || "").toLowerCase() === "done" ? "Idle" : "Idle";
+  return "Idle";
 }
 
 function formatElapsedClock(startedAt, now = Date.now()) {
@@ -2742,27 +2918,77 @@ function runtimeModelFromTerminal(data) {
   return match ? `${match[1]} [${match[2].toLowerCase()}]` : "";
 }
 
-function flushTerminalOutput(session) {
-  if (!session || session.terminalWriteScheduled) return;
-  session.terminalWriteScheduled = true;
-  requestAnimationFrame(() => {
-    session.terminalWriteScheduled = false;
-    const chunk = session.pendingTerminalOutput.shift() || "";
-    session.pendingTerminalOutputBytes = Math.max(0, session.pendingTerminalOutputBytes - chunk.length);
-    if (chunk) session.term.write(chunk);
-    if (session.pendingTerminalOutput.length) flushTerminalOutput(session);
-  });
-}
-
 function queueTerminalOutput(session, data) {
   const chunk = String(data || "");
-  if (!chunk) return;
-  session.pendingTerminalOutput.push(chunk);
-  session.pendingTerminalOutputBytes += chunk.length;
-  while (session.pendingTerminalOutputBytes > 4 * 1024 * 1024 && session.pendingTerminalOutput.length > 1) {
-    session.pendingTerminalOutputBytes -= session.pendingTerminalOutput.shift().length;
+  if (!session?.term || !chunk) return;
+  // xterm's WriteBuffer already preserves PTY ordering, parser state, scroll
+  // anchoring, and a render-time budget. Feeding the original chunks into it
+  // avoids both giant synchronous parses and corrupting an ANSI sequence by
+  // dropping arbitrary backlog bytes.
+  session.term.write(chunk);
+}
+
+function writeAgentInstruction(session, message) {
+  const line = String(message || "").trim();
+  if (!session || !line || session.exited || session.pendingAgentSubmitTimer) return false;
+  session.term.paste(line);
+  session.pendingAgentSubmitTimer = window.setTimeout(() => {
+    const current = sessions.get(session.id);
+    session.pendingAgentSubmitTimer = null;
+    if (!current || current.exited) return;
+    current.term.input("\r", true);
+  }, 170);
+  return true;
+}
+
+function fitTerminalPreservingScroll(session) {
+  if (!session?.term || !session?.fitAddon || !session?.terminalHost) return false;
+  const { width, height } = session.terminalHost.getBoundingClientRect();
+  if (
+    !session.terminalHost.isConnected
+    || width < 80
+    || height < 48
+    || document.body.classList.contains("cinematic-resizing")
+    || document.body.classList.contains("window-resizing")
+    || document.body.classList.contains("is-resizing")
+  ) {
+    return false;
   }
-  flushTerminalOutput(session);
+  // BufferService owns ydisp adjustment during scrollback trimming and line
+  // reflow. Re-applying an old absolute viewportY makes the screen jump.
+  session.fitAddon.fit();
+  return true;
+}
+
+function scheduleActiveTerminalFits() {
+  for (const session of activeWorkspaceSessions()) {
+    session.scheduleTerminalFit?.();
+  }
+}
+
+function settleResponsiveLayout() {
+  if (windowResizeFrame) cancelAnimationFrame(windowResizeFrame);
+  windowResizeFrame = 0;
+  document.body.classList.remove("window-resizing");
+  if (cinematicModeEnabled) applyCinematicPaneSize();
+  if (!pixelPetDetail.hidden && pixelPetDetailAnchor) positionPixelPetDetail();
+  scheduleActiveTerminalFits();
+}
+
+function handleWindowResize() {
+  document.body.classList.add("window-resizing");
+  if (!windowResizeFrame) {
+    windowResizeFrame = requestAnimationFrame(() => {
+      windowResizeFrame = 0;
+      if (cinematicModeEnabled) applyCinematicPaneSize();
+      if (!pixelPetDetail.hidden && pixelPetDetailAnchor) positionPixelPetDetail();
+    });
+  }
+  if (windowResizeSettleTimer) window.clearTimeout(windowResizeSettleTimer);
+  windowResizeSettleTimer = window.setTimeout(() => {
+    windowResizeSettleTimer = 0;
+    settleResponsiveLayout();
+  }, 140);
 }
 
 function updateAgentStatusCard(session, now = Date.now()) {
@@ -2964,12 +3190,12 @@ function scheduleAgentCleanRender(session) {
 function sendAgentCleanInstruction(session) {
   const message = session?.cleanComposeInput?.value.trim();
   if (!session || !message || session.exited) return false;
+  if (!writeAgentInstruction(session, message)) return false;
   lastTerminalInputAt = Date.now();
   resumeSessionEta(session);
   session.pausedByUser = false;
   beginAgentTask(session, message);
   updateRuntimeStatus();
-  api.writeAgent(session.id, `${message}\r`);
   session.cleanComposeInput.value = "";
   session.cleanComposeInput.dispatchEvent(new Event("input", { bubbles: true }));
   showToast(`Sent to ${session.metadata.name || `Agent ${session.slotIndex + 1}`}`);
@@ -2992,7 +3218,7 @@ function setAgentCleanMode(session, enabled, { focus = true } = {}) {
   } else {
     requestAnimationFrame(() => {
       try {
-        session.fitAddon.fit();
+        fitTerminalPreservingScroll(session);
         session.term.focus();
       } catch (error) {
       }
@@ -3016,14 +3242,16 @@ function setGlobalCleanMode(enabled, { persist = true } = {}) {
 
 function cinematicPaneBounds() {
   const compact = window.innerWidth <= 920;
-  const horizontalPadding = compact ? 64 : 144;
-  const verticalPadding = compact ? 130 : 166;
-  const columnGap = compact ? 22 : 40;
-  const rowGap = compact ? 22 : 34;
+  // Keep these values in sync with the compact Cinematic CSS so a 2×2 grid
+  // always fits exactly inside the available stage after a native resize.
+  const horizontalPadding = compact ? 64 : 116;
+  const verticalPadding = compact ? 130 : 146;
+  const columnGap = compact ? 22 : 30;
+  const rowGap = compact ? 22 : 26;
   return {
-    minWidth: Math.min(360, Math.max(260, Math.floor((window.innerWidth - horizontalPadding - columnGap) / 2))),
+    minWidth: Math.min(compact ? 340 : 420, Math.max(280, Math.floor((window.innerWidth - horizontalPadding - columnGap) / 2))),
     maxWidth: Math.max(260, Math.floor((window.innerWidth - horizontalPadding - columnGap) / 2)),
-    minHeight: Math.min(190, Math.max(150, Math.floor((window.innerHeight - verticalPadding - rowGap) / 2))),
+    minHeight: Math.min(compact ? 185 : 225, Math.max(160, Math.floor((window.innerHeight - verticalPadding - rowGap) / 2))),
     maxHeight: Math.max(150, Math.floor((window.innerHeight - verticalPadding - rowGap) / 2))
   };
 }
@@ -3107,6 +3335,7 @@ function finishCinematicPaneResize(event = {}) {
   cinematicResizeReadout.hidden = true;
   localStorage.setItem("agentWorkbenchCinematicPaneWidth", String(cinematicPaneSize.width));
   localStorage.setItem("agentWorkbenchCinematicPaneHeight", String(cinematicPaneSize.height));
+  for (const session of activeWorkspaceSessions()) session.scheduleTerminalFit?.();
   cinematicResizeSettleTimer = setTimeout(() => {
     document.body.classList.remove("cinematic-resize-settling");
   }, 520);
@@ -3143,7 +3372,7 @@ function setCinematicMode(enabled, { persist = true } = {}) {
   requestAnimationFrame(() => {
     for (const session of activeWorkspaceSessions()) {
       try {
-        session.fitAddon.fit();
+        fitTerminalPreservingScroll(session);
       } catch (error) {
       }
     }
@@ -3194,12 +3423,12 @@ async function submitCinematicPrompt() {
       showToast("No available agent slot.");
       return;
     }
+    if (!writeAgentInstruction(target, message)) return;
     lastTerminalInputAt = Date.now();
     resumeSessionEta(target);
     target.pausedByUser = false;
     beginAgentTask(target, message);
     updateRuntimeStatus();
-    api.writeAgent(target.id, `${message}\r`);
     cinematicPromptInput.value = "";
     showToast(`Sent to ${target.metadata.name || `Agent ${target.slotIndex + 1}`}`);
   } finally {
@@ -3253,38 +3482,20 @@ function cinematicMentionContext() {
 }
 
 function cinematicMentionChoices(query = "") {
-  const modelChoices = [
-    { token: "codex", label: "Codex", detail: "OpenAI coding agent" },
-    { token: "claude", label: "Claude", detail: "Claude Code agent" },
-    { token: "shell", label: "Shell", detail: "Terminal session" }
-  ];
-  const slotChoices = Array.from({ length: activeWorkspaceLayout() }, (_, slotIndex) => {
-    const session = activeWorkspaceSessions().find((entry) => !entry.exited && entry.slotIndex === slotIndex);
-    return {
-      token: String(slotIndex + 1),
-      label: session?.metadata.name || `Agent ${slotIndex + 1}`,
-      detail: session
-        ? `Pane ${slotIndex + 1} · ${session.kind} · ${normalizedAgentState(session.metadata)}`
-        : `Pane ${slotIndex + 1} · start default model`,
-      session: session || null
-    };
-  });
   const namedChoices = activeWorkspaceSessions()
-    .filter((session) => !session.exited && session.metadata.name)
+    .filter((session) => !session.exited && String(session.metadata.name || "").trim())
     .map((session) => ({
-      token: String(session.metadata.name).toLowerCase(),
-      label: session.metadata.name,
-      detail: `${session.kind} · pane ${session.slotIndex + 1} · ${normalizedAgentState(session.metadata)}`,
+      token: String(session.metadata.name).trim().toLowerCase(),
+      label: String(session.metadata.name).trim(),
       session
     }));
   const seen = new Set();
-  return [...modelChoices, ...slotChoices, ...namedChoices].filter((choice) => {
+  return namedChoices.filter((choice) => {
     if (seen.has(choice.token)) return false;
     seen.add(choice.token);
     return !query
       || choice.token.includes(query)
-      || choice.label.toLowerCase().includes(query)
-      || choice.detail.toLowerCase().includes(query);
+      || choice.label.toLowerCase().includes(query);
   });
 }
 
@@ -3295,13 +3506,17 @@ function closeCinematicMentionMenu() {
   cinematicMentionIndex = 0;
 }
 
-function renderCinematicMentionMenu(forceOpen = false) {
-  const context = cinematicMentionContext();
-  if (!context && !forceOpen) {
+function renderCinematicMentionMenu() {
+  if (!cinematicModeEnabled || cinematicPromptDock.hidden) {
     closeCinematicMentionMenu();
     return;
   }
-  cinematicMentionChoicesState = cinematicMentionChoices(context?.query || "");
+  const context = cinematicMentionContext();
+  if (!context) {
+    closeCinematicMentionMenu();
+    return;
+  }
+  cinematicMentionChoicesState = cinematicMentionChoices(context.query);
   if (!cinematicMentionChoicesState.length) {
     closeCinematicMentionMenu();
     return;
@@ -3314,25 +3529,18 @@ function renderCinematicMentionMenu(forceOpen = false) {
     button.dataset.mentionIndex = String(index);
     button.setAttribute("role", "option");
     button.setAttribute("aria-selected", String(index === cinematicMentionIndex));
-    if (choice.session) {
-      button.classList.add("has-profile");
-      const avatar = document.createElement("span");
-      avatar.className = "cinematic-mention-avatar";
-      applyAgentFace(avatar, choice.session);
-      const profile = document.createElement("span");
-      profile.className = "cinematic-mention-profile";
-      profile.innerHTML = `
-        <strong>@${escapeHtml(choice.token)}</strong>
-        <span>${escapeHtml(choice.label)}</span>
-        <small>${escapeHtml(choice.detail)}</small>
-      `;
-      const state = document.createElement("em");
-      state.className = "cinematic-mention-state";
-      state.textContent = normalizedAgentState(choice.session.metadata);
-      button.append(avatar, profile, state);
-    } else {
-      button.innerHTML = `<strong>@${escapeHtml(choice.token)}</strong><span>${escapeHtml(choice.label)}</span><small>${escapeHtml(choice.detail)}</small>`;
-    }
+    button.classList.add("has-profile");
+    button.setAttribute("aria-label", `Mention ${choice.label}`);
+    const avatar = document.createElement("span");
+    avatar.className = "cinematic-mention-avatar";
+    applyAgentFace(avatar, choice.session);
+    const profile = document.createElement("span");
+    profile.className = "cinematic-mention-profile";
+    profile.innerHTML = `<span>${escapeHtml(choice.label)}</span>`;
+    const state = document.createElement("em");
+    state.className = "cinematic-mention-state";
+    state.textContent = agentStateLabel(normalizedAgentState(choice.session.metadata), choice.session.metadata);
+    button.append(avatar, profile, state);
     return button;
   }));
   cinematicMentionMenu.hidden = false;
@@ -3368,8 +3576,8 @@ function selectAgentSession(session) {
   document.querySelectorAll(".agent-slot.selected").forEach((slot) => slot.classList.remove("selected"));
   if (session?.slot) session.slot.classList.add("selected");
   cinematicPromptInput.placeholder = session
-    ? `Tell ${session.metadata.name || `Agent ${session.slotIndex + 1}`} what to do…`
-    : "Use @codex, @claude, @shell, or choose an agent…";
+    ? `What’s next for ${session.metadata.name || `Agent ${session.slotIndex + 1}`}?`
+    : "What should we work on?";
   updateRuntimeStatus();
 }
 
@@ -3381,7 +3589,7 @@ function toggleRunPauseAll() {
     if (shouldResume) {
       session.pausedByUser = false;
       resumeSessionEta(session);
-      api.writeAgent(session.id, "Continue from where you paused.\\r");
+      writeAgentInstruction(session, "Continue from where you paused.");
       session.metadata = { ...session.metadata, status: "working", state: "coding", currentTask: "Resuming task" };
     } else {
       session.pausedByUser = true;
@@ -3422,9 +3630,9 @@ async function retryFailedAgents() {
 function askAgentsForStatus(targetSession = null) {
   const targets = targetSession ? [targetSession] : activeWorkspaceSessions();
   for (const session of targets) {
-    api.writeAgent(
-      session.id,
-      "Please report a concise status update and refresh all BsCode metadata fields now.\\r"
+    writeAgentInstruction(
+      session,
+      "Please report a concise status update and refresh all BsCode metadata fields now."
     );
   }
   if (targets.length) showToast(`Asked ${targets.length} ${targets.length === 1 ? "agent" : "agents"} for status.`);
@@ -3433,8 +3641,8 @@ function askAgentsForStatus(targetSession = null) {
 function reassignAgentTask(session) {
   const task = window.prompt("Reassign task", session.metadata.currentTask || session.metadata.tldr || "");
   if (!task?.trim()) return;
+  if (!writeAgentInstruction(session, task)) return;
   beginAgentTask(session, task.trim());
-  api.writeAgent(session.id, `${task.trim()}\\r`);
 }
 
 async function duplicateAgent(session) {
@@ -3459,7 +3667,7 @@ function toggleFocusMode() {
   requestAnimationFrame(() => {
     for (const session of activeWorkspaceSessions()) {
       try {
-        session.fitAddon.fit();
+        fitTerminalPreservingScroll(session);
       } catch (error) {
       }
     }
@@ -3884,7 +4092,7 @@ function setOutputCollapsed(collapsed) {
   requestAnimationFrame(() => {
     for (const session of sessions.values()) {
       try {
-        session.fitAddon.fit();
+        fitTerminalPreservingScroll(session);
       } catch (error) {
       }
     }
@@ -3907,7 +4115,7 @@ function setFilesCollapsed(collapsed) {
   requestAnimationFrame(() => {
     for (const session of sessions.values()) {
       try {
-        session.fitAddon.fit();
+        fitTerminalPreservingScroll(session);
       } catch (error) {
       }
     }
@@ -4000,8 +4208,8 @@ function selectedAppearanceCategory() {
 }
 
 function selectedSceneTheme() {
-  const saved = localStorage.getItem("agentWorkbenchSceneTheme") || "aurora-peak";
-  return Object.prototype.hasOwnProperty.call(SCENE_THEMES, saved) ? saved : "aurora-peak";
+  const saved = localStorage.getItem("agentWorkbenchSceneTheme") || "copenhagen-moonlight";
+  return Object.prototype.hasOwnProperty.call(SCENE_THEMES, saved) ? saved : "copenhagen-moonlight";
 }
 
 function refreshTerminalThemes() {
@@ -4031,7 +4239,7 @@ function sceneRandom(seed, index) {
 }
 
 function resizeSceneCanvas() {
-  const pixelRatio = Math.min(1.5, Math.max(1, window.devicePixelRatio || 1));
+  const pixelRatio = Math.min(1.25, Math.max(1, window.devicePixelRatio || 1));
   const width = Math.max(1, Math.round(window.innerWidth * pixelRatio));
   const height = Math.max(1, Math.round(window.innerHeight * pixelRatio));
   if (sceneBackgroundCanvas.width === width && sceneBackgroundCanvas.height === height) return;
@@ -4133,7 +4341,7 @@ function drawSceneParticles(context, width, height, colors, time, seed, kind) {
   }
 }
 
-function drawLivingScene(timestamp = performance.now()) {
+function drawLegacyLivingScene(timestamp = performance.now()) {
   sceneAnimationFrame = 0;
   if (!cinematicModeEnabled || document.visibilityState !== "visible") return;
   const sceneId = document.body.dataset.sceneTheme || selectedSceneTheme();
@@ -4174,7 +4382,7 @@ function drawLivingScene(timestamp = performance.now()) {
     }
     return;
   }
-  const frameRate = numericPreference("agentWorkbenchSceneFrameRate", 24, 15, 45);
+  const frameRate = numericPreference("agentWorkbenchSceneFrameRate", 30, 15, 45);
   const interval = 1000 / frameRate;
   if (timestamp - sceneLastFrameAt < interval) {
     sceneAnimationFrame = requestAnimationFrame(drawLivingScene);
@@ -4285,7 +4493,7 @@ function drawLivingScene(timestamp = performance.now()) {
   if (!reduceMotion) sceneAnimationFrame = requestAnimationFrame(drawLivingScene);
 }
 
-function syncSceneBackgroundPlayback() {
+function syncLegacySceneBackgroundPlayback() {
   const scene = document.body.dataset.sceneTheme || selectedSceneTheme();
   const config = SCENE_THEMES[scene] || null;
   const active = Boolean(config && cinematicModeEnabled && homeView.hidden);
@@ -4318,8 +4526,255 @@ function syncSceneBackgroundPlayback() {
   }
 }
 
+function sceneRgba(hex, alpha) {
+  const normalized = String(hex || "#ffffff").replace("#", "");
+  const value = normalized.length === 3
+    ? normalized.split("").map((character) => `${character}${character}`).join("")
+    : normalized.padEnd(6, "f").slice(0, 6);
+  const red = Number.parseInt(value.slice(0, 2), 16);
+  const green = Number.parseInt(value.slice(2, 4), 16);
+  const blue = Number.parseInt(value.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+function drawAmbientMist(context, width, height, scene, time, seed) {
+  for (let index = 0; index < 3; index += 1) {
+    const period = 76 + sceneRandom(seed, index + 50) * 53;
+    const phase = time / period + sceneRandom(seed, index + 80) * Math.PI * 2;
+    const centerX = width * (
+      0.18
+      + sceneRandom(seed, index) * 0.64
+      + Math.sin(phase) * 0.022
+    );
+    const centerY = height * (0.36 + index * 0.17 + sceneRandom(seed, index + 20) * 0.08);
+    const radius = width * (0.24 + sceneRandom(seed, index + 120) * 0.12);
+    const gradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, sceneRgba(scene.colors[2], 0.055));
+    gradient.addColorStop(0.58, sceneRgba(scene.colors[2], 0.028));
+    gradient.addColorStop(1, sceneRgba(scene.colors[2], 0));
+    context.save();
+    context.scale(1, 0.46);
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, width, height / 0.46);
+    context.restore();
+  }
+}
+
+function drawAmbientClouds(context, width, height, scene, time, seed) {
+  for (let index = 0; index < 4; index += 1) {
+    const period = 92 + sceneRandom(seed, index + 40) * 67;
+    const phase = time / period + sceneRandom(seed, index + 90) * Math.PI * 2;
+    const centerX = width * (
+      0.14
+      + sceneRandom(seed, index) * 0.72
+      + Math.sin(phase) * 0.018
+    );
+    const centerY = height * (0.11 + sceneRandom(seed, index + 20) * 0.29);
+    const radius = width * (0.14 + sceneRandom(seed, index + 70) * 0.1);
+    const gradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, sceneRgba(scene.colors[2], 0.045));
+    gradient.addColorStop(0.62, sceneRgba(scene.colors[2], 0.018));
+    gradient.addColorStop(1, sceneRgba(scene.colors[2], 0));
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, width, height * 0.62);
+  }
+}
+
+function drawAmbientWater(context, width, height, scene, time, seed) {
+  context.save();
+  context.lineCap = "round";
+  for (let index = 0; index < 14; index += 1) {
+    const period = 18 + sceneRandom(seed, index + 50) * 19;
+    const phase = time / period + sceneRandom(seed, index + 110) * Math.PI * 2;
+    const centerX = width * (0.1 + sceneRandom(seed, index) * 0.8);
+    const y = height * (0.57 + sceneRandom(seed, index + 20) * 0.32);
+    const length = width * (0.018 + sceneRandom(seed, index + 70) * 0.055);
+    context.strokeStyle = sceneRgba(scene.colors[2], 0.035 + Math.max(0, Math.sin(phase)) * 0.035);
+    context.lineWidth = 0.7 + sceneRandom(seed, index + 140) * 1.4;
+    context.beginPath();
+    context.moveTo(centerX - length, y);
+    context.quadraticCurveTo(centerX, y + Math.sin(phase) * 2.5, centerX + length, y);
+    context.stroke();
+  }
+  context.restore();
+}
+
+function drawAmbientLights(context, width, height, scene, time, seed, kind) {
+  const count = kind === "stars" ? 13 : kind === "fireflies" ? 16 : 20;
+  const upper = kind === "stars" ? 0.58 : 0.82;
+  const lower = kind === "stars" ? 0.08 : 0.34;
+  for (let index = 0; index < count; index += 1) {
+    const period = 8 + sceneRandom(seed, index + 90) * 19;
+    const phase = time / period + sceneRandom(seed, index + 140) * Math.PI * 2;
+    const drift = kind === "dust" ? Math.sin(phase * 0.63) * width * 0.003 : Math.sin(phase) * width * 0.002;
+    const x = sceneRandom(seed, index) * width + drift;
+    const y = height * (
+      lower
+      + sceneRandom(seed, index + 30) * (upper - lower)
+      + Math.cos(phase * 0.73) * 0.003
+    );
+    const glow = Math.max(0.08, (Math.sin(phase) + 1) / 2);
+    const radius = (kind === "stars" ? 0.8 : 1.1) + glow * (kind === "fireflies" ? 2.2 : 1.4);
+    context.fillStyle = sceneRgba(scene.colors[2], 0.035 + glow * (kind === "fireflies" ? 0.12 : 0.075));
+    context.beginPath();
+    context.arc(x, y, radius, 0, Math.PI * 2);
+    context.fill();
+  }
+}
+
+function drawAmbientLight(context, width, height, scene, time, seed) {
+  const phase = time / (83 + sceneRandom(seed, 22) * 41);
+  const centerX = width * (0.58 + Math.sin(phase) * 0.012);
+  const centerY = height * (0.23 + Math.cos(phase * 0.71) * 0.009);
+  const radius = Math.max(width, height) * 0.58;
+  const glow = 0.5 + Math.sin(phase * 1.37) * 0.5;
+  const gradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+  gradient.addColorStop(0, sceneRgba(scene.colors[2], 0.025 + glow * 0.02));
+  gradient.addColorStop(0.54, sceneRgba(scene.colors[1], 0.012));
+  gradient.addColorStop(1, sceneRgba(scene.colors[0], 0));
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+}
+
+function musicReactivePlaybackActive() {
+  return (
+    cinematicModeEnabled
+    && homeView.hidden
+    && !booleanPreference("agentWorkbenchReduceMotion", false)
+    && booleanPreference("agentWorkbenchMusicReactive", true)
+    && String(latestSpotifyStatus?.state || "").toLowerCase() === "playing"
+    && numericPreference("agentWorkbenchCinematicEffectStrength", 60, 0, 100) > 0
+  );
+}
+
+function musicReactivePulse() {
+  if (!musicReactivePlaybackActive()) return 0;
+  const strength = numericPreference("agentWorkbenchCinematicEffectStrength", 60, 0, 100) / 100;
+  const estimatedPosition = Number(latestSpotifyStatus?.position || 0)
+    + Math.max(0, Date.now() - Number(latestSpotifyStatus?.retrievedAt || Date.now())) / 1000;
+  // Spotify's desktop bridge exposes playback position but not audio amplitude.
+  // Anchor a smooth, consistent pulse to that position so pausing and seeking
+  // also pause and seek the atmosphere instead of using an unrelated wall clock.
+  const phase = estimatedPosition * Math.PI * 3.2;
+  const envelope = Math.pow((Math.sin(phase - Math.PI / 2) + 1) / 2, 3);
+  return Math.min(1, envelope * strength);
+}
+
+function applyMusicReactivePulse(beat) {
+  const active = musicReactivePlaybackActive();
+  const pulse = active ? Math.max(0, Math.min(1, Number(beat) || 0)) : 0;
+  document.body.classList.toggle("music-reactive-active", active);
+  musicReactiveOverlay.style.setProperty("--cinematic-beat", pulse.toFixed(3));
+  musicReactiveOverlay.style.setProperty(
+    "--cinematic-glow-opacity",
+    active ? (0.012 + pulse * 0.048).toFixed(3) : "0"
+  );
+  musicReactiveOverlay.style.setProperty(
+    "--cinematic-pulse-scale",
+    "1"
+  );
+  spotifyNowPlaying.style.setProperty(
+    "--cinematic-player-glow",
+    "0"
+  );
+  spotifyNowPlaying.style.setProperty(
+    "--cinematic-player-scale",
+    "1"
+  );
+}
+
+function drawMusicReactiveAtmosphere(context, width, height, scene, time, seed, beat) {
+  if (beat <= 0.002) return;
+  const edgeOpacity = 0.005 + beat * 0.018;
+  const edgeGradients = [
+    context.createLinearGradient(0, 0, width * 0.1, 0),
+    context.createLinearGradient(width, 0, width * 0.9, 0),
+    context.createLinearGradient(0, 0, 0, height * 0.09),
+    context.createLinearGradient(0, height, 0, height * 0.91)
+  ];
+  for (const gradient of edgeGradients) {
+    gradient.addColorStop(0, sceneRgba(scene.colors[2], edgeOpacity));
+    gradient.addColorStop(1, sceneRgba(scene.colors[1], 0));
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, width, height);
+  }
+}
+
+function drawLivingScene(timestamp = performance.now()) {
+  sceneAnimationFrame = 0;
+  const reduceMotion = booleanPreference("agentWorkbenchReduceMotion", false);
+  if (
+    reduceMotion
+    || !cinematicModeEnabled
+    || !homeView.hidden
+    || document.visibilityState !== "visible"
+  ) {
+    applyMusicReactivePulse(0);
+    return;
+  }
+  const sceneId = document.body.dataset.sceneTheme || selectedSceneTheme();
+  const scene = SCENE_THEMES[sceneId];
+  if (!scene) return;
+  const frameRate = numericPreference("agentWorkbenchSceneFrameRate", 24, 15, 30);
+  const interval = 1000 / frameRate;
+  if (timestamp - sceneLastFrameAt < interval) {
+    sceneAnimationFrame = requestAnimationFrame(drawLivingScene);
+    return;
+  }
+  sceneLastFrameAt = timestamp;
+  resizeSceneCanvas();
+  const context = sceneBackgroundCanvas.getContext("2d", { alpha: true });
+  const width = sceneBackgroundCanvas.width;
+  const height = sceneBackgroundCanvas.height;
+  const seed = sceneHash(sceneId);
+  const time = timestamp / 1000;
+  context.clearRect(0, 0, width, height);
+
+  if (scene.motion === "clouds") drawAmbientClouds(context, width, height, scene, time, seed);
+  if (scene.motion === "mist") drawAmbientMist(context, width, height, scene, time, seed);
+  if (scene.motion === "water") drawAmbientWater(context, width, height, scene, time, seed);
+  if (scene.motion === "stars") drawAmbientLights(context, width, height, scene, time, seed, "stars");
+  if (scene.motion === "fireflies") drawAmbientLights(context, width, height, scene, time, seed, "fireflies");
+  if (scene.motion === "dust") drawAmbientLights(context, width, height, scene, time, seed, "dust");
+  if (scene.motion === "light") drawAmbientLight(context, width, height, scene, time, seed);
+
+  const beat = musicReactivePulse();
+  applyMusicReactivePulse(beat);
+  drawMusicReactiveAtmosphere(context, width, height, scene, time, seed, beat);
+  sceneAnimationFrame = requestAnimationFrame(drawLivingScene);
+}
+
+function syncSceneBackgroundPlayback() {
+  const sceneId = document.body.dataset.sceneTheme || selectedSceneTheme();
+  const config = SCENE_THEMES[sceneId] || null;
+  const active = Boolean(config && cinematicModeEnabled && homeView.hidden);
+  const reduceMotion = booleanPreference("agentWorkbenchReduceMotion", false);
+  const animate = active && !reduceMotion && document.visibilityState === "visible";
+  document.body.classList.toggle("scene-background-active", active);
+  sceneBackground.classList.toggle("active", active);
+  if (active) {
+    if (sceneBackground.getAttribute("src") !== config.image) {
+      sceneBackground.src = config.image;
+      sceneBackground.decode?.().catch(() => {});
+    }
+  } else {
+    sceneBackground.removeAttribute("src");
+  }
+  sceneBackgroundCanvas.classList.toggle("active", animate);
+  if (sceneAnimationFrame) cancelAnimationFrame(sceneAnimationFrame);
+  sceneAnimationFrame = 0;
+  const context = sceneBackgroundCanvas.getContext("2d", { alpha: true });
+  context.clearRect(0, 0, sceneBackgroundCanvas.width, sceneBackgroundCanvas.height);
+  if (animate) {
+    sceneLastFrameAt = 0;
+    drawLivingScene();
+  } else {
+    applyMusicReactivePulse(0);
+  }
+}
+
 function selectSceneTheme(scene, { persist = true } = {}) {
-  const selected = Object.prototype.hasOwnProperty.call(SCENE_THEMES, scene) ? scene : "aurora-peak";
+  const selected = Object.prototype.hasOwnProperty.call(SCENE_THEMES, scene) ? scene : "copenhagen-moonlight";
   document.body.dataset.sceneTheme = selected;
   sceneThemeOptions.forEach((option) => {
     const active = option.dataset.sceneTheme === selected;
@@ -4408,16 +4863,63 @@ function applyTerminalPreferences() {
   const cursorBlink = booleanPreference("agentWorkbenchTerminalCursorBlink", true);
   settingsTerminalFontSizeValue.textContent = `${fontSize} px`;
   settingsTerminalLineHeightValue.textContent = `${lineHeight.toFixed(2)}×`;
+  settingsTerminalPreview.style.setProperty("--preview-font-size", `${fontSize}px`);
+  settingsTerminalPreview.style.setProperty("--preview-line-height", String(lineHeight));
   for (const session of sessions.values()) {
     session.term.options.fontSize = fontSize;
     session.term.options.lineHeight = lineHeight;
     session.term.options.scrollback = scrollback;
     session.term.options.cursorBlink = cursorBlink;
     try {
-      session.fitAddon.fit();
+      fitTerminalPreservingScroll(session);
     } catch (error) {
     }
   }
+}
+
+function resetWorkbenchSettings() {
+  const preferenceKeys = [
+    "agentWorkbenchTheme",
+    "agentWorkbenchThemeSystem",
+    "agentWorkbenchAppearanceCategory",
+    "agentWorkbenchPdfMode",
+    "agentWorkbenchRememberWidths",
+    "agentWorkbenchAutoCollapsePanes",
+    "agentWorkbenchCompactTabs",
+    "agentWorkbenchShowTabEtas",
+    "agentWorkbenchDefaultAgent",
+    "agentWorkbenchGlobalCleanMode",
+    "agentWorkbenchAutoPreview",
+    "agentWorkbenchAgentNotifications",
+    "agentWorkbenchRecentFilesLimit",
+    "agentWorkbenchPixelPets",
+    "agentWorkbenchPixelPetChoice",
+    "agentWorkbenchPixelStatusLabels",
+    "agentWorkbenchTerminalFontSize",
+    "agentWorkbenchTerminalLineHeight",
+    "agentWorkbenchTerminalScrollback",
+    "agentWorkbenchTerminalCursorBlink",
+    "agentWorkbenchAutoOpenOutput",
+    "agentWorkbenchCompactOutputs",
+    "agentWorkbenchMetricsInterval",
+    "agentWorkbenchReduceMotion",
+    "agentWorkbenchMusicReactive",
+    "agentWorkbenchCinematicEffectStrength",
+    "agentWorkbenchCinematicPanelOpacity",
+    "agentWorkbenchSceneFrameRate",
+    "agentWorkbenchSceneTheme"
+  ];
+  preferenceKeys.forEach((key) => localStorage.removeItem(key));
+  Object.keys(localStorage)
+    .filter((key) => key.startsWith("agentWorkbenchTheme:"))
+    .forEach((key) => localStorage.removeItem(key));
+  setGlobalCleanMode(false, { persist: false });
+  initializeSettings();
+  initializeWorkbenchSettings();
+  restartSystemMetricsTimer();
+  updateAgentEta();
+  syncPixelMode(true);
+  showToast("Settings reset to defaults.");
 }
 
 function applyWorkbenchPreferences() {
@@ -4431,7 +4933,7 @@ function applyWorkbenchPreferences() {
     String(numericPreference("agentWorkbenchCinematicPanelOpacity", 55, 35, 94) / 100)
   );
   settingsCinematicEffectStrengthValue.textContent =
-    `${numericPreference("agentWorkbenchCinematicEffectStrength", 40, 0, 100)}%`;
+    `${numericPreference("agentWorkbenchCinematicEffectStrength", 60, 0, 100)}%`;
   settingsCinematicPanelOpacityValue.textContent =
     `${numericPreference("agentWorkbenchCinematicPanelOpacity", 55, 35, 94)}%`;
   syncSceneBackgroundPlayback();
@@ -4468,10 +4970,10 @@ function initializeWorkbenchSettings() {
   settingsCompactOutputs.checked = booleanPreference("agentWorkbenchCompactOutputs", true);
   settingsMetricsInterval.value = String(numericPreference("agentWorkbenchMetricsInterval", 5000, 2000, 10000));
   settingsReduceMotion.checked = booleanPreference("agentWorkbenchReduceMotion", false);
-  settingsMusicReactive.checked = booleanPreference("agentWorkbenchMusicReactive", false);
-  settingsCinematicEffectStrength.value = String(numericPreference("agentWorkbenchCinematicEffectStrength", 40, 0, 100));
+  settingsMusicReactive.checked = booleanPreference("agentWorkbenchMusicReactive", true);
+  settingsCinematicEffectStrength.value = String(numericPreference("agentWorkbenchCinematicEffectStrength", 60, 0, 100));
   settingsCinematicPanelOpacity.value = String(numericPreference("agentWorkbenchCinematicPanelOpacity", 55, 35, 94));
-  settingsSceneFrameRate.value = String(numericPreference("agentWorkbenchSceneFrameRate", 24, 15, 45));
+  settingsSceneFrameRate.value = String(numericPreference("agentWorkbenchSceneFrameRate", 30, 15, 45));
   const profile = {
     name: localStorage.getItem("agentWorkbenchProfileName") || "Alex",
     role: localStorage.getItem("agentWorkbenchProfileRole") || "",
@@ -4525,13 +5027,72 @@ function renderNotepadTodos() {
   }
 }
 
+function sketchSnapshot() {
+  return notepadSketchCanvas.toDataURL("image/png");
+}
+
+function updateSketchHistoryControls() {
+  notepadSketchUndo.disabled = notepadSketchUndoStack.length === 0;
+  notepadSketchRedo.disabled = notepadSketchRedoStack.length === 0;
+}
+
+function rememberSketchState() {
+  notepadSketchUndoStack.push(sketchSnapshot());
+  if (notepadSketchUndoStack.length > 30) notepadSketchUndoStack.shift();
+  notepadSketchRedoStack = [];
+  updateSketchHistoryControls();
+}
+
 function drawSavedSketch(dataUrl) {
   const context = notepadSketchCanvas.getContext("2d");
   context.clearRect(0, 0, notepadSketchCanvas.width, notepadSketchCanvas.height);
-  if (!dataUrl) return;
-  const image = new Image();
-  image.onload = () => context.drawImage(image, 0, 0, notepadSketchCanvas.width, notepadSketchCanvas.height);
-  image.src = dataUrl;
+  if (!dataUrl) return Promise.resolve();
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => {
+      context.globalCompositeOperation = "source-over";
+      context.drawImage(image, 0, 0, notepadSketchCanvas.width, notepadSketchCanvas.height);
+      resolve();
+    };
+    image.onerror = resolve;
+    image.src = dataUrl;
+  });
+}
+
+async function undoNotepadSketch() {
+  if (!notepadSketchUndoStack.length) return;
+  notepadSketchRedoStack.push(sketchSnapshot());
+  const previous = notepadSketchUndoStack.pop();
+  await drawSavedSketch(previous);
+  updateSketchHistoryControls();
+  queueNotepadSave();
+}
+
+async function redoNotepadSketch() {
+  if (!notepadSketchRedoStack.length) return;
+  notepadSketchUndoStack.push(sketchSnapshot());
+  const next = notepadSketchRedoStack.pop();
+  await drawSavedSketch(next);
+  updateSketchHistoryControls();
+  queueNotepadSave();
+}
+
+function setNotepadSketchTool(tool) {
+  notepadSketchTool = tool === "eraser" ? "eraser" : "pen";
+  const erasing = notepadSketchTool === "eraser";
+  notepadSketchPen.classList.toggle("active", !erasing);
+  notepadSketchPen.setAttribute("aria-pressed", String(!erasing));
+  notepadSketchEraser.classList.toggle("active", erasing);
+  notepadSketchEraser.setAttribute("aria-pressed", String(erasing));
+  notepadSketchCanvas.classList.toggle("eraser-active", erasing);
+}
+
+function selectNotepadSketchColor(color) {
+  notepadSketchColor.value = color;
+  notepadSketchSwatches.forEach((swatch) => {
+    swatch.classList.toggle("active", swatch.dataset.sketchColor.toLowerCase() === color.toLowerCase());
+  });
+  setNotepadSketchTool("pen");
 }
 
 async function saveNotepad() {
@@ -4568,7 +5129,10 @@ async function openNotepad() {
   notepadText.value = payload?.notes || "";
   notepadTodos = Array.isArray(payload?.todos) ? payload.todos : [];
   renderNotepadTodos();
-  drawSavedSketch(payload?.sketch || "");
+  await drawSavedSketch(payload?.sketch || "");
+  notepadSketchUndoStack = [];
+  notepadSketchRedoStack = [];
+  updateSketchHistoryControls();
   notepadSaveState.textContent = "Saved";
   requestAnimationFrame(() => notepadText.focus());
 }
@@ -4864,7 +5428,7 @@ async function runSshAuthentication(remote) {
   const term = new Terminal({
     allowProposedApi: false,
     allowTransparency: true,
-    convertEol: true,
+    convertEol: false,
     cursorBlink: true,
     fontFamily: '"SFMono-Regular", "SF Mono", Menlo, Consolas, monospace',
     fontSize: 10,
@@ -5035,10 +5599,11 @@ function renderHomeView() {
     homeWorkspaceGrid.appendChild(empty);
     return;
   }
-  for (const workspace of recent) {
+  for (const [index, workspace] of recent.entries()) {
     const card = document.createElement("button");
     card.className = "home-workspace-card";
     card.classList.toggle("active", workspace.id === activeWorkspaceId);
+    card.style.setProperty("--home-card-index", String(index));
     card.type = "button";
     card.title = `Open ${workspace.name}`;
     const icon = document.createElement("span");
@@ -5344,23 +5909,6 @@ function renderFileTree() {
   updateFileEmptyState();
   const workspace = activeWorkspace();
   if (workspace?.type === "ssh" && !isWorkspaceConnected(workspace)) return;
-  const openedHere = openedOutputPaths.filter((entry) => entry.workspaceId === activeWorkspaceId);
-  if (openedHere.length) {
-    const group = document.createElement("section");
-    group.className = "opened-output-files";
-    const heading = document.createElement("strong");
-    heading.textContent = "Opened outputs";
-    group.appendChild(heading);
-    for (const entry of openedHere) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.title = entry.relativePath;
-      button.innerHTML = `<span aria-hidden="true">↗</span><span>${escapeHtml(entry.name || entry.relativePath.split("/").pop())}</span>`;
-      button.addEventListener("click", () => previewWorkspaceFile(entry.workspaceId, entry.relativePath));
-      group.appendChild(button);
-    }
-    fileTree.appendChild(group);
-  }
   fileNodes.forEach((node) => fileTree.appendChild(createFileTreeNode(node, 0)));
 }
 
@@ -5957,7 +6505,6 @@ async function previewWorkspaceFile(workspaceId, relativePath) {
     ].slice(0, 20);
     localStorage.setItem("agentWorkbenchOpenedOutputs", JSON.stringify(openedOutputPaths));
     renderArtifactPreview(artifact, workspaceId, relativePath);
-    renderFileTree();
     if (cinematicModeEnabled) openOutputViewer(artifact, workspaceId);
   } catch (error) {
     showToast(error.message || String(error));
@@ -6081,7 +6628,7 @@ function renderWorkspaceAgentGrid() {
   requestAnimationFrame(() => {
     for (const session of workspaceSessions) {
       try {
-        session.fitAddon.fit();
+        fitTerminalPreservingScroll(session);
       } catch (error) {
       }
     }
@@ -6285,12 +6832,12 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   const term = new Terminal({
     allowProposedApi: false,
     allowTransparency: true,
-    convertEol: true,
+    convertEol: false,
     cursorBlink: booleanPreference("agentWorkbenchTerminalCursorBlink", true),
     fontFamily: '"SFMono-Regular", "SF Mono", Menlo, Consolas, monospace',
     fontSize: numericPreference("agentWorkbenchTerminalFontSize", 9, 8, 16),
     lineHeight: numericPreference("agentWorkbenchTerminalLineHeight", 1.15, 1, 1.5),
-    scrollOnUserInput: false,
+    scrollOnUserInput: true,
     scrollback: numericPreference("agentWorkbenchTerminalScrollback", 6000, 1000, 10000),
     theme: terminalThemeFromPalette()
   });
@@ -6334,18 +6881,18 @@ function renderAgentCard(slot, slotIndex, descriptor) {
   });
   term.onResize(({ cols, rows }) => api.resizeAgent(descriptor.id, cols, rows));
 
-  let terminalFitScheduled = false;
-  const observer = new ResizeObserver(() => {
-    if (terminalFitScheduled) return;
-    terminalFitScheduled = true;
-    requestAnimationFrame(() => {
-      terminalFitScheduled = false;
+  let terminalFitTimer = 0;
+  const scheduleTerminalFit = () => {
+    if (terminalFitTimer) window.clearTimeout(terminalFitTimer);
+    terminalFitTimer = window.setTimeout(() => {
+      terminalFitTimer = 0;
       try {
-        fitAddon.fit();
+        fitTerminalPreservingScroll(session);
       } catch (error) {
       }
-    });
-  });
+    }, 90);
+  };
+  const observer = new ResizeObserver(scheduleTerminalFit);
   observer.observe(terminalHost);
 
   const session = {
@@ -6359,6 +6906,12 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     term,
     fitAddon,
     observer,
+    terminalHost,
+    scheduleTerminalFit,
+    cancelTerminalFit: () => {
+      if (terminalFitTimer) window.clearTimeout(terminalFitTimer);
+      terminalFitTimer = 0;
+    },
     nameInput,
     tldrNode,
     statusCard,
@@ -6386,9 +6939,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
     notifiedApproval: false,
     finishNotified: descriptor.metadata.status === "done",
     modelDetectionBuffer: "",
-    pendingTerminalOutput: [],
-    pendingTerminalOutputBytes: 0,
-    terminalWriteScheduled: false,
+    pendingAgentSubmitTimer: null,
     terminalInputBuffer: ""
   };
   session.runtimeModel = descriptor.metadata.model && !/^(codex|claude|shell)$/i.test(descriptor.metadata.model)
@@ -6459,7 +7010,7 @@ function renderAgentCard(slot, slotIndex, descriptor) {
 
   requestAnimationFrame(() => {
     try {
-      fitAddon.fit();
+      fitTerminalPreservingScroll(session);
       term.focus();
     } catch (error) {
     }
@@ -6478,7 +7029,7 @@ function toggleAgentLayout(session, mode) {
   requestAnimationFrame(() => {
     for (const activeSession of sessions.values()) {
       try {
-        activeSession.fitAddon.fit();
+        fitTerminalPreservingScroll(activeSession);
       } catch (error) {
       }
     }
@@ -6498,7 +7049,7 @@ function focusAgentWindow(slotIndex) {
     updateAgentMaximizeControls();
     requestAnimationFrame(() => {
       try {
-        session.fitAddon.fit();
+        fitTerminalPreservingScroll(session);
         session.term.focus();
       } catch (error) {
       }
@@ -6797,11 +7348,7 @@ function updateAgentMetadata(session, metadata) {
   if (recentFooterWasHidden !== session.recentFooter.hidden) {
     requestAnimationFrame(() => {
       try {
-        const buffer = session.term.buffer.active;
-        const viewportY = buffer.viewportY;
-        const wasAtBottom = viewportY >= buffer.baseY;
-        session.fitAddon.fit();
-        if (!wasAtBottom) session.term.scrollToLine(viewportY);
+        fitTerminalPreservingScroll(session);
       } catch (error) {
       }
     });
@@ -6815,6 +7362,9 @@ async function stopAgent(id) {
   session.stoppingByUser = true;
   session.notifiedFailure = true;
   session.finishNotified = true;
+  if (session.pendingAgentSubmitTimer) window.clearTimeout(session.pendingAgentSubmitTimer);
+  session.pendingAgentSubmitTimer = null;
+  session.cancelTerminalFit?.();
   postPixelMessage({ type: "agentClosed", id: session.slotIndex + 1 });
   pixelKnownAgentIds.delete(session.slotIndex + 1);
   await api.killAgent(id);
@@ -6919,7 +7469,6 @@ async function refreshSystemMetrics() {
     storageUsageText.textContent = metrics.storageTotalBytes
       ? `${formatCompactBytes(metrics.storageUsedBytes)} / ${formatCompactBytes(metrics.storageTotalBytes)}`
       : "—";
-    gpuMetrics.title = metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : "";
     for (const gpu of metrics.gpus || []) {
       const item = document.createElement("span");
       item.className = "gpu-metric";
@@ -6941,53 +7490,23 @@ async function refreshSystemMetrics() {
       const userLines = Array.from(userMemory.entries())
         .sort((left, right) => (Number(right[1]) || 0) - (Number(left[1]) || 0))
         .map(([user, memoryUsedMiB]) => (
-          `${user} · ${Number.isFinite(memoryUsedMiB) ? formatMiB(memoryUsedMiB) : "usage unavailable"}`
+          `User: ${user} · Memory used: ${Number.isFinite(memoryUsedMiB) ? formatMiB(memoryUsedMiB) : "—"}`
         ));
       const utilization = Number.isFinite(gpu.utilizationPercent)
         ? `${Math.round(gpu.utilizationPercent)}%`
         : "—";
-      const memory = Number.isFinite(gpu.memoryUsedMiB) && Number.isFinite(gpu.memoryTotalMiB)
-        ? `${formatMiB(gpu.memoryUsedMiB)}/${formatMiB(gpu.memoryTotalMiB)}`
-        : Number.isFinite(gpu.memoryTotalMiB)
-          ? `—/${formatMiB(gpu.memoryTotalMiB)}`
-          : "—";
-      const visibleProcesses = processes.slice(0, 12);
-      const processLines = visibleProcesses.map((process) => {
-        const memory = Number.isFinite(process.memoryUsedMiB)
-          ? ` · ${formatMiB(process.memoryUsedMiB)}`
-          : "";
-        return `${process.user || "unknown"} · ${process.name || `PID ${process.pid}`}${memory}`;
-      });
-      const hiddenProcesses = processes.slice(visibleProcesses.length);
-      if (hiddenProcesses.length) {
-        const hiddenMemoryMiB = hiddenProcesses.reduce(
-          (total, process) => total + (Number(process.memoryUsedMiB) || 0),
-          0
-        );
-        processLines.push(
-          `+ ${hiddenProcesses.length} more process${hiddenProcesses.length === 1 ? "" : "es"}`
-          + (hiddenMemoryMiB > 0 ? ` · ${formatMiB(hiddenMemoryMiB)}` : "")
-        );
-      }
-      const processMetricsAvailable = gpu.processMetricsAvailable !== false;
+      const memoryUsed = Number.isFinite(gpu.memoryUsedMiB)
+        ? formatMiB(gpu.memoryUsedMiB)
+        : "—";
       const gpuTooltip = [
-        gpu.name || `GPU ${gpu.index}`,
-        `VRAM ${memory} · usage ${utilization}`,
-        userLines.length ? "Users:" : "",
-        ...userLines,
-        !userLines.length && processMetricsAvailable ? "No active compute users" : "",
-        !processMetricsAvailable
-          ? `Process ownership unavailable${gpu.processError ? `: ${gpu.processError}` : ""}`
-          : "",
-        processLines.length ? "Processes:" : "",
-        ...processLines,
-        metrics.gpuError ? `nvidia-smi: ${metrics.gpuError}` : ""
-      ].filter(Boolean).join("\n");
+        userLines.length ? userLines.join("\n") : `User: None · Memory used: ${memoryUsed}`,
+        `Utilization: ${utilization}`
+      ].join("\n");
       item.dataset.tooltip = gpuTooltip;
       item.tabIndex = 0;
       item.setAttribute("aria-label", gpuTooltip);
       item.classList.toggle("muted", !gpu.metricsAvailable && !Number.isFinite(gpu.utilizationPercent));
-      item.textContent = `GPU ${gpu.index} · memory ${memory} · usage ${utilization}`;
+      item.textContent = `GPU ${gpu.index} · memory ${memoryUsed} · usage ${utilization}`;
       gpuMetrics.appendChild(item);
     }
     if (metrics.source === "ssh" && !(metrics.gpus || []).length) {
@@ -7013,6 +7532,23 @@ async function refreshSystemMetrics() {
   }
 }
 
+function setSpotifyShuffleState(shuffling, { available = true } = {}) {
+  const shuffle = available && Boolean(shuffling);
+  const state = available ? (shuffle ? "on" : "off") : "unavailable";
+  const visibleState = available ? (shuffle ? "ON" : "OFF") : "—";
+  const actionLabel = shuffle
+    ? "Shuffle is on. Turn shuffle off"
+    : available
+      ? "Shuffle is off. Turn shuffle on"
+      : "Shuffle is unavailable";
+  spotifyShuffleButton.classList.toggle("active", shuffle);
+  spotifyShuffleButton.dataset.shuffleState = state;
+  spotifyShuffleButton.setAttribute("aria-pressed", String(shuffle));
+  spotifyShuffleButton.title = actionLabel;
+  spotifyShuffleButton.setAttribute("aria-label", actionLabel);
+  spotifyShuffleState.textContent = visibleState;
+}
+
 async function refreshSpotifyStatus() {
   if (spotifyRefreshBusy) return;
   spotifyRefreshBusy = true;
@@ -7030,8 +7566,7 @@ async function refreshSpotifyStatus() {
       spotifyArtwork.hidden = true;
       spotifyNowPlaying.classList.remove("playing");
       document.body.classList.remove("music-playing");
-      spotifyShuffleButton.classList.remove("active");
-      spotifyShuffleButton.setAttribute("aria-pressed", "false");
+      setSpotifyShuffleState(false);
       return;
     }
     if (spotifyTrackName.textContent !== status.name) spotifyTrackName.textContent = status.name;
@@ -7064,11 +7599,7 @@ async function refreshSpotifyStatus() {
     const actionLabel = playing ? "Pause" : "Play";
     spotifyPlayPauseButton.title = actionLabel;
     spotifyPlayPauseButton.setAttribute("aria-label", actionLabel);
-    const shuffle = Boolean(status.shuffling);
-    spotifyShuffleButton.classList.toggle("active", shuffle);
-    spotifyShuffleButton.setAttribute("aria-pressed", String(shuffle));
-    spotifyShuffleButton.title = shuffle ? "Turn shuffle off" : "Turn shuffle on";
-    spotifyShuffleButton.setAttribute("aria-label", spotifyShuffleButton.title);
+    setSpotifyShuffleState(status.shuffling);
   } catch (error) {
     spotifyNowPlaying.hidden = false;
     spotifyNowPlaying.classList.add("no-track");
@@ -7076,6 +7607,7 @@ async function refreshSpotifyStatus() {
     spotifyTrackName.textContent = "Spotify";
     spotifyTrackDetail.textContent = "Open Spotify";
     document.body.classList.remove("music-playing");
+    setSpotifyShuffleState(false, { available: false });
   } finally {
     spotifyRefreshBusy = false;
   }
@@ -7136,21 +7668,27 @@ function refreshTitlebarTime() {
   applyPixelSkyPhase(now);
 }
 
-function renderCalendar(now = new Date()) {
-  calendarMonth.textContent = new Intl.DateTimeFormat([], { month: "long", year: "numeric" }).format(now);
-  calendarFullDate.textContent = new Intl.DateTimeFormat([], {
+function renderCalendar(cursor = calendarCursor, today = new Date()) {
+  calendarCursor = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  calendarMonth.textContent = new Intl.DateTimeFormat([], { month: "long", year: "numeric" }).format(calendarCursor);
+  const isCurrentMonth =
+    calendarCursor.getFullYear() === today.getFullYear()
+    && calendarCursor.getMonth() === today.getMonth();
+  calendarFullDate.textContent = isCurrentMonth
+    ? new Intl.DateTimeFormat([], {
     weekday: "long", month: "long", day: "numeric"
-  }).format(now);
+    }).format(today)
+    : `${new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 0).getDate()} days`;
   calendarGrid.replaceChildren();
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const first = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
+  const days = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 0).getDate();
   for (let index = 0; index < first.getDay(); index += 1) {
     calendarGrid.appendChild(document.createElement("span"));
   }
   for (let day = 1; day <= days; day += 1) {
     const cell = document.createElement("b");
     cell.textContent = String(day);
-    cell.classList.toggle("today", day === now.getDate());
+    cell.classList.toggle("today", isCurrentMonth && day === today.getDate());
     calendarGrid.appendChild(cell);
   }
 }
@@ -7160,7 +7698,7 @@ async function refreshPowerStatus() {
   titlebarBattery.hidden = !status.available;
   if (!status.available) return;
   const percent = Math.max(0, Math.min(100, Number(status.percent) || 0));
-  titlebarBatteryFill.setAttribute("width", String(10.8 * percent / 100));
+  titlebarBatteryFill.setAttribute("width", String(19 * percent / 100));
   const charging = Boolean(status.charging);
   const charged = Boolean(status.charged);
   titlebarBatteryText.textContent = `${Math.round(percent)}%`;
@@ -7248,6 +7786,7 @@ function setupPanelResizing() {
           && rawNext <= collapseThreshold
         ) {
           if (!liveCollapsed) setCollapsed(true);
+          scheduleActiveTerminalFits();
           return;
         }
         if (liveCollapsed) setCollapsed(false);
@@ -7255,6 +7794,7 @@ function setupPanelResizing() {
         if (booleanPreference("agentWorkbenchRememberWidths", true)) {
           localStorage.setItem(storageKey, String(Math.round(value)));
         }
+        scheduleActiveTerminalFits();
       };
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
@@ -7298,6 +7838,7 @@ function setupPanelResizing() {
         if (booleanPreference("agentWorkbenchRememberWidths", true)) {
           localStorage.setItem(storageKey, String(Math.round(value)));
         }
+        scheduleActiveTerminalFits();
       };
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
@@ -7429,10 +7970,12 @@ notepadBackdrop.addEventListener("click", (event) => {
 });
 notepadText.addEventListener("input", queueNotepadSave);
 notepadSectionButtons.forEach((button) => button.addEventListener("click", () => {
+  notepadActiveSection = button.dataset.notepadSection;
   notepadSectionButtons.forEach((item) => item.classList.toggle("active", item === button));
   for (const [name, section] of Object.entries(notepadSections)) {
-    section.hidden = name !== button.dataset.notepadSection;
+    section.hidden = name !== notepadActiveSection;
   }
+  if (notepadActiveSection === "sketch") requestAnimationFrame(() => notepadSketchCanvas.focus());
 }));
 notepadTodoForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -7444,7 +7987,9 @@ notepadTodoForm.addEventListener("submit", (event) => {
   queueNotepadSave();
 });
 notepadSketchCanvas.addEventListener("pointerdown", (event) => {
+  rememberSketchState();
   notepadSketchDrawing = true;
+  notepadSketchCanvas.focus();
   notepadSketchCanvas.setPointerCapture(event.pointerId);
   const bounds = notepadSketchCanvas.getBoundingClientRect();
   notepadSketchLastPoint = {
@@ -7460,6 +8005,7 @@ notepadSketchCanvas.addEventListener("pointermove", (event) => {
     y: (event.clientY - bounds.top) * notepadSketchCanvas.height / bounds.height
   };
   const context = notepadSketchCanvas.getContext("2d");
+  context.globalCompositeOperation = notepadSketchTool === "eraser" ? "destination-out" : "source-over";
   context.strokeStyle = notepadSketchColor.value;
   context.lineWidth = Number(notepadSketchSize.value) * notepadSketchCanvas.width / bounds.width;
   context.lineCap = "round";
@@ -7478,8 +8024,35 @@ const finishNotepadStroke = () => {
 notepadSketchCanvas.addEventListener("pointerup", finishNotepadStroke);
 notepadSketchCanvas.addEventListener("pointercancel", finishNotepadStroke);
 notepadSketchClear.addEventListener("click", () => {
+  rememberSketchState();
   notepadSketchCanvas.getContext("2d").clearRect(0, 0, notepadSketchCanvas.width, notepadSketchCanvas.height);
   queueNotepadSave();
+});
+notepadSketchPen.addEventListener("click", () => setNotepadSketchTool("pen"));
+notepadSketchEraser.addEventListener("click", () => setNotepadSketchTool("eraser"));
+notepadSketchSwatches.forEach((swatch) => {
+  swatch.addEventListener("click", () => selectNotepadSketchColor(swatch.dataset.sketchColor));
+});
+notepadSketchColor.addEventListener("input", () => selectNotepadSketchColor(notepadSketchColor.value));
+notepadSketchSize.addEventListener("input", () => {
+  notepadSketchSizeOutput.value = `${notepadSketchSize.value} px`;
+});
+notepadSketchUndo.addEventListener("click", () => undoNotepadSketch());
+notepadSketchRedo.addEventListener("click", () => redoNotepadSketch());
+window.addEventListener("keydown", (event) => {
+  if (
+    notepadBackdrop.hidden
+    || notepadActiveSection !== "sketch"
+    || !event.metaKey
+    || event.altKey
+    || event.key.toLowerCase() !== "z"
+  ) return;
+  event.preventDefault();
+  if (event.shiftKey) {
+    redoNotepadSketch();
+  } else {
+    undoNotepadSketch();
+  }
 });
 cinematicModeButton.addEventListener("click", () => setCinematicMode(!cinematicModeEnabled));
 cinematicExitButton.addEventListener("click", () => setCinematicMode(false));
@@ -7488,9 +8061,7 @@ agentGrid.addEventListener("pointerdown", beginCinematicPaneResize);
 window.addEventListener("pointermove", updateCinematicPaneResize);
 window.addEventListener("pointerup", finishCinematicPaneResize);
 window.addEventListener("pointercancel", finishCinematicPaneResize);
-window.addEventListener("resize", () => {
-  if (cinematicModeEnabled) applyCinematicPaneSize();
-});
+window.addEventListener("resize", handleWindowResize);
 pixelModeButton.addEventListener("click", () => {
   if (!pixelModeEnabled && cinematicModeEnabled) setCinematicMode(false);
   setPixelMode(!pixelModeEnabled);
@@ -7500,16 +8071,6 @@ globalZenButton.addEventListener("click", () => setGlobalCleanMode(!globalCleanM
 cinematicPromptDock.addEventListener("submit", (event) => {
   event.preventDefault();
   submitCinematicPrompt();
-});
-cinematicMentionButton.addEventListener("click", () => {
-  const cursor = cinematicPromptInput.selectionStart ?? cinematicPromptInput.value.length;
-  const prefix = cursor > 0 && !/\s$/.test(cinematicPromptInput.value.slice(0, cursor)) ? " " : "";
-  cinematicPromptInput.setRangeText(`${prefix}@`, cursor, cursor, "end");
-  cinematicPromptInput.focus();
-  const mentionEnd = cursor + prefix.length + 1;
-  cinematicPromptInput.setSelectionRange(mentionEnd, mentionEnd);
-  cinematicMentionIndex = 0;
-  renderCinematicMentionMenu(true);
 });
 cinematicResultsButton.addEventListener("click", async () => {
   if (activeOutputArtifact) {
@@ -7656,8 +8217,18 @@ notificationButton.addEventListener("contextmenu", (event) => {
 });
 titlebarTime.addEventListener("click", (event) => {
   event.stopPropagation();
-  renderCalendar();
+  const today = new Date();
+  calendarCursor = new Date(today.getFullYear(), today.getMonth(), 1);
+  renderCalendar(calendarCursor, today);
   calendarPopover.hidden = !calendarPopover.hidden;
+});
+calendarPreviousMonth.addEventListener("click", (event) => {
+  event.stopPropagation();
+  renderCalendar(new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1));
+});
+calendarNextMonth.addEventListener("click", (event) => {
+  event.stopPropagation();
+  renderCalendar(new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1));
 });
 openSettingsButton.addEventListener("click", openSettings);
 homeButton.addEventListener("click", () => setHomeView(homeView.hidden));
@@ -7675,7 +8246,13 @@ homeAddWorkspaceButton.addEventListener("click", () => {
   setHomeView(false);
   setWorkspaceAddMenu(true);
 });
+homeCommandPaletteButton.addEventListener("click", () => {
+  setHomeView(false);
+  openCommandPalette();
+});
+homeReturnWorkspaceButton.addEventListener("click", () => setHomeView(false));
 closeSettingsButton.addEventListener("click", closeSettings);
+settingsResetDefaultsButton.addEventListener("click", resetWorkbenchSettings);
 settingsOverlay.addEventListener("click", (event) => {
   if (event.target === settingsOverlay) closeSettings();
 });
@@ -7864,7 +8441,7 @@ window.addEventListener("message", (event) => {
     return;
   }
   if (message.type === "pixelPetSelected") {
-    openPixelPetDetail(message.pet, message.floor);
+    openPixelPetDetail(message.pet, message.floor, message.anchor);
     return;
   }
   if (message.type === "pixelRoomState") {
@@ -7922,7 +8499,7 @@ api.onAgentData(({ id, data }) => {
   } else {
     const pending = pendingTerminalData.get(id) || [];
     pending.push(data);
-    pendingTerminalData.set(id, pending.slice(-120));
+    pendingTerminalData.set(id, pending);
   }
 });
 api.onAgentExit(({ id, code, signal }) => {
@@ -7938,8 +8515,10 @@ api.onAgentExit(({ id, code, signal }) => {
   session.etaPaused = false;
   session.etaPausedSeconds = null;
   session.etaDeadline = null;
-  session.term.writeln("");
-  session.term.writeln(`\x1b[38;5;244m[process exited: ${signal || code || 0}]\x1b[0m`);
+  queueTerminalOutput(
+    session,
+    `\r\n\x1b[38;5;244m[process exited: ${signal || code || 0}]\x1b[0m\r\n`
+  );
   session.reconnectBanner.hidden = !(session.descriptor?.remote && finalStatus === "error");
   updateAgentStatusCard(session);
   if (finalStatus === "error" && !session.notifiedFailure) {
@@ -8028,6 +8607,34 @@ api.onWorkspaceMenuAction(async (payload) => {
 });
 
 window.addEventListener("keydown", (event) => {
+  const editableTarget = event.target instanceof Element
+    && Boolean(event.target.closest("input, textarea, select, [contenteditable='true']"));
+  if (
+    !homeView.hidden
+    && (event.metaKey || event.ctrlKey)
+    && !event.shiftKey
+    && !event.altKey
+    && event.key.toLowerCase() === "o"
+  ) {
+    event.preventDefault();
+    homeAddWorkspaceButton.click();
+    return;
+  }
+  if (
+    pixelModeEnabled
+    && !editableTarget
+    && !event.metaKey
+    && !event.ctrlKey
+    && !event.altKey
+    && !event.shiftKey
+    && (event.key === "ArrowUp" || event.key === "ArrowDown")
+    && settingsOverlay.hidden
+    && notepadBackdrop.hidden
+  ) {
+    event.preventDefault();
+    traversePixelTower(event.key === "ArrowUp" ? 1 : -1);
+    return;
+  }
   if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.code === "Space") {
     event.preventDefault();
     toggleRunPauseAll();
@@ -8075,6 +8682,11 @@ window.addEventListener("keydown", (event) => {
     return;
   }
   if (event.key === "Escape") {
+    if (!homeView.hidden) {
+      event.preventDefault();
+      setHomeView(false);
+      return;
+    }
     if (!notificationPanel.hidden) {
       setNotificationPanel(false);
       return;
@@ -8114,7 +8726,12 @@ window.addEventListener("beforeunload", () => {
   if (titlebarClockTimer) clearInterval(titlebarClockTimer);
   if (powerStatusTimer) clearInterval(powerStatusTimer);
   if (etaTimer) clearInterval(etaTimer);
-  for (const session of sessions.values()) session.observer.disconnect();
+  if (windowResizeFrame) cancelAnimationFrame(windowResizeFrame);
+  if (windowResizeSettleTimer) clearTimeout(windowResizeSettleTimer);
+  for (const session of sessions.values()) {
+    session.cancelTerminalFit?.();
+    session.observer.disconnect();
+  }
 });
 
 document.addEventListener("pointerdown", (event) => {

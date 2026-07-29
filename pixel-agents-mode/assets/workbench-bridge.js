@@ -14,6 +14,7 @@
   let selectedPet = "hamster";
   let petClickSequence = 0;
   let petPointerSnapshot = null;
+  let petPointerAnchor = null;
   const petNames = [
     "Claudio",
     "Nibbles",
@@ -336,6 +337,7 @@
             petType: pet.petType,
             state: pet.state,
           },
+          anchor: petPointerAnchor,
         },
       },
       "*",
@@ -384,6 +386,11 @@
     (event) => {
       if (event.target?.tagName !== "CANVAS") return;
       petPointerSnapshot = petSpeechSnapshot();
+      const bounds = event.target.getBoundingClientRect();
+      petPointerAnchor = {
+        x: Math.max(0, Math.min(1, (event.clientX - bounds.left) / Math.max(1, bounds.width))),
+        y: Math.max(0, Math.min(1, (event.clientY - bounds.top) / Math.max(1, bounds.height))),
+      };
     },
     true,
   );

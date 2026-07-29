@@ -157,7 +157,14 @@ button {
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.2;
+  stroke-width: 1.35;
+}
+
+.battery-terminal {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2;
 }
 
 .battery-fill {
@@ -166,8 +173,9 @@ button {
 
 .battery-charge {
   fill: var(--theme-bg, #11151b);
-  stroke: color-mix(in srgb, var(--theme-bg, #11151b) 82%, transparent);
-  stroke-width: 0.35;
+  stroke: var(--theme-bg, #11151b);
+  stroke-linejoin: round;
+  stroke-width: 0.65;
 }
 
 .battery-charge[hidden] {
@@ -175,12 +183,12 @@ button {
 }
 
 .titlebar-battery.charging {
-  color: var(--theme-accent, #74d3a3);
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--theme-accent, #74d3a3) 45%, transparent));
+  color: var(--theme-text, #f5f7fa);
+  filter: none;
 }
 
 .titlebar-battery.charged {
-  color: var(--theme-status, #74d3a3);
+  color: var(--theme-text, #f5f7fa);
 }
 
 .titlebar-battery strong {
@@ -772,8 +780,7 @@ body.is-resizing .resize-handle::after {
   padding: 5px 3px 3px 7px;
 }
 
-.terminal-host .xterm,
-.terminal-host .xterm-viewport {
+.terminal-host .xterm {
   height: 100%;
 }
 
@@ -4952,6 +4959,35 @@ body.reduce-motion .workspace-editor-tab.active {
   stroke: none;
 }
 
+.spotify-shuffle-control {
+  column-gap: 2px;
+  width: 42px;
+}
+
+.spotify-shuffle-state {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  opacity: 0.62;
+}
+
+.spotify-shuffle-control[data-shuffle-state="on"] {
+  --button-hover-contour: #1ed760;
+  color: #1ed760;
+}
+
+.spotify-shuffle-control[data-shuffle-state="on"] .spotify-shuffle-state {
+  opacity: 1;
+  text-shadow: 0 0 5px color-mix(in srgb, #1ed760 45%, transparent);
+}
+
+.spotify-shuffle-control[data-shuffle-state="unavailable"] {
+  color: var(--theme-muted);
+  opacity: 0.48;
+}
+
 .spotify-pause-icon {
   display: none;
 }
@@ -7521,7 +7557,7 @@ html[data-appearance-mode="pixelized"] :is(
     ),
     var(--theme-bg);
   inset: var(--titlebar-height) 0 var(--statusbar-height);
-  overflow: auto;
+  overflow: hidden;
   position: absolute;
   z-index: 180;
 }
@@ -8320,9 +8356,9 @@ html[data-appearance-mode="pixelized"] .gpu-metric[data-tooltip]::after {
 
 .workspace-editor-tab .agent-eta > span.has-agent-face::before {
   background-image: var(--agent-face);
-  background-position: 0 -6px;
+  background-position: center 38%;
   background-repeat: no-repeat;
-  background-size: 126px 108px;
+  background-size: 18px 24px;
   border-radius: 3px;
   content: "";
   flex: 0 0 18px;
@@ -9677,11 +9713,12 @@ html[data-appearance-tone="light"] :is(
 }
 
 .editor-tab.workspace-editor-tab:hover .workspace-tab-shape-fill {
-  fill: color-mix(in srgb, var(--theme-hover) 62%, transparent);
+  fill: transparent;
 }
 
 .editor-tab.workspace-editor-tab:hover .workspace-tab-shape-edge {
   opacity: 1;
+  stroke: color-mix(in srgb, var(--theme-accent) 78%, var(--theme-border));
 }
 
 .editor-tab.workspace-editor-tab.active .workspace-tab-shape-fill {
@@ -9725,6 +9762,16 @@ html[data-appearance-mode="pixelized"] .editor-tab.workspace-editor-tab.active {
   margin: 0 0 0 10px;
   padding: 0 0 4px;
   width: 38px;
+}
+
+#fileResizeHandle {
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0 37px,
+      color-mix(in srgb, var(--theme-border) 78%, var(--theme-bg)) 37px 100%
+    );
+  border-left: 0;
 }
 
 /* Give each agent pane a distinct frame at full-window sizes. */
@@ -10080,14 +10127,15 @@ html[data-appearance-mode="pixelized"] .pixel-pet-detail {
 /* Living scene themes and the focused, translucent Cinematic workspace. */
 .scene-background {
   background: #071016;
-  filter: brightness(0.82) saturate(0.98);
+  filter: brightness(0.93) saturate(1.01);
   height: 100%;
   inset: 0;
   object-fit: cover;
   opacity: 0;
   pointer-events: none;
   position: fixed;
-  transition: opacity 280ms ease;
+  transform: none;
+  transition: opacity 420ms ease;
   width: 100%;
   z-index: 0;
 }
@@ -10291,8 +10339,8 @@ body[data-scene-theme="sunset"] .scene-atmosphere::after {
 
 body.scene-background-active::before {
   background:
-    linear-gradient(180deg, rgba(4, 8, 12, 0.13), rgba(4, 8, 12, 0.3)),
-    radial-gradient(circle at 50% 42%, transparent 0 38%, rgba(2, 5, 8, 0.22) 100%);
+    linear-gradient(180deg, rgba(4, 8, 12, 0.045), rgba(4, 8, 12, 0.16)),
+    radial-gradient(circle at 50% 42%, transparent 0 48%, rgba(2, 5, 8, 0.12) 100%);
   content: "";
   inset: 0;
   pointer-events: none;
@@ -10471,7 +10519,7 @@ body.music-playing .cinematic-mode-button svg {
   padding: 6px 7px 6px 13px;
   position: absolute;
   transform: translateX(-50%);
-  width: min(620px, calc(100% - 72px));
+  width: min(700px, calc(100% - 72px));
   z-index: 34;
 }
 
@@ -10487,6 +10535,10 @@ body.music-playing .cinematic-mode-button svg {
   display: none !important;
 }
 
+.cinematic-prompt-dock[hidden] {
+  display: none !important;
+}
+
 .cinematic-mention-menu {
   backdrop-filter: blur(22px) saturate(1.2);
   background: rgba(14, 20, 26, 0.86);
@@ -10497,7 +10549,7 @@ body.music-playing .cinematic-mode-button svg {
   display: grid;
   gap: 2px;
   left: 0;
-  max-height: 246px;
+  max-height: 206px;
   overflow-y: auto;
   padding: 5px;
   position: absolute;
@@ -10544,10 +10596,10 @@ body.music-playing .cinematic-mode-button svg {
 }
 
 .cinematic-mention-choice.has-profile {
-  gap: 10px;
-  grid-template-columns: 42px minmax(0, 1fr) max-content;
-  min-height: 58px;
-  padding: 7px 9px;
+  gap: 6px;
+  grid-template-columns: 26px minmax(0, 1fr) max-content;
+  min-height: 34px;
+  padding: 3px 7px;
 }
 
 .cinematic-mention-avatar {
@@ -10555,16 +10607,15 @@ body.music-playing .cinematic-mode-button svg {
   background-repeat: no-repeat;
   background-size: cover;
   border: 1px solid color-mix(in srgb, var(--theme-accent) 56%, rgba(255, 255, 255, 0.18));
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  height: 40px;
+  height: 24px;
   image-rendering: pixelated;
-  width: 40px;
+  width: 24px;
 }
 
 .cinematic-mention-profile {
   display: grid;
-  gap: 2px;
   min-width: 0;
 }
 
@@ -10575,7 +10626,7 @@ body.music-playing .cinematic-mode-button svg {
 
 .cinematic-mention-profile span {
   color: #ffffff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 650;
 }
 
@@ -10583,8 +10634,8 @@ body.music-playing .cinematic-mode-button svg {
   border: 1px solid color-mix(in srgb, var(--theme-accent) 42%, rgba(255, 255, 255, 0.14));
   border-radius: 999px;
   color: color-mix(in srgb, var(--theme-accent) 78%, #ffffff);
-  font: 750 8px/1 var(--mono);
-  padding: 5px 7px;
+  font: 750 7px/1 var(--mono);
+  padding: 4px 6px;
   text-transform: uppercase;
 }
 
@@ -10636,7 +10687,36 @@ body.cinematic-mode .app-shell {
 }
 
 body.cinematic-mode .titlebar {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  display: block !important;
+  height: 0;
+  inset: 0;
+  min-height: 0;
+  padding: 0;
+  pointer-events: none;
+  position: fixed;
+  z-index: 79;
+}
+
+body.cinematic-mode .titlebar > :not(.titlebar-spotify) {
   display: none !important;
+}
+
+body.cinematic-mode .titlebar-spotify {
+  -webkit-app-region: no-drag;
+  backdrop-filter: blur(18px) saturate(1.12);
+  background: rgba(8, 12, 16, 0.62);
+  border-radius: 10px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.24);
+  height: 34px;
+  left: 14px;
+  padding: 0 7px;
+  pointer-events: auto;
+  position: fixed;
+  top: 12px;
+  width: min(319px, calc(100vw - 116px));
 }
 
 .cinematic-exit-button[hidden],
@@ -10732,13 +10812,13 @@ body.cinematic-mode .agent-stage {
   background: transparent !important;
   grid-column: 1;
   grid-template-rows: minmax(0, 1fr);
-  padding: 54px 72px 112px;
+  padding: 44px 58px 102px;
 }
 
 body.cinematic-mode .agent-grid {
   align-content: center;
   background: transparent !important;
-  gap: 34px 40px;
+  gap: 26px 30px;
   grid-template-columns: repeat(2, minmax(0, var(--cinematic-agent-width, 600px)));
   grid-template-rows: repeat(2, minmax(0, var(--cinematic-agent-height, 285px)));
   justify-content: center;
@@ -10747,13 +10827,18 @@ body.cinematic-mode .agent-grid {
 }
 
 body.cinematic-mode .agent-grid[data-layout-count] .agent-slot {
-  display: block;
+  display: grid;
+}
+
+body.cinematic-mode .agent-card {
+  height: 100%;
+  min-height: 0;
 }
 
 body.cinematic-mode .agent-slot,
 body.cinematic-mode .agent-slot.empty {
-  backdrop-filter: blur(18px) saturate(0.92);
-  background: rgba(18, 27, 33, 0.5) !important;
+  backdrop-filter: blur(12px) saturate(1.02);
+  background: rgba(18, 27, 33, 0.66) !important;
   border: 0;
   border-radius: 11px;
   box-shadow:
@@ -10862,35 +10947,12 @@ body.cinematic-resizing .agent-slot {
     0 20px 52px rgba(0, 0, 0, 0.32),
     0 0 20px color-mix(in srgb, var(--agent-color) 30%, transparent),
     inset 0 0 0 1px color-mix(in srgb, var(--agent-color) 28%, transparent);
-  transform: scale(1.004);
 }
 
 body.cinematic-resizing .cinematic-agent-resize-handle {
   color: var(--agent-color);
   opacity: 1;
   scale: 1.22;
-}
-
-body.cinematic-resize-settling .agent-slot {
-  animation: cinematic-pane-settle 480ms cubic-bezier(0.22, 1.45, 0.36, 1);
-}
-
-body.cinematic-resize-settling .agent-slot:nth-child(2) {
-  animation-delay: 28ms;
-}
-
-body.cinematic-resize-settling .agent-slot:nth-child(3) {
-  animation-delay: 56ms;
-}
-
-body.cinematic-resize-settling .agent-slot:nth-child(4) {
-  animation-delay: 84ms;
-}
-
-@keyframes cinematic-pane-settle {
-  0% { transform: scale(1); }
-  48% { transform: scale(1.014); }
-  100% { transform: scale(1); }
 }
 
 body.cinematic-mode .agent-card,
@@ -10908,12 +10970,8 @@ body.cinematic-mode .terminal-host > .xterm {
 }
 
 body.cinematic-mode .terminal-host .xterm-viewport {
-  bottom: 0 !important;
-  height: auto !important;
-  right: 4px !important;
   scrollbar-color: color-mix(in srgb, var(--agent-color) 48%, transparent) transparent;
   scrollbar-width: thin;
-  top: 7px !important;
 }
 
 body.cinematic-mode .terminal-host .xterm-viewport::-webkit-scrollbar {
@@ -10949,32 +11007,39 @@ body.cinematic-mode .agent-checklist-item.working .agent-checklist-marker {
 }
 
 body.cinematic-mode .agent-slot.clean-mode .agent-clean-view {
-  gap: 10px;
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-  padding: 14px 16px 16px;
+  gap: 11px;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+  padding: 17px 19px 18px;
 }
 
-body.cinematic-mode .agent-clean-heading {
+body.cinematic-mode .agent-current-task-indicator {
   grid-row: 1;
 }
 
-body.cinematic-mode .agent-clean-checklist {
+body.cinematic-mode .agent-clean-heading {
   grid-row: 2;
+}
+
+body.cinematic-mode .agent-clean-checklist {
+  grid-row: 3;
   max-height: 118px;
 }
 
 body.cinematic-mode .agent-clean-files {
   align-self: start;
-  grid-row: 3;
+  grid-row: 4;
 }
 
 body.cinematic-mode .agent-clean-eta-row {
-  grid-row: 4;
+  grid-row: 5;
   min-height: 38px;
 }
 
 body.cinematic-mode .agent-clean-compose {
-  grid-row: 5;
+  align-items: center;
+  display: grid;
+  grid-row: 6;
+  grid-template-columns: minmax(0, 1fr) 40px 40px;
 }
 
 body.cinematic-mode .agent-card-header {
@@ -10983,6 +11048,37 @@ body.cinematic-mode .agent-card-header {
   border: 0 !important;
   border-bottom-color: transparent;
   box-shadow: none !important;
+  min-height: 40px;
+}
+
+body.cinematic-mode .agent-name-input {
+  font-size: 13px;
+}
+
+body.cinematic-mode .agent-clean-heading {
+  font-size: 10px;
+  line-height: 18px;
+}
+
+body.cinematic-mode .agent-checklist-copy {
+  font-size: 10px;
+}
+
+body.cinematic-mode .agent-checklist-eta,
+body.cinematic-mode .agent-clean-eta-row {
+  font-size: 9px;
+}
+
+body.cinematic-mode .agent-current-task-indicator > strong,
+body.cinematic-mode .agent-checklist-copy,
+body.cinematic-mode .agent-clean-eta-row.has-output-message .agent-clean-eta-text {
+  color: rgba(247, 250, 252, 0.94) !important;
+}
+
+body.cinematic-mode .agent-checklist-eta,
+body.cinematic-mode .agent-card-header .agent-action,
+body.cinematic-mode .agent-state-chip {
+  color: rgba(235, 241, 244, 0.7) !important;
 }
 
 body.cinematic-mode .agent-card-header .agent-action {
@@ -11118,9 +11214,18 @@ body.reduce-motion .cinematic-mode-button svg {
 }
 
 .calendar-popover header {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  margin-bottom: 13px;
+}
+
+.calendar-popover header > div {
   display: grid;
   gap: 4px;
-  margin-bottom: 13px;
+  min-width: 0;
+  text-align: center;
 }
 
 .calendar-popover header strong {
@@ -11130,6 +11235,27 @@ body.reduce-motion .cinematic-mode-button svg {
 .calendar-popover header span {
   color: var(--theme-muted);
   font: 500 10px/1.2 var(--sans);
+}
+
+.calendar-popover header button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  color: var(--theme-muted);
+  display: flex;
+  font: 500 22px/1 var(--sans);
+  height: 28px;
+  justify-content: center;
+  padding: 0 0 2px;
+  width: 28px;
+}
+
+.calendar-popover header button:hover,
+.calendar-popover header button:focus-visible {
+  background: var(--theme-hover);
+  color: var(--theme-text);
+  outline: 0;
 }
 
 .calendar-weekdays,
@@ -11221,10 +11347,7 @@ body.reduce-motion .cinematic-mode-button svg {
 }
 
 .workspace-editor-tab .agent-eta > span.has-agent-face {
-  background-image: var(--agent-face);
-  background-position: 2px 50%;
-  background-repeat: no-repeat;
-  background-size: 18px 18px;
+  background-image: none;
   color: var(--theme-muted);
   font: 700 8px/1 var(--mono);
   height: 20px;
@@ -11336,8 +11459,87 @@ body.reduce-motion .cinematic-mode-button svg {
   width: 4px !important;
 }
 
+.pixel-tower-antenna {
+  background:
+    linear-gradient(
+      90deg,
+      #53677d 0 25%,
+      #b8cce0 25% 50%,
+      #8097ad 50% 75%,
+      #394b5f 75% 100%
+    );
+  box-shadow:
+    -1px 0 0 #0a111b,
+    1px 0 0 rgba(194, 218, 238, 0.24);
+  height: 54px;
+  left: 50%;
+  position: absolute;
+  top: -120px;
+  transform: translateX(-50%);
+  width: 4px;
+  z-index: 4;
+}
+
+.pixel-tower-antenna::before {
+  background: #ff7667;
+  border: 2px solid #2b1820;
+  box-shadow:
+    0 0 0 2px rgba(255, 118, 103, 0.16),
+    0 0 10px rgba(255, 92, 75, 0.54);
+  content: "";
+  height: 7px;
+  left: 50%;
+  position: absolute;
+  top: -8px;
+  transform: translateX(-50%);
+  width: 7px;
+}
+
+.pixel-tower-antenna::after {
+  background: #52667b;
+  clip-path: polygon(43% 0, 57% 0, 100% 100%, 0 100%);
+  content: "";
+  height: 20px;
+  left: 50%;
+  position: absolute;
+  top: 45px;
+  transform: translateX(-50%);
+  width: 28px;
+}
+
+.pixel-tower-antenna > span {
+  background: #849bb1;
+  box-shadow:
+    0 13px 0 #657a8f,
+    0 26px 0 #4d6074;
+  height: 3px;
+  left: 50%;
+  position: absolute;
+  top: 12px;
+  transform: translateX(-50%);
+  width: 17px;
+  z-index: 1;
+}
+
+.pixel-tower-antenna > i {
+  background:
+    linear-gradient(67deg, transparent 42%, #61758a 43% 50%, transparent 51%),
+    linear-gradient(-67deg, transparent 42%, #61758a 43% 50%, transparent 51%);
+  bottom: -10px;
+  height: 22px;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  width: 28px;
+  z-index: 1;
+}
+
 .pixel-floor-stack {
   bottom: 18px !important;
+  height: min(
+    var(--pixel-tower-height, 352px),
+    max(210px, calc(100% - 150px))
+  ) !important;
   top: auto !important;
 }
 
@@ -11385,15 +11587,7 @@ body.reduce-motion .cinematic-mode-button svg {
 }
 
 .pixel-clipboard-empty .pixel-coffee-animation::after {
-  bottom: -2px;
-  color: #f0c46a;
-  content: "HOT COFFEE";
-  font: 800 7px/1 var(--mono);
-  left: 0;
-  letter-spacing: 1px;
-  position: absolute;
-  text-align: center;
-  width: 96px;
+  content: none;
 }
 
 .pixel-coffee-cup {
@@ -11637,6 +11831,54 @@ html[data-appearance-mode="pixelized"] .pixel-pet-detail {
 .pixel-pet-detail-title small {
   color: #bcc8d8;
   font-size: 10px;
+}
+
+.pixel-pet-detail[data-anchored="true"],
+html[data-appearance-mode="pixelized"] .pixel-pet-detail[data-anchored="true"] {
+  bottom: auto !important;
+  left: var(--pixel-pet-left) !important;
+  max-height: min(470px, calc(100% - 32px));
+  top: var(--pixel-pet-top) !important;
+  width: min(430px, calc(100% - 32px));
+}
+
+.pixel-pet-detail[data-anchored="true"]::before,
+.pixel-pet-detail[data-anchored="true"]::after {
+  content: "";
+  image-rendering: pixelated;
+  position: absolute;
+  top: calc(var(--pixel-pet-pointer-top) - 10px);
+  z-index: 2;
+}
+
+.pixel-pet-detail[data-anchor-side="right"]::before {
+  border-bottom: 12px solid transparent;
+  border-right: 14px solid #8795a8;
+  border-top: 12px solid transparent;
+  left: -18px;
+}
+
+.pixel-pet-detail[data-anchor-side="right"]::after {
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid #303b4e;
+  border-top: 8px solid transparent;
+  left: -10px;
+  top: calc(var(--pixel-pet-pointer-top) - 6px);
+}
+
+.pixel-pet-detail[data-anchor-side="left"]::before {
+  border-bottom: 12px solid transparent;
+  border-left: 14px solid #8795a8;
+  border-top: 12px solid transparent;
+  right: -18px;
+}
+
+.pixel-pet-detail[data-anchor-side="left"]::after {
+  border-bottom: 8px solid transparent;
+  border-left: 10px solid #303b4e;
+  border-top: 8px solid transparent;
+  right: -10px;
+  top: calc(var(--pixel-pet-pointer-top) - 6px);
 }
 
 .pixel-pet-vital {
@@ -11947,18 +12189,18 @@ body.music-playing .cinematic-mode-button svg {
   animation: none !important;
 }
 
-html[data-appearance-mode="light"] .agent-name-input,
-html[data-appearance-mode="light"] .agent-card-header strong,
-html[data-appearance-mode="light"] .workspace-editor-label {
+html[data-appearance-tone="light"] body:not(.cinematic-mode) .agent-name-input,
+html[data-appearance-tone="light"] body:not(.cinematic-mode) .agent-card-header strong,
+html[data-appearance-tone="light"] body:not(.cinematic-mode) .workspace-editor-label {
   color: #182232 !important;
 }
 
-html[data-appearance-mode="light"] .agent-stage,
-html[data-appearance-mode="light"] .main-layout {
+html[data-appearance-tone="light"] body:not(.cinematic-mode) .agent-stage,
+html[data-appearance-tone="light"] body:not(.cinematic-mode) .main-layout {
   background: #eef2f7;
 }
 
-html[data-appearance-mode="light"] .stage-heading {
+html[data-appearance-tone="light"] body:not(.cinematic-mode) .stage-heading {
   background: #f5f7fa;
 }
 
@@ -11969,47 +12211,6 @@ html[data-appearance-mode="light"] .stage-heading {
 .agent-stage {
   border-radius: 14px 0 0 0;
   overflow: hidden;
-}
-
-.opened-output-files {
-  border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 64%, transparent);
-  display: grid;
-  gap: 2px;
-  margin: 0 4px 6px;
-  padding: 6px 0 8px;
-}
-
-.opened-output-files > strong {
-  color: var(--theme-muted);
-  font: 700 9px/1 var(--sans);
-  letter-spacing: 0.08em;
-  padding: 4px 8px;
-  text-transform: uppercase;
-}
-
-.opened-output-files > button {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  border-radius: 7px;
-  color: var(--theme-text);
-  display: grid;
-  font: 600 11px/1.2 var(--sans);
-  gap: 7px;
-  grid-template-columns: 14px minmax(0, 1fr);
-  padding: 6px 8px;
-  text-align: left;
-}
-
-.opened-output-files > button:hover,
-.opened-output-files > button:focus-visible {
-  background: color-mix(in srgb, var(--theme-accent) 14%, transparent);
-}
-
-.opened-output-files > button span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @media (max-width: 760px) {
@@ -12033,11 +12234,11 @@ html[data-appearance-mode="light"] .stage-heading {
 
 /* Release polish: readable cinematic controls and visible living artwork. */
 .scene-background-canvas {
-  filter: brightness(1.18) saturate(1.12);
+  filter: none;
 }
 
 .cinematic-prompt-dock {
-  grid-template-columns: 40px minmax(0, 1fr) auto auto 44px;
+  grid-template-columns: minmax(0, 1fr) auto auto 44px;
   padding: 7px 9px;
 }
 
@@ -12052,9 +12253,7 @@ html[data-appearance-mode="light"] .stage-heading {
 }
 
 .cinematic-prompt-dock > .cinematic-mention-button {
-  color: rgba(231, 238, 241, 0.72);
-  font: 700 18px/1 var(--mono);
-  width: 40px;
+  display: none;
 }
 
 .cinematic-prompt-dock > .cinematic-results-button {
@@ -12068,13 +12267,1690 @@ html[data-appearance-mode="light"] .stage-heading {
 body.cinematic-mode .agent-slot,
 body.cinematic-mode .agent-slot.empty,
 body.cinematic-mode .agent-slot.selected {
-  background: rgba(15, 22, 28, var(--cinematic-panel-opacity, 0.55)) !important;
+  background: rgba(15, 22, 28, var(--cinematic-panel-opacity, 0.68)) !important;
 }
 
 body.cinematic-mode .agent-slot.empty .agent-task-input,
 body.cinematic-mode .agent-clean-compose textarea {
-  background: rgba(238, 246, 250, 0.075) !important;
+  background: rgba(238, 246, 250, 0.1) !important;
   color: #f5f8fa !important;
   font-size: 12px !important;
   line-height: 1.35 !important;
+}
+
+/* Keep every Spotify control on one titlebar row. There are seven children:
+   artwork, four transport controls, track copy, and the Spotify launcher. */
+.spotify-now-playing {
+  align-self: stretch;
+  column-gap: 3px;
+  grid-auto-flow: column;
+  grid-template-columns: 24px repeat(3, 19px) 42px minmax(0, 1fr) 22px;
+  grid-template-rows: minmax(0, 1fr);
+  height: var(--titlebar-height);
+  max-width: 319px;
+  overflow: hidden;
+  width: min(319px, 100%);
+}
+
+.spotify-now-playing.no-track {
+  grid-template-columns: minmax(0, 1fr) 22px;
+  height: var(--titlebar-height);
+  max-width: 190px;
+}
+
+.spotify-artwork {
+  margin-right: 0;
+}
+
+.spotify-track-copy,
+.spotify-track-name-clip {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.titlebar-spotify {
+  align-self: stretch;
+  min-width: 0;
+}
+
+/* A note page with a folded corner and pencil reads clearly at titlebar size. */
+.notepad-symbol {
+  height: 18px;
+  overflow: visible;
+  width: 18px;
+}
+
+.notepad-symbol :is(.notepad-page, .notepad-fold, .notepad-lines, .notepad-pencil) {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.notepad-symbol .notepad-page {
+  fill: color-mix(in srgb, var(--theme-accent) 10%, transparent);
+  stroke-width: 1.35;
+}
+
+.notepad-symbol .notepad-fold,
+.notepad-symbol .notepad-lines {
+  opacity: 0.76;
+  stroke-width: 1.1;
+}
+
+.notepad-symbol .notepad-pencil {
+  color: var(--theme-accent);
+  stroke: currentColor;
+  stroke-width: 1.45;
+}
+
+#notepadSketchSection {
+  display: grid;
+  gap: 12px;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: 16px 18px 18px;
+}
+
+#notepadSketchSection[hidden] {
+  display: none;
+}
+
+.notepad-sketch-toolbar {
+  align-items: center;
+  background: color-mix(in srgb, var(--theme-elevated) 82%, transparent);
+  border: 1px solid var(--theme-border);
+  border-radius: 14px;
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  min-height: 54px;
+  padding: 8px 10px;
+}
+
+.notepad-sketch-tool-group,
+.notepad-sketch-history {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+
+.notepad-sketch-history {
+  margin-left: auto;
+}
+
+.notepad-sketch-toolbar button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: var(--theme-muted);
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  padding: 0;
+  width: 34px;
+}
+
+.notepad-sketch-toolbar button:hover,
+.notepad-sketch-toolbar button:focus-visible {
+  background: var(--theme-hover);
+  color: var(--theme-text);
+  outline: 0;
+}
+
+.notepad-sketch-toolbar button.active {
+  background: color-mix(in srgb, var(--theme-accent) 22%, var(--theme-panel));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-accent) 45%, transparent);
+  color: var(--theme-accent);
+}
+
+.notepad-sketch-toolbar button:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.notepad-sketch-toolbar button svg {
+  fill: none;
+  height: 18px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.45;
+  width: 18px;
+}
+
+.notepad-sketch-color-field,
+.notepad-sketch-size-control {
+  align-items: center;
+  color: var(--theme-muted);
+  display: flex;
+  font: 650 9px/1 var(--sans);
+  gap: 8px;
+}
+
+.notepad-sketch-color-field {
+  border-left: 1px solid var(--theme-border);
+  padding-left: 14px;
+}
+
+.notepad-sketch-swatches {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+}
+
+.notepad-sketch-swatches > button {
+  background: var(--swatch);
+  border: 2px solid color-mix(in srgb, var(--theme-text) 14%, transparent);
+  border-radius: 50%;
+  height: 20px;
+  width: 20px;
+}
+
+.notepad-sketch-swatches > button:hover,
+.notepad-sketch-swatches > button:focus-visible {
+  background: var(--swatch);
+  border-color: color-mix(in srgb, var(--theme-text) 62%, transparent);
+}
+
+.notepad-sketch-swatches > button.active {
+  background: var(--swatch);
+  border-color: var(--theme-bg);
+  box-shadow: 0 0 0 2px var(--theme-accent);
+}
+
+.notepad-sketch-custom-color {
+  align-items: center;
+  border: 1px dashed color-mix(in srgb, var(--theme-muted) 58%, transparent);
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  height: 21px;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  width: 21px;
+}
+
+.notepad-sketch-custom-color input {
+  height: 30px;
+  inset: -5px;
+  opacity: 0;
+  position: absolute;
+  width: 30px;
+}
+
+.notepad-sketch-custom-color span {
+  color: var(--theme-muted);
+  font: 700 14px/1 var(--sans);
+}
+
+.notepad-sketch-size-control {
+  border-left: 1px solid var(--theme-border);
+  padding-left: 14px;
+}
+
+.notepad-sketch-size-control input {
+  accent-color: var(--theme-accent);
+  width: 92px;
+}
+
+.notepad-sketch-size-control output {
+  color: var(--theme-text);
+  font: 650 9px/1 var(--mono);
+  min-width: 34px;
+}
+
+.notepad-sketch-toolbar .notepad-sketch-clear {
+  color: color-mix(in srgb, #f07f7f 78%, var(--theme-muted));
+  gap: 6px;
+  padding: 0 9px;
+  width: auto;
+}
+
+.notepad-sketch-clear span {
+  font: 650 9px/1 var(--sans);
+}
+
+.notepad-sketch-canvas-shell {
+  min-height: 0;
+  position: relative;
+}
+
+#notepadSketchCanvas {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--theme-muted) 17%, transparent) 1px, transparent 1.2px)
+      0 0 / 20px 20px,
+    color-mix(in srgb, var(--theme-text) 3.5%, var(--theme-bg));
+  border: 1px solid color-mix(in srgb, var(--theme-border) 82%, var(--theme-accent));
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text) 5%, transparent);
+  cursor: crosshair;
+  display: block;
+  height: 100%;
+  outline: 0;
+  touch-action: none;
+  width: 100%;
+}
+
+#notepadSketchCanvas.eraser-active {
+  cursor: cell;
+}
+
+#notepadSketchCanvas:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent) 68%, var(--theme-border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--theme-text) 5%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--theme-accent) 16%, transparent);
+}
+
+.notepad-sketch-hint {
+  background: color-mix(in srgb, var(--theme-panel) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-border) 80%, transparent);
+  border-radius: 999px;
+  bottom: 12px;
+  color: color-mix(in srgb, var(--theme-muted) 82%, transparent);
+  font: 600 8px/1 var(--sans);
+  left: 50%;
+  padding: 7px 11px;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.notepad-sketch-hint kbd {
+  color: var(--theme-text);
+  font: 650 8px/1 var(--mono);
+}
+
+@media (max-width: 900px) {
+  .notepad-sketch-toolbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .notepad-sketch-history {
+    margin-left: 0;
+  }
+}
+
+/* Home — quiet motion, a stronger brand moment, and clearer recent workspaces. */
+.home-view {
+  background:
+    radial-gradient(circle at 13% 20%, color-mix(in srgb, var(--theme-accent) 12%, transparent), transparent 27%),
+    radial-gradient(circle at 88% 82%, color-mix(in srgb, #8c72ff 8%, transparent), transparent 30%),
+    var(--theme-bg);
+  isolation: isolate;
+}
+
+.home-view::before {
+  animation: home-ambient-drift 18s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at 28% 38%, color-mix(in srgb, var(--theme-accent) 14%, transparent), transparent 28%),
+    radial-gradient(circle at 72% 61%, color-mix(in srgb, #6688ff 9%, transparent), transparent 31%);
+  content: "";
+  inset: -18%;
+  opacity: 0.7;
+  pointer-events: none;
+  position: absolute;
+  transform: translate3d(-2%, -1%, 0) scale(1);
+  will-change: transform;
+  z-index: -1;
+}
+
+.home-view::after {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--theme-text) 2.4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--theme-text) 2.4%, transparent) 1px, transparent 1px);
+  background-size: 52px 52px;
+  content: "";
+  inset: 0;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.34), transparent 67%);
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+.home-content {
+  max-width: 1220px;
+  padding-top: clamp(50px, 8vh, 96px);
+  position: relative;
+}
+
+.home-heading {
+  align-items: center;
+  display: grid;
+  gap: clamp(24px, 3.6vw, 46px);
+  grid-template-columns: 164px minmax(0, 1fr) auto;
+  margin-bottom: 34px;
+  min-height: 224px;
+  padding-bottom: 38px;
+}
+
+.home-heading-copy {
+  min-width: 0;
+}
+
+.home-heading .home-brand {
+  color: color-mix(in srgb, var(--theme-accent) 86%, var(--theme-text));
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  margin-bottom: 13px;
+  text-transform: uppercase;
+}
+
+.home-heading h1 {
+  font-size: clamp(38px, 5vw, 66px);
+  font-weight: 650;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  max-width: 780px;
+}
+
+.home-heading p {
+  font-size: clamp(12px, 1.25vw, 15px);
+  margin-top: 17px;
+  max-width: 530px;
+}
+
+.home-logo-stage {
+  align-items: center;
+  display: flex;
+  height: 164px;
+  justify-content: center;
+  position: relative;
+  width: 164px;
+}
+
+.home-logo-stage img {
+  animation: home-logo-float 4.8s ease-in-out infinite;
+  filter: drop-shadow(0 18px 28px color-mix(in srgb, var(--theme-accent) 24%, transparent));
+  height: 132px;
+  object-fit: contain;
+  position: relative;
+  width: 132px;
+  z-index: 2;
+}
+
+.home-logo-glow {
+  animation: home-logo-breathe 4.8s ease-in-out infinite;
+  background: color-mix(in srgb, var(--theme-accent) 28%, transparent);
+  border-radius: 50%;
+  filter: blur(24px);
+  height: 112px;
+  position: absolute;
+  width: 112px;
+}
+
+.home-logo-orbit {
+  animation: home-orbit-spin 14s linear infinite;
+  border: 1px solid color-mix(in srgb, var(--theme-accent) 30%, transparent);
+  border-radius: 50%;
+  height: 160px;
+  position: absolute;
+  width: 160px;
+}
+
+.home-logo-orbit::before,
+.home-logo-orbit::after {
+  background: var(--theme-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--theme-accent) 70%, transparent);
+  content: "";
+  height: 5px;
+  left: 15px;
+  position: absolute;
+  top: 13px;
+  width: 5px;
+}
+
+.home-logo-orbit::after {
+  bottom: 9px;
+  height: 3px;
+  left: auto;
+  right: 22px;
+  top: auto;
+  width: 3px;
+}
+
+#homeAddWorkspaceButton {
+  border-radius: 12px;
+  flex-basis: auto;
+  font-size: 12px;
+  font-weight: 650;
+  gap: 9px;
+  height: 44px;
+  padding: 0 15px;
+  width: auto;
+}
+
+#homeAddWorkspaceButton svg {
+  fill: none;
+  height: 16px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.6;
+  width: 16px;
+}
+
+#homeAddWorkspaceButton span {
+  color: currentColor;
+  display: inline;
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+}
+
+.home-recents {
+  position: relative;
+}
+
+.home-recents-heading {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 2px 13px;
+}
+
+.home-recents-heading h2 {
+  color: var(--theme-text);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.015em;
+  margin: 0;
+}
+
+.home-recents-heading span {
+  color: var(--theme-muted);
+  font-size: 10px;
+}
+
+.home-workspace-grid {
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+}
+
+.home-workspace-card {
+  animation: home-card-enter 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--home-card-index, 0) * 55ms);
+  backdrop-filter: blur(16px);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--theme-elevated) 94%, transparent), color-mix(in srgb, var(--theme-panel) 82%, transparent));
+  border-color: color-mix(in srgb, var(--theme-border) 82%, var(--theme-accent));
+  border-radius: 14px;
+  gap: 16px;
+  grid-template-columns: 46px minmax(0, 1fr);
+  min-height: 108px;
+  padding: 18px;
+}
+
+.home-workspace-card:hover,
+.home-workspace-card:focus-visible {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--theme-hover) 95%, transparent), color-mix(in srgb, var(--theme-panel) 90%, transparent));
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--theme-bg) 42%, transparent);
+  transform: translateY(-3px);
+}
+
+.home-workspace-card.active {
+  box-shadow:
+    inset 3px 0 0 var(--theme-accent),
+    0 10px 28px color-mix(in srgb, var(--theme-bg) 34%, transparent);
+}
+
+.home-workspace-icon {
+  border-radius: 12px;
+  height: 46px;
+  width: 46px;
+}
+
+.home-workspace-icon svg {
+  height: 23px;
+  width: 23px;
+}
+
+.home-workspace-copy strong {
+  font-size: 14px;
+}
+
+.home-workspace-copy span {
+  font-size: 10px;
+}
+
+.home-workspace-copy small {
+  font-size: 9px;
+  margin-top: 7px;
+}
+
+@keyframes home-ambient-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(3%, 2%, 0) scale(1.06); }
+}
+
+@keyframes home-logo-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg); }
+  50% { transform: translate3d(0, -7px, 0) rotate(1deg); }
+}
+
+@keyframes home-logo-breathe {
+  0%, 100% { opacity: 0.42; transform: scale(0.92); }
+  50% { opacity: 0.78; transform: scale(1.12); }
+}
+
+@keyframes home-orbit-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes home-card-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 760px) {
+  .home-heading {
+    gap: 18px;
+    grid-template-columns: 82px minmax(0, 1fr);
+    min-height: 180px;
+  }
+
+  .home-logo-stage {
+    height: 82px;
+    width: 82px;
+  }
+
+  .home-logo-stage img {
+    height: 66px;
+    width: 66px;
+  }
+
+  .home-logo-orbit {
+    height: 82px;
+    width: 82px;
+  }
+
+  #homeAddWorkspaceButton {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-view::before,
+  .home-logo-stage img,
+  .home-logo-glow,
+  .home-logo-orbit,
+  .home-workspace-card {
+    animation: none;
+  }
+}
+
+/* Agent headers have five children. Keeping five explicit tracks prevents the
+   action cluster from wrapping into a clipped second row. */
+.agent-card-header {
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+}
+
+body:not(.cinematic-mode) .agent-slot.clean-mode .agent-clean-view {
+  gap: 10px;
+  grid-template-rows: auto auto minmax(64px, 1fr) auto auto auto;
+  padding: 13px 15px 15px;
+}
+
+body:not(.cinematic-mode) .agent-current-task-indicator {
+  align-items: center;
+  background: color-mix(in srgb, var(--agent-color) 7%, var(--theme-panel));
+  border: 1px solid color-mix(in srgb, var(--agent-color) 25%, var(--theme-border));
+  border-radius: 8px;
+  gap: 10px;
+  margin: 0;
+  min-height: 34px;
+  padding: 7px 10px;
+}
+
+body:not(.cinematic-mode) .agent-clean-heading {
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 82%, transparent);
+  font-size: 10px;
+  line-height: 22px;
+}
+
+body:not(.cinematic-mode) .agent-clean-checklist {
+  align-content: start !important;
+  grid-auto-rows: max-content;
+  padding: 1px 3px 1px 0;
+}
+
+body:not(.cinematic-mode) .agent-checklist-item {
+  align-self: start;
+}
+
+body:not(.cinematic-mode) .agent-clean-empty {
+  background: color-mix(in srgb, var(--theme-panel) 46%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--theme-border) 72%, transparent);
+  border-radius: 8px;
+  min-height: 76px;
+}
+
+body:not(.cinematic-mode) .agent-clean-compose textarea {
+  padding-right: 82px;
+}
+
+body:not(.cinematic-mode) .agent-clean-send {
+  bottom: 7px;
+  position: absolute;
+  right: 43px;
+}
+
+body:not(.cinematic-mode) .agent-clean-interrupt {
+  bottom: 7px;
+  right: 7px;
+}
+
+.sidebar-view-toggle {
+  height: 25px !important;
+  padding: 2px !important;
+  width: 120px !important;
+}
+
+.sidebar-view-toggle span {
+  font-size: 7.5px;
+  height: 19px;
+  padding-inline: 6px;
+}
+
+/* Home follows the calm, keyboard-first opening experience of a code editor:
+   centered identity and commands, with recent workspaces kept secondary. */
+.home-content {
+  align-content: stretch;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  padding: clamp(34px, 6vh, 68px) clamp(26px, 6vw, 76px) 42px;
+  width: min(100%, 1080px);
+}
+
+.home-start {
+  align-content: center;
+  display: grid;
+  justify-items: center;
+  padding-bottom: 30px;
+  text-align: center;
+}
+
+.home-start .home-logo-stage {
+  height: 188px;
+  margin-bottom: 18px;
+  width: 188px;
+}
+
+.home-start .home-logo-stage img {
+  height: 172px;
+  object-fit: contain;
+  width: 154px;
+}
+
+.home-start .home-logo-glow {
+  height: 138px;
+  width: 138px;
+}
+
+.home-start .home-logo-orbit {
+  height: 184px;
+  width: 184px;
+}
+
+.home-start .home-heading-copy {
+  display: grid;
+  justify-items: center;
+}
+
+.home-start .home-brand {
+  color: color-mix(in srgb, var(--theme-accent) 86%, var(--theme-text));
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.home-start h1 {
+  color: var(--theme-text);
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 640;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  margin: 0;
+}
+
+.home-start p {
+  color: var(--theme-muted);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 12px 0 0;
+  max-width: 470px;
+}
+
+.home-quick-actions {
+  display: none;
+  gap: 1px;
+  margin-top: 25px;
+  width: min(330px, 100%);
+}
+
+.home-quick-actions button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--theme-muted);
+  display: flex;
+  font: 540 10px/1 var(--sans);
+  justify-content: space-between;
+  min-height: 28px;
+  padding: 0 8px;
+  text-align: left;
+  width: 100%;
+}
+
+#homeAddWorkspaceButton {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--theme-muted);
+  flex-basis: auto;
+  font: 540 10px/1 var(--sans);
+  height: 28px;
+  padding: 0 8px;
+  width: 100%;
+}
+
+.home-quick-actions button:hover,
+.home-quick-actions button:focus-visible,
+#homeAddWorkspaceButton:hover,
+#homeAddWorkspaceButton:focus-visible {
+  background: transparent;
+  border: 0;
+  color: var(--theme-text);
+  outline: 0;
+}
+
+.home-quick-actions kbd {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: color-mix(in srgb, var(--theme-muted) 82%, transparent);
+  font: 650 8px/1 var(--mono);
+  min-width: 28px;
+  padding: 4px 0;
+  text-align: center;
+}
+
+.home-recents {
+  margin-inline: auto;
+  min-height: 0;
+  overflow: hidden;
+  width: min(780px, 100%);
+}
+
+.home-recents-heading {
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 72%, transparent);
+  margin-bottom: 10px;
+  padding: 0 2px 8px;
+}
+
+.home-workspace-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  max-height: 94px;
+  overflow-y: auto;
+}
+
+.home-workspace-card {
+  border-radius: 9px;
+  gap: 11px;
+  grid-template-columns: 34px minmax(0, 1fr);
+  min-height: 72px;
+  padding: 10px 12px;
+}
+
+.home-workspace-icon {
+  border-radius: 8px;
+  height: 34px;
+  width: 34px;
+}
+
+.home-workspace-icon svg {
+  height: 17px;
+  width: 17px;
+}
+
+.home-workspace-copy strong {
+  font-size: 11px;
+}
+
+.home-workspace-copy span,
+.home-workspace-copy small {
+  font-size: 8px;
+}
+
+@media (max-height: 700px) {
+  .home-content {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .home-start .home-logo-stage {
+    height: 142px;
+    margin-bottom: 5px;
+    width: 142px;
+  }
+
+  .home-start .home-logo-stage img {
+    height: 116px;
+    width: 116px;
+  }
+
+  .home-start .home-logo-orbit {
+    height: 140px;
+    width: 140px;
+  }
+
+  .home-quick-actions {
+    margin-top: 18px;
+  }
+}
+
+.settings-reset-defaults {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--theme-border) 86%, transparent);
+  border-radius: 7px;
+  color: var(--theme-muted);
+  font: 650 8px/1 var(--sans);
+  height: 29px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.settings-header {
+  background: var(--theme-bg);
+  position: sticky;
+  top: 0;
+  z-index: 12;
+}
+
+.settings-reset-defaults:hover,
+.settings-reset-defaults:focus-visible {
+  background: color-mix(in srgb, #e16b64 10%, var(--theme-hover));
+  border-color: color-mix(in srgb, #e16b64 44%, var(--theme-border));
+  color: color-mix(in srgb, #e16b64 78%, var(--theme-text));
+  outline: 0;
+}
+
+.settings-terminal-preview {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--theme-panel) 90%, transparent), var(--theme-bg));
+  border: 1px solid var(--theme-border);
+  border-radius: 10px;
+  margin-top: 18px;
+  overflow: hidden;
+}
+
+.settings-terminal-preview header {
+  align-items: center;
+  background: color-mix(in srgb, var(--theme-elevated) 74%, transparent);
+  border-bottom: 1px solid var(--theme-border);
+  color: var(--theme-text);
+  display: flex;
+  font: 650 8px/1 var(--sans);
+  justify-content: space-between;
+  padding: 9px 11px;
+}
+
+.settings-terminal-preview header b {
+  color: var(--theme-muted);
+  font-size: 7px;
+  font-weight: 550;
+}
+
+.settings-terminal-preview pre {
+  color: var(--theme-text);
+  font-family: var(--mono);
+  font-size: var(--preview-font-size, 9px);
+  line-height: var(--preview-line-height, 1.15);
+  margin: 0;
+  min-height: 118px;
+  padding: 15px;
+  transition: font-size 90ms linear, line-height 90ms linear;
+  white-space: pre-wrap;
+}
+
+.settings-terminal-preview .preview-prompt { color: var(--theme-accent); }
+.settings-terminal-preview .preview-muted { color: var(--theme-muted); }
+.settings-terminal-preview .preview-success { color: var(--theme-status); }
+.settings-terminal-preview .preview-cursor { color: var(--theme-accent); }
+
+/* The space between agent cells belongs to the selected theme, not to the
+   neutral divider palette. Cells keep their own surfaces and agent colors. */
+body:not(.cinematic-mode) .agent-grid {
+  background:
+    radial-gradient(
+      circle at 50% 42%,
+      color-mix(in srgb, var(--theme-accent) 7%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--theme-bg) 92%, var(--theme-accent)) !important;
+}
+
+/* Pixelized appearance swaps the curved browser-tab silhouette for a strict
+   rectangular strip. Other appearance modes retain the curved SVG tabs. */
+html[data-appearance-mode="pixelized"] .workspace-editor-tabs {
+  gap: 2px;
+}
+
+html[data-appearance-mode="pixelized"] .editor-tab.workspace-editor-tab {
+  background: color-mix(in srgb, var(--theme-panel) 90%, var(--theme-bg)) !important;
+  border: 1px solid var(--theme-border) !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  filter: none !important;
+  height: 30px;
+  margin: 0;
+}
+
+html[data-appearance-mode="pixelized"] .editor-tab.workspace-editor-tab:hover {
+  background: color-mix(in srgb, var(--theme-panel) 90%, var(--theme-bg)) !important;
+  border-color: var(--theme-accent) !important;
+}
+
+html[data-appearance-mode="pixelized"] .editor-tab.workspace-editor-tab.active {
+  background: var(--theme-bg) !important;
+  border-color: var(--theme-accent) !important;
+  border-radius: 0 !important;
+}
+
+html[data-appearance-mode="pixelized"] .workspace-tab-shape,
+html[data-appearance-mode="pixelized"] .editor-tab.workspace-editor-tab::before,
+html[data-appearance-mode="pixelized"] .editor-tab.workspace-editor-tab::after {
+  display: none !important;
+}
+
+html[data-appearance-mode="pixelized"] :is(
+  .workspace-tab-close,
+  .workspace-tab-add
+) {
+  border-radius: 0 !important;
+}
+
+/* One hover language for the whole workbench. Buttons keep their resting
+   surface; the icon or glyph contour carries the hover feedback instead of a
+   filled rectangle around the control. */
+:where(button, [role="button"]) {
+  --button-rest-surface: transparent;
+  --button-hover-contour: var(--agent-color, var(--theme-accent));
+}
+
+.command-center {
+  --button-rest-surface: color-mix(in srgb, var(--theme-elevated) 86%, var(--theme-bg));
+}
+
+.workspace-wizard-button {
+  --button-rest-surface: var(--theme-panel);
+}
+
+.workspace-wizard-button.primary {
+  --button-rest-surface: color-mix(in srgb, var(--theme-accent) 16%, var(--theme-panel));
+}
+
+.dialog-icon-button {
+  --button-rest-surface: #2d2d2d;
+}
+
+.dialog-icon-button.primary {
+  --button-rest-surface: #0e639c;
+}
+
+.dialog-icon-button.danger {
+  --button-rest-surface: #b4232d;
+}
+
+:is(
+  .workspace-item.active,
+  .artifact-item.active,
+  .settings-nav-item.active,
+  .pdf-option.active,
+  .agent-sidebar-item.active,
+  .agent-action.active
+) {
+  --button-rest-surface: var(--theme-active);
+}
+
+.artifact-list-title {
+  --button-rest-surface: var(--theme-panel);
+}
+
+.workspace-tab-add.active {
+  --button-rest-surface: color-mix(in srgb, var(--theme-accent) 13%, var(--theme-panel));
+}
+
+.home-workspace-card {
+  --button-rest-surface:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--theme-elevated) 94%, transparent),
+      color-mix(in srgb, var(--theme-panel) 82%, transparent)
+    );
+}
+
+/* Spotify-backed Cinematic pulse. The overlay is composited separately from
+   the 1440p artwork, keeping the visible response smooth without filtering or
+   repainting the full scene image every frame. */
+.music-reactive-overlay {
+  background:
+    radial-gradient(
+      ellipse at center,
+      transparent 0 76%,
+      rgba(105, 167, 255, 0.08) 91%,
+      rgba(157, 211, 255, 0.34) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(118, 185, 255, 0.2),
+      transparent 9% 91%,
+      rgba(202, 178, 255, 0.17)
+    ),
+    linear-gradient(
+      180deg,
+      rgba(177, 216, 255, 0.12),
+      transparent 8% 92%,
+      rgba(91, 151, 227, 0.16)
+    );
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  transform: scale(1);
+  transform-origin: center;
+  visibility: hidden;
+  will-change: opacity, transform;
+  z-index: 0;
+}
+
+body.cinematic-mode.scene-background-active.music-reactive-active .music-reactive-overlay {
+  opacity: var(--cinematic-glow-opacity, 0);
+  transform: scale(var(--cinematic-pulse-scale, 1));
+  visibility: visible;
+}
+
+body.reduce-motion .music-reactive-overlay {
+  display: none !important;
+}
+
+.scene-theme-option {
+  --button-rest-surface: var(--theme-panel);
+}
+
+:is(.ssh-recent-connection, .ssh-recent-folder, .agent-clean-file) {
+  --button-rest-surface: color-mix(in srgb, var(--theme-panel) 78%, var(--theme-bg));
+}
+
+.agent-clean-interrupt {
+  --button-rest-surface: color-mix(in srgb, #dc655f 8%, var(--theme-bg));
+}
+
+.agent-reconnect-banner button {
+  --button-rest-surface: color-mix(in srgb, #d66b5f 10%, transparent);
+}
+
+.remote-status-button.connected {
+  --button-rest-surface: color-mix(in srgb, var(--theme-accent) 18%, var(--theme-panel));
+}
+
+.remote-status-button.disconnected {
+  --button-rest-surface: color-mix(in srgb, var(--red) 20%, var(--theme-panel));
+}
+
+.pixel-floor-launcher-buttons button {
+  --button-rest-surface: var(--theme-panel);
+}
+
+.pixel-floor-list > button {
+  --button-rest-surface: #121923;
+}
+
+.pixel-agent-clipboard-button {
+  --button-rest-surface: var(--theme-elevated);
+}
+
+.pixel-agent-clipboard-button.active {
+  --button-rest-surface: var(--theme-hover);
+}
+
+:is(.pixel-add-floor-button, .pixel-delete-floor-button, .pixel-refresh-button) {
+  --button-rest-surface: #344253;
+  --button-hover-contour: #f2cf63;
+}
+
+.pixel-sky-toggle-button {
+  --button-rest-surface: rgba(12, 20, 31, 0.68);
+  --button-hover-contour: #f2cf63;
+}
+
+.pixel-exit-button {
+  --button-rest-surface: rgba(12, 20, 31, 0.82);
+  --button-hover-contour: #9ec6e4;
+}
+
+:is(
+  .pixel-agent-clipboard .pixel-roster-agent,
+  .pixel-agent-detail-files button,
+  .pixel-agent-detail > footer button
+) {
+  --button-rest-surface: color-mix(in srgb, var(--theme-panel) 76%, transparent);
+}
+
+.cinematic-mention-choice[aria-selected="true"] {
+  --button-rest-surface:
+    color-mix(in srgb, var(--theme-accent) 18%, rgba(255, 255, 255, 0.055));
+}
+
+.cinematic-exit-button {
+  --button-rest-surface: rgba(8, 12, 16, 0.68);
+}
+
+.cinematic-next-scene-button {
+  --button-rest-surface: rgba(8, 12, 16, 0.72);
+}
+
+#settingsCycleProfileAvatar {
+  --button-rest-surface: color-mix(in srgb, var(--theme-accent) 11%, var(--theme-panel));
+}
+
+.notepad-section-button.active {
+  --button-rest-surface: color-mix(in srgb, var(--theme-accent) 16%, transparent);
+}
+
+.notepad-sketch-toolbar button.active {
+  --button-rest-surface: color-mix(in srgb, var(--theme-accent) 22%, var(--theme-panel));
+}
+
+.notepad-sketch-swatches > button {
+  --button-rest-surface: var(--swatch);
+}
+
+@media (hover: hover) {
+  :where(button, [role="button"]):not(:disabled):not([aria-disabled="true"]):hover {
+    background: var(--button-rest-surface) !important;
+    outline: 0 !important;
+    transform: none !important;
+  }
+
+  :is(
+    .top-action,
+    .icon-button,
+    .activity-button,
+    .launcher-button,
+    .agent-action,
+    .settings-close,
+    .workspace-history-button,
+    .workspace-tab-close,
+    .workspace-tab-add,
+    .spotify-control,
+    .calendar-popover header button,
+    .preview-toolbar button,
+    .output-path-form button,
+    .cinematic-prompt-dock > button,
+    .cinematic-exit-button,
+    .cinematic-next-scene-button,
+    .pixel-floor-launcher-buttons button,
+    .pixel-sky-toggle-button,
+    .pixel-exit-button,
+    .pixel-add-floor-button,
+    .pixel-delete-floor-button,
+    .pixel-refresh-button,
+    .pixel-agent-clipboard > header button,
+    .pixel-agent-detail > header button,
+    .notepad-sketch-toolbar button
+  ):not(:disabled):hover {
+    color: var(--button-hover-contour) !important;
+  }
+
+  :where(button, [role="button"]):not(:disabled):hover svg {
+    color: var(--button-hover-contour);
+    filter: drop-shadow(
+      0 0 2px color-mix(in srgb, var(--button-hover-contour) 54%, transparent)
+    );
+  }
+
+  :is(
+    .top-action,
+    .launcher-button,
+    .spotify-open-button
+  ):not(:disabled):hover img:not(.pixel-mode-agent-face) {
+    filter: drop-shadow(
+      0 0 2px color-mix(in srgb, var(--button-hover-contour) 54%, transparent)
+    );
+  }
+
+  html[data-appearance-tone="light"]
+    .launcher-button:not(:disabled):hover
+    .brand-symbol[src*="openai"] {
+    filter:
+      invert(1)
+      drop-shadow(
+        0 0 2px color-mix(in srgb, var(--button-hover-contour) 54%, transparent)
+      );
+  }
+
+  .home-workspace-card:hover {
+    box-shadow: none !important;
+  }
+
+  .home-workspace-card.active:hover {
+    box-shadow:
+      inset 3px 0 0 var(--theme-accent),
+      0 10px 28px color-mix(in srgb, var(--theme-bg) 34%, transparent) !important;
+  }
+
+  .pixel-floor-list > button:hover {
+    filter: none !important;
+  }
+
+  /* Workspace tabs already draw their curved hover perimeter in SVG. A CSS
+     outline here would reintroduce the square highlight around that curve. */
+  .editor-tab.workspace-editor-tab:hover {
+    outline: 0 !important;
+  }
+}
+
+/* Preserve a usable macOS drag surface across the otherwise empty part of the
+   right titlebar column. Interactive controls opt back out individually. */
+.titlebar-actions {
+  -webkit-app-region: drag;
+}
+
+.titlebar-actions > :is(
+  button,
+  .notification-control,
+  .titlebar-system-status
+) {
+  -webkit-app-region: no-drag;
+}
+
+/* Keep unread counts legible against every accent/theme combination. */
+.notification-button.has-unread {
+  filter: none;
+}
+
+.notification-button.has-unread .notification-symbol {
+  filter: drop-shadow(
+    0 0 5px color-mix(in srgb, var(--theme-accent) 48%, transparent)
+  );
+}
+
+.notification-badge {
+  background: color-mix(in srgb, var(--theme-accent) 84%, white 16%);
+  border-color: color-mix(in srgb, var(--theme-bg) 82%, black 18%);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.38);
+  color: #090c10;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  height: 16px;
+  line-height: 1;
+  min-width: 16px;
+  padding: 0 3px;
+  pointer-events: none;
+  right: -3px;
+  text-shadow: 0 1px rgba(255, 255, 255, 0.24);
+  top: -2px;
+  z-index: 4;
+}
+
+/* The sidebar divider occupies its own grid column, so explicitly bridge the
+   one-pixel tab/sidebar baseline across that column. */
+:root {
+  --workspace-chrome-height: 37px;
+}
+
+.workspace-explorer {
+  grid-template-rows: var(--workspace-chrome-height) minmax(0, 1fr);
+}
+
+.stage-heading,
+.workspace-editor-tabs {
+  min-height: var(--workspace-chrome-height);
+}
+
+.workspace-editor-tabs {
+  height: var(--workspace-chrome-height);
+  max-height: var(--workspace-chrome-height);
+}
+
+#fileResizeHandle {
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0 calc(var(--workspace-chrome-height) - 1px),
+      var(--theme-border) calc(var(--workspace-chrome-height) - 1px)
+        var(--workspace-chrome-height),
+      transparent var(--workspace-chrome-height) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 0 var(--workspace-chrome-height),
+      color-mix(in srgb, var(--theme-border) 78%, var(--theme-bg))
+        var(--workspace-chrome-height) 100%
+    );
+}
+
+/* Keep optional reconnect UI in its own collapsing row. Explicit areas prevent
+   the banner from taking over the flexible terminal row when it becomes
+   visible, while Terminal and Zen views can safely share the content area. */
+.agent-card {
+  grid-template-areas:
+    "header"
+    "reconnect"
+    "content"
+    "footer";
+  grid-template-rows: minmax(35px, auto) auto minmax(0, 1fr) auto;
+}
+
+.agent-card-header {
+  grid-area: header;
+}
+
+.agent-reconnect-banner {
+  grid-area: reconnect;
+}
+
+.agent-card > :is(.terminal-host, .agent-clean-view) {
+  grid-area: content;
+  min-height: 0;
+}
+
+.agent-recent-footer {
+  grid-area: footer;
+}
+
+/* Home workspace cards use a soft, theme-aware luminous edge. The glow is
+   intentionally restrained at rest and strengthens for hover, keyboard focus,
+   and the current workspace without introducing a hard accent rail. */
+.home-workspace-card {
+  border-color: color-mix(in srgb, var(--theme-accent) 22%, transparent);
+  box-shadow:
+    0 0 5px color-mix(in srgb, var(--theme-accent) 13%, transparent),
+    0 0 15px color-mix(in srgb, var(--theme-accent) 7%, transparent);
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    box-shadow 160ms ease,
+    transform 140ms ease;
+}
+
+.home-workspace-card:hover,
+.home-workspace-card:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent) 44%, transparent);
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--theme-accent) 34%, transparent),
+    0 0 20px color-mix(in srgb, var(--theme-accent) 22%, transparent),
+    0 9px 24px color-mix(in srgb, var(--theme-bg) 24%, transparent) !important;
+  outline: 0;
+}
+
+.home-workspace-card.active,
+.home-workspace-card.active:hover,
+.home-workspace-card.active:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent) 52%, transparent);
+  box-shadow:
+    0 0 7px color-mix(in srgb, var(--theme-accent) 42%, transparent),
+    0 0 24px color-mix(in srgb, var(--theme-accent) 29%, transparent),
+    inset 0 0 18px color-mix(in srgb, var(--theme-accent) 5%, transparent) !important;
+}
+
+html[data-appearance-tone="light"] .home-workspace-card {
+  border-color: color-mix(in srgb, var(--theme-accent) 28%, transparent);
+  box-shadow:
+    0 0 4px color-mix(in srgb, var(--theme-accent) 15%, transparent),
+    0 3px 12px color-mix(in srgb, var(--theme-text) 9%, transparent);
+}
+
+html[data-appearance-tone="light"] .home-workspace-card:hover,
+html[data-appearance-tone="light"] .home-workspace-card:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent) 50%, transparent);
+  box-shadow:
+    0 0 5px color-mix(in srgb, var(--theme-accent) 32%, transparent),
+    0 0 14px color-mix(in srgb, var(--theme-accent) 18%, transparent),
+    0 8px 22px color-mix(in srgb, var(--theme-text) 11%, transparent) !important;
+}
+
+html[data-appearance-tone="light"] .home-workspace-card.active,
+html[data-appearance-tone="light"] .home-workspace-card.active:hover,
+html[data-appearance-tone="light"] .home-workspace-card.active:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent) 58%, transparent);
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--theme-accent) 40%, transparent),
+    0 0 17px color-mix(in srgb, var(--theme-accent) 22%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--theme-accent) 6%, transparent) !important;
+}
+
+/* Let the remote connection surface meet the native lower-left window edge.
+   The window clip still supplies the outer rounded corner. */
+.usage-bar {
+  padding-left: 0;
+}
+
+/* Stable responsive geometry. Saved pane widths remain preferences, but they
+   may not consume the center workspace when the native window narrows. */
+.main-layout {
+  grid-template-columns:
+    min(
+      var(--files-column, var(--files-width)),
+      clamp(150px, 20vw, 380px)
+    )
+    var(--files-divider, 7px)
+    minmax(360px, 1fr)
+    var(--outputs-divider, 7px)
+    min(
+      var(--outputs-column, var(--artifacts-width)),
+      clamp(180px, 23vw, 500px)
+    );
+  min-width: 0;
+  overflow: hidden;
+}
+
+.main-layout > :is(.files-panel, .agent-stage, .output-panel),
+.stage-heading,
+.workspace-editor-tabs,
+.agent-grid,
+.agent-slot,
+.agent-card,
+.agent-card-header,
+.agent-actions {
+  min-width: 0;
+}
+
+.agent-grid,
+.agent-grid[data-layout-count="4"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.agent-slot {
+  container-type: inline-size;
+}
+
+@container (max-width: 420px) {
+  .agent-actions :is(.agent-wide, .agent-tall) {
+    display: none;
+  }
+}
+
+@container (max-width: 310px) {
+  .agent-actions .agent-maximize {
+    display: none;
+  }
+
+  .agent-state-chip {
+    font-size: 0;
+    gap: 0;
+    padding-inline: 4px;
+  }
+}
+
+/* The Files header keeps its mode switch usable and drops secondary creation
+   controls before allowing them to overlap the editor. */
+@media (max-width: 1100px) {
+  .titlebar {
+    grid-template-columns: minmax(150px, 190px) minmax(190px, 1fr) auto;
+    padding-left: 78px;
+  }
+
+  .workspace-address-shell {
+    gap: 3px;
+    width: 100%;
+  }
+
+  .workspace-history-button {
+    width: 23px;
+  }
+
+  .titlebar-actions {
+    min-width: 0;
+  }
+
+  .titlebar-actions .top-action {
+    width: 27px;
+  }
+
+  .file-create-button {
+    display: none !important;
+  }
+
+  .sidebar-view-toggle {
+    width: 112px !important;
+  }
+
+  body.pixel-mode-active :is(
+    .files-panel,
+    #fileResizeHandle,
+    #artifactResizeHandle,
+    .output-panel
+  ) {
+    display: none !important;
+  }
+
+  body.pixel-mode-active .main-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.pixel-mode-active .agent-stage {
+    border-radius: 0;
+    grid-column: 1;
+  }
+
+  body.pixel-mode-active .pixel-mode-view {
+    --pixel-tower-half: clamp(105px, 14vw, 130px);
+    --pixel-tower-zone: clamp(210px, 28vw, 260px);
+  }
+}
+
+@media (max-width: 980px) {
+  .titlebar {
+    grid-template-columns: minmax(132px, 160px) minmax(160px, 1fr) auto;
+    padding-left: 74px;
+  }
+
+  #openChromeButton,
+  #openOpenleafButton,
+  #openCodeButton {
+    display: none;
+  }
+
+  .spotify-now-playing:not(.no-track) {
+    grid-template-columns: 24px repeat(3, 19px) 19px 22px;
+  }
+
+  .spotify-now-playing:not(.no-track) .spotify-track-copy,
+  .spotify-shuffle-state,
+  .titlebar-battery strong {
+    display: none;
+  }
+
+  .spotify-shuffle-control {
+    width: 19px;
+  }
+
+  .titlebar-system-status {
+    gap: 3px;
+  }
+
+  .main-layout {
+    grid-template-columns:
+      min(
+        var(--files-column, var(--files-width)),
+        clamp(142px, 18vw, 210px)
+      )
+      var(--files-divider, 7px)
+      minmax(340px, 1fr)
+      var(--outputs-divider, 7px)
+      min(
+        var(--outputs-column, var(--artifacts-width)),
+        clamp(170px, 21vw, 230px)
+      );
+  }
+}
+
+@media (max-height: 680px) {
+  .home-content {
+    padding-block: 20px 24px;
+  }
+
+  .home-start {
+    padding-bottom: 14px;
+  }
+
+  .home-start .home-logo-stage {
+    height: 104px;
+    margin-bottom: 2px;
+    width: 104px;
+  }
+
+  .home-start .home-logo-stage img {
+    height: 94px;
+    width: 88px;
+  }
+
+  .home-start h1 {
+    font-size: clamp(26px, 4vw, 38px);
+  }
+
+  .home-workspace-card {
+    min-height: 64px;
+    padding-block: 7px;
+  }
+
+  .home-workspace-grid {
+    max-height: none;
+    overflow: hidden;
+  }
+}
+
+/* Avoid reflowing xterm and compositing large translucent surfaces on every
+   native resize tick. The renderer performs one guarded fit after settling. */
+body.window-resizing :is(
+  .agent-slot,
+  .agent-stage,
+  .files-panel,
+  .output-panel,
+  .home-workspace-card
+) {
+  transition: none !important;
+}
+
+body.window-resizing.cinematic-mode :is(
+  .agent-slot,
+  .titlebar-spotify,
+  .cinematic-prompt-dock
+) {
+  backdrop-filter: none !important;
 }

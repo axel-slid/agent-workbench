@@ -7,15 +7,15 @@
 
   Local and SSH workspaces · Four live agents · Cinematic scenes · Pixel tower
 
-  [![Version](https://img.shields.io/badge/version-0.2.0-70b7ff?style=for-the-badge)](https://github.com/axel-slid/agent-workbench/releases/tag/v0.2.0)
+  [![Version](https://img.shields.io/badge/version-0.2.1-70b7ff?style=for-the-badge)](https://github.com/axel-slid/agent-workbench/releases/tag/v0.2.1)
   [![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon-111827?style=for-the-badge&logo=apple)](https://github.com/axel-slid/agent-workbench/releases/latest)
   [![Electron](https://img.shields.io/badge/Electron-42-47848f?style=for-the-badge&logo=electron)](https://www.electronjs.org/)
-  [![Tests](https://img.shields.io/badge/regression%20checks-42-63d69f?style=for-the-badge)](tests/run.mjs)
+  [![Tests](https://img.shields.io/badge/regression%20checks-46-63d69f?style=for-the-badge)](tests/run.mjs)
 
   [Download](https://github.com/axel-slid/agent-workbench/releases/latest) ·
   [Feature reference](docs/features.md) ·
   [Build guide](docs/cross-platform.md) ·
-  [Release notes](docs/release-v0.2.0.md)
+  [Release notes](docs/release-v0.2.1.md)
 </div>
 
 ---
@@ -33,10 +33,10 @@ metadata.
 | Surface | What it does |
 | --- | --- |
 | **Agent wall** | One, two, or four Codex, Claude, or shell PTYs with live model, state, task, ETA, checklist, and files |
-| **Cinematic Mode** | True full-screen four-pane view over 20 credited, artist-made 1080p animated landscapes with `⌘K`, `@mentions`, Results, scene shuffle, and synchronized pane resizing |
-| **Pixel Mode** | A 20-floor Art Deco tower with premade previews, diverse rooms, time-of-day skies, agent clipboard navigation, and clickable RPG pet stats |
-| **Workspace Notes** | Notes, todos, and a sketch canvas saved beside the project so agents can read the same plan |
-| **Home** | Fast return to recent local and SSH workspaces; immersive modes stay disabled until a workspace is open |
+| **Cinematic Mode** | True full-screen four-pane view over 15 licensed, artist-made 1440p landscapes and architectural paintings with `⌘K`, `@mentions`, Results, scene shuffle, and synchronized pane resizing |
+| **Pixel Mode** | A 20-floor Art Deco tower with premade previews, collision-aware diverse rooms, arrow-key floor navigation, time-of-day skies, and RPG pet stats anchored beside the clicked pet |
+| **Workspace Notes** | Notes, todos, and an undoable sketch canvas saved beside the project so agents can read the same plan |
+| **Home** | A clean, keyboard-first B launch screen and fast return to recent local and SSH workspaces; immersive modes stay disabled until a workspace is open |
 | **Files + Outputs** | Live Explorer, remembered opened outputs, generated-file attribution, and embedded image, video, PDF, HTML, code, and document previews |
 
 ## Highlights
@@ -50,11 +50,14 @@ metadata.
 - Workspace tabs with running-agent portraits and optional live ETA labels.
 - Disconnected SSH workspaces clear stale files and show their state plainly.
 - Local or remote disk usage in the bottom bar.
-- Spotify playback and shuffle controls, plus optional music-reactive scene
-  atmosphere with adjustable strength.
+- Spotify playback and shuffle controls, plus playback-synchronized scene
+  bloom, atmosphere, and player feedback with adjustable strength.
+- Terminal output follows the native xterm write path, keeps ANSI chunks in
+  order, and preserves a user's scroll position during large output bursts.
 - Searchable Openleaf theme catalog with 22 choices in each of seven
   categories.
-- macOS clock, clickable calendar, battery meter, and charging bolt.
+- macOS clock, month-switching calendar, battery meter, and charging bolt.
+- Reset-to-defaults settings plus a live Terminal typography preview.
 - Command-palette **Copy workspace handoff** action for an instant Markdown
   standup of every live agent.
 
@@ -67,7 +70,7 @@ hidden room iframe through every floor. Rooms vary by size, shape, materials,
 palette, furniture, and floor plan. Each occupied floor hosts one live agent
 and a species-specific pet.
 
-Click a pet to open a pixel RPG sheet with:
+Click a pet to open a pixel RPG sheet beside that pet with:
 
 - HP and energy bars
 - level and mood
@@ -76,24 +79,28 @@ Click a pet to open a pixel RPG sheet with:
 - personality trait
 - special talent
 
-Click an agent in the clipboard to jump straight to its floor. The tower sky
+Click an agent in the clipboard to jump straight to its floor, or use the
+Up/Down arrow keys to move through the tower. The tower sky
 defaults to local sunrise, day, sunset, or night and can be cycled manually.
 
 ## Cinematic Mode
 
 Press `⌘K` (`Ctrl+K` elsewhere) to enter full screen and focus the shared
 command dock. All four panes remain visible even when no agents are running.
-Type `@` to route a message to:
+Type `@` to open a compact picker containing only the names and faces of agents
+that are actually active in the current workspace. Pick a name to route the
+message directly to that agent.
 
-- `@codex`, `@claude`, or `@shell`
-- `@1` through `@4`
-- any running agent by name
-
-The 20 bundled scenes are credited, artist-made CGI and Blender animations.
-They are locally cached 1080p loops—not AI-generated art, live-action footage,
-or artificial pans across still images. Only the selected scene is decoded;
-the other 19 remain dormant. Enable Reduce Motion or opt into
-Spotify-reactive atmosphere. Full credits and source licenses are recorded in
+The 15 bundled scenes are public-domain landscape and architectural paintings
+from The Met and the Art Institute of Chicago. Each fixed 2560 × 1440 artwork
+receives one restrained local effect—slow clouds, mist, water glints, light,
+dust, fireflies, or stars—without moving the camera or the artwork. There is no
+AI art, stock footage, game art, CGI spectacle, or short video seam. Only the
+selected WebP is decoded; Reduce Motion disables all atmosphere. The optional
+Spotify response is a faint perimeter glow: it leaves the center, agent panes,
+and player still while playback gently changes the outer edge. Spotify stays
+available as a compact player in the top-left of full screen. Full credits and
+source licenses are recorded in
 [`assets/scenes/README.md`](assets/scenes/README.md).
 
 ## Workspace Notes
@@ -102,7 +109,8 @@ The Notes button opens a focused Apple Notes-inspired workspace with:
 
 - free-form notes
 - checkable todos
-- a pressure-free sketch pad with color and brush size
+- a pressure-free sketch pad with pen/eraser tools, color and brush size,
+  undo/redo (`⌘Z` / `⇧⌘Z`), and clear
 
 BsCode persists the structured data in `.bscode-notes.json` and an agent-readable
 summary in `.bscode-notes.md`. SSH workspaces write the same files remotely.
@@ -196,7 +204,7 @@ selected workspace. Use trusted workspaces and review `createAgent` in
 ## Documentation
 
 - [Complete feature breakdown](docs/features.md)
-- [v0.2.0 release notes](docs/release-v0.2.0.md)
+- [v0.2.1 release notes](docs/release-v0.2.1.md)
 - [Cross-platform build and smoke-test guide](docs/cross-platform.md)
 - [Visual QA and release matrix](docs/visual-qa.md)
 - [Pixel Agents integration](pixel-agents-mode/AGENT-WORKBENCH-INTEGRATION.md)
