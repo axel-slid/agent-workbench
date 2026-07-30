@@ -12336,6 +12336,56 @@ html[data-appearance-tone="light"] body:not(.cinematic-mode) .stage-heading {
   height: 36px;
 }
 
+.cinematic-prompt-field {
+  height: 36px;
+  min-width: 0;
+  position: relative;
+}
+
+.cinematic-prompt-highlight {
+  color: #eef4f5;
+  font: 12px/36px var(--font);
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  white-space: pre;
+  z-index: 0;
+}
+
+.cinematic-prompt-highlight > span {
+  display: block;
+  min-width: 100%;
+  transform: translateX(0);
+  width: max-content;
+  will-change: transform;
+}
+
+.cinematic-prompt-mention-token {
+  color: var(--mention-color, var(--theme-accent));
+  font-weight: 720;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--mention-color, var(--theme-accent)) 24%, transparent);
+}
+
+.cinematic-prompt-field input {
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.cinematic-prompt-field.has-colorized-mention input {
+  -webkit-text-fill-color: transparent;
+  caret-color: #eef4f5;
+  color: transparent;
+}
+
+.cinematic-prompt-field.has-colorized-mention input::selection {
+  background: rgba(116, 184, 255, 0.3);
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
 .cinematic-prompt-dock > button {
   height: 40px;
   width: 44px;

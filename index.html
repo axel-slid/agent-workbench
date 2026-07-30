@@ -458,7 +458,12 @@
         </section>
         <form id="cinematicPromptDock" class="cinematic-prompt-dock" hidden>
           <div id="cinematicMentionMenu" class="cinematic-mention-menu" role="listbox" aria-label="Mention an active agent" hidden></div>
-          <input id="cinematicPromptInput" type="text" autocomplete="off" placeholder="What should we work on?" aria-label="Cinematic agent instruction">
+          <div class="cinematic-prompt-field">
+            <div class="cinematic-prompt-highlight" aria-hidden="true">
+              <span id="cinematicPromptHighlightText"></span>
+            </div>
+            <input id="cinematicPromptInput" type="text" autocomplete="off" placeholder="What should we work on?" aria-label="Cinematic agent instruction">
+          </div>
           <button id="cinematicResultsButton" class="cinematic-results-button" type="button" title="View generated results" aria-label="View generated results">Results</button>
           <kbd class="cinematic-prompt-shortcut" aria-label="Command K">⌘K</kbd>
           <button id="cinematicPromptSendButton" type="submit" title="Send instruction" aria-label="Send instruction">↵</button>

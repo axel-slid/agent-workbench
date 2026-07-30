@@ -757,8 +757,68 @@ test("Pixel floors keep one live agent, a distinct pet, and a sprite portrait", 
   }
   assert.match(
     browserMockSource,
-    /readSprite\(\s*png,\s*PET_SIDE_FRAME_WIDTH,\s*PET_FRAME_HEIGHT,[\s\S]*?PET_FRAME_HEIGHT \* 2/,
-    "Pet side frames must come only from the side-facing atlas row"
+    /function petSideFrames\(png\)[\s\S]*?petSideColumnRuns\(png\)/,
+    "Pet side frames must be isolated before the animation uses them"
+  );
+  assert.match(
+    browserMockSource,
+    /const PET_SIDE_FRAME_WIDTH\s*=\s*32;/,
+    "Pet side frames must retain the runtime's normalized 32px width"
+  );
+  assert.match(
+    browserMockSource,
+    /runs\.length\s*===\s*3\s*&&\s*!usesStandardCells[\s\S]*?normalizedPetSideFrame/,
+    "Compact atlases must be segmented by visible pose instead of fixed cell offsets"
+  );
+  const sideAtlasPixels = new Uint8ClampedArray(96 * 96 * 4);
+  const sideFrameColors = [
+    [220, 40, 60],
+    [40, 210, 90],
+    [55, 110, 230]
+  ];
+  const compactSideFrameStarts = [5, 24, 42];
+  for (let frame = 0; frame < sideFrameColors.length; frame += 1) {
+    for (let y = 64; y < 96; y += 1) {
+      for (
+        let x = compactSideFrameStarts[frame];
+        x < compactSideFrameStarts[frame] + 16;
+        x += 1
+      ) {
+        const offset = (y * 96 + x) * 4;
+        sideAtlasPixels.set([...sideFrameColors[frame], 255], offset);
+      }
+    }
+  }
+  const sideFrameFixture = {
+    png: { width: 96, height: 96, data: sideAtlasPixels }
+  };
+  vm.runInNewContext(
+    `const PET_FRAME_HEIGHT = 32;
+     const PET_FRAME_WIDTH = 16;
+     const PET_SIDE_FRAME_WIDTH = 32;
+     ${extractFunction(browserMockSource, "rgbaToHex")}
+     ${extractFunction(browserMockSource, "getPixel")}
+     ${extractFunction(browserMockSource, "readSprite")}
+     ${extractFunction(browserMockSource, "petSideColumnRuns")}
+     ${extractFunction(browserMockSource, "normalizedPetSideFrame")}
+     ${extractFunction(browserMockSource, "petSideFrames")}
+     ${extractFunction(browserMockSource, "petFrames")}
+     this.frames = petFrames(png);`,
+    sideFrameFixture
+  );
+  const decodedSideFrames = JSON.parse(JSON.stringify(sideFrameFixture.frames.walkRight));
+  assert.deepEqual(
+    decodedSideFrames.map((frame) => [
+      frame.length,
+      frame[0].length,
+      [...new Set(frame.flat().filter(Boolean))]
+    ]),
+    [
+      [32, 32, ["#DC283C"]],
+      [32, 32, ["#28D25A"]],
+      [32, 32, ["#376EE6"]]
+    ],
+    "Every compact side pose must decode into one isolated normalized frame"
   );
   const petProfiles = extractArray(rendererSource, "pixelPetProfiles");
   assert.equal(petProfiles.length, 12, "Every bundled pet needs an attribute profile");
@@ -1679,10 +1739,14 @@ test("agent state, current task, and checklist normalization stay synchronized",
 test("the cinematic mention picker reveals only named active agents after typing @", () => {
   const html = read("index.html");
   const rendererSource = read("renderer.js");
+  const styles = read("styles.css");
   const choiceSource = extractFunction(rendererSource, "cinematicMentionChoices");
   const renderSource = extractFunction(rendererSource, "renderCinematicMentionMenu");
+  const highlightSource = extractFunction(rendererSource, "renderCinematicPromptHighlight");
+  const insertSource = extractFunction(rendererSource, "insertCinematicMention");
   assert.doesNotMatch(html, /id="cinematicMentionButton"/);
   assert.match(html, /id="cinematicMentionMenu"[\s\S]*?role="listbox"[\s\S]*?aria-label="Mention an active agent"/);
+  assert.match(html, /class="cinematic-prompt-highlight"[\s\S]*?id="cinematicPromptHighlightText"/);
   assert.match(choiceSource, /activeWorkspaceSessions\(\)/);
   assert.match(choiceSource, /session\.metadata\.name/);
   assert.doesNotMatch(choiceSource, /OpenAI coding agent|Claude Code agent|Terminal session|slotChoices|modelChoices/);
@@ -1692,6 +1756,13 @@ test("the cinematic mention picker reveals only named active agents after typing
   assert.match(renderSource, /const context\s*=\s*cinematicMentionContext\(\)/);
   assert.match(renderSource, /if\s*\(!context\)\s*\{[\s\S]*?closeCinematicMentionMenu\(\)/);
   assert.doesNotMatch(renderSource, /forceOpen/);
+  assert.match(highlightSource, /activeWorkspaceSessions\(\)/);
+  assert.match(highlightSource, /cinematicModeEnabled\s*&&\s*hasColorizedMention/);
+  assert.match(highlightSource, /cinematic-prompt-mention-token/);
+  assert.match(highlightSource, /--mention-color[\s\S]*?cinematicMentionAccent\(session\)/);
+  assert.match(insertSource, /setRangeText\([\s\S]*?renderCinematicPromptHighlight\(\)/);
+  assert.match(styles, /\.cinematic-prompt-field\.has-colorized-mention input\s*\{[\s\S]*?color:\s*transparent/);
+  assert.match(styles, /\.cinematic-prompt-mention-token\s*\{[\s\S]*?var\(--mention-color/);
 });
 
 test("Cinematic cells are borderless, resizable as one grid, and have scene shuffle", () => {

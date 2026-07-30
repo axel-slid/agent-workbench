@@ -35,6 +35,80 @@ function readSprite(png, width, height, offsetX = 0, offsetY = 0) {
   return sprite;
 }
 
+// Official Pixel Agents pets use three 32px cells on the last row. Several
+// community pets pack those same three poses more tightly, so a fixed crop can
+// include the end of one pose and the start of the next. Detect the three
+// visible silhouettes and normalize only the non-standard atlases back to the
+// 32px runtime contract.
+function petSideColumnRuns(png) {
+  const occupied = [];
+  for (let x = 0; x < png.width; x += 1) {
+    let hasPixel = false;
+    for (let y = PET_FRAME_HEIGHT * 2; y < PET_FRAME_HEIGHT * 3; y += 1) {
+      if (getPixel(png, x, y)[3] >= 2) {
+        hasPixel = true;
+        break;
+      }
+    }
+    occupied.push(hasPixel);
+  }
+
+  const runs = [];
+  let start = -1;
+  for (let x = 0; x <= occupied.length; x += 1) {
+    if (occupied[x] && start < 0) start = x;
+    if ((!occupied[x] || x === occupied.length) && start >= 0) {
+      runs.push({ start, end: x - 1 });
+      start = -1;
+    }
+  }
+  return runs;
+}
+
+function normalizedPetSideFrame(png, run) {
+  const width = run.end - run.start + 1;
+  const source = readSprite(
+    png,
+    width,
+    PET_FRAME_HEIGHT,
+    run.start,
+    PET_FRAME_HEIGHT * 2,
+  );
+  const frame = Array.from(
+    { length: PET_FRAME_HEIGHT },
+    () => Array(PET_SIDE_FRAME_WIDTH).fill(""),
+  );
+  const offsetX = Math.max(0, Math.floor((PET_SIDE_FRAME_WIDTH - width) / 2));
+  for (let y = 0; y < PET_FRAME_HEIGHT; y += 1) {
+    for (let x = 0; x < Math.min(width, PET_SIDE_FRAME_WIDTH); x += 1) {
+      frame[y][offsetX + x] = source[y][x];
+    }
+  }
+  return frame;
+}
+
+function petSideFrames(png) {
+  const runs = petSideColumnRuns(png);
+  const usesStandardCells = runs.length === 3 && runs.every(
+    (run, frame) =>
+      run.start >= frame * PET_SIDE_FRAME_WIDTH
+      && run.end < (frame + 1) * PET_SIDE_FRAME_WIDTH,
+  );
+
+  if (runs.length === 3 && !usesStandardCells) {
+    return runs.map((run) => normalizedPetSideFrame(png, run));
+  }
+
+  return Array.from({ length: 3 }, (_, frame) =>
+    readSprite(
+      png,
+      PET_SIDE_FRAME_WIDTH,
+      PET_FRAME_HEIGHT,
+      frame * PET_SIDE_FRAME_WIDTH,
+      PET_FRAME_HEIGHT * 2,
+    ));
+}
+
 async function decodePng(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to fetch PNG: ${url} (${response.status})`);
@@ -124,6 +198,7 @@ function petFrames(png) {
     idleUp: [],
     walkRight: [],
   };
+  const sideFrames = petSideFrames(png);
   for (let frame = 0; frame < 3; frame += 1) {
     frames.walkDown.push(
       readSprite(png, PET_FRAME_WIDTH, PET_FRAME_HEIGHT, frame * PET_FRAME_WIDTH, 0),
@@ -149,15 +224,7 @@ function petFrames(png) {
         PET_FRAME_HEIGHT,
       ),
     );
-    frames.walkRight.push(
-      readSprite(
-        png,
-        PET_SIDE_FRAME_WIDTH,
-        PET_FRAME_HEIGHT,
-        frame * PET_SIDE_FRAME_WIDTH,
-        PET_FRAME_HEIGHT * 2,
-      ),
-    );
+    frames.walkRight.push(sideFrames[frame]);
   }
   return frames;
 }

@@ -115,6 +115,7 @@ const outputViewerContent = document.getElementById("outputViewerContent");
 const closeOutputViewerButton = document.getElementById("closeOutputViewerButton");
 const cinematicPromptDock = document.getElementById("cinematicPromptDock");
 const cinematicPromptInput = document.getElementById("cinematicPromptInput");
+const cinematicPromptHighlightText = document.getElementById("cinematicPromptHighlightText");
 const cinematicPromptSendButton = document.getElementById("cinematicPromptSendButton");
 const cinematicMentionMenu = document.getElementById("cinematicMentionMenu");
 const cinematicResultsButton = document.getElementById("cinematicResultsButton");
@@ -3446,6 +3447,7 @@ function setCinematicMode(enabled, { persist = true } = {}) {
   cinematicNextSceneButton.hidden = !cinematicModeEnabled;
   cinematicPromptDock.hidden = !cinematicModeEnabled;
   if (!cinematicModeEnabled) closeCinematicMentionMenu();
+  renderCinematicPromptHighlight();
   if (persist) {
     localStorage.setItem("agentWorkbenchCinematicMode", cinematicModeEnabled ? "1" : "0");
   }
@@ -3503,7 +3505,10 @@ async function submitCinematicPrompt() {
           routing.kind || (["codex", "claude", "shell"].includes(preferredKind) ? preferredKind : "codex"),
           message
         );
-        if (target) cinematicPromptInput.value = "";
+        if (target) {
+          cinematicPromptInput.value = "";
+          renderCinematicPromptHighlight();
+        }
         return;
       }
       target = workspaceSessions[0] || null;
@@ -3519,6 +3524,7 @@ async function submitCinematicPrompt() {
     beginAgentTask(target, message);
     updateRuntimeStatus();
     cinematicPromptInput.value = "";
+    renderCinematicPromptHighlight();
     showToast(`Sent to ${target.metadata.name || `Agent ${target.slotIndex + 1}`}`);
   } finally {
     cinematicPromptSendButton.disabled = false;
@@ -3588,6 +3594,54 @@ function cinematicMentionChoices(query = "") {
   });
 }
 
+function cinematicMentionAccent(session) {
+  const fallbackAccents = ["#65b8ff", "#ff9d66", "#b99cff", "#62d7a3"];
+  const slotIndex = Number(session?.slotIndex);
+  const fallback = fallbackAccents[Number.isInteger(slotIndex) ? slotIndex : 0] || fallbackAccents[0];
+  if (!session?.slot) return fallback;
+  const computed = getComputedStyle(session.slot).getPropertyValue("--agent-color").trim();
+  return computed || fallback;
+}
+
+function syncCinematicPromptHighlightScroll() {
+  if (!cinematicPromptHighlightText) return;
+  cinematicPromptHighlightText.style.transform = `translateX(${-cinematicPromptInput.scrollLeft}px)`;
+}
+
+function renderCinematicPromptHighlight() {
+  if (!cinematicPromptHighlightText) return;
+  const field = cinematicPromptInput.closest(".cinematic-prompt-field");
+  const value = cinematicPromptInput.value;
+  const sessionsByToken = new Map(
+    activeWorkspaceSessions()
+      .filter((session) => !session.exited && String(session.metadata.name || "").trim())
+      .map((session) => [String(session.metadata.name).trim().toLowerCase(), session])
+  );
+  const fragment = document.createDocumentFragment();
+  let textOffset = 0;
+  let hasColorizedMention = false;
+  for (const match of value.matchAll(/@[a-z0-9_-]+/gi)) {
+    const session = sessionsByToken.get(match[0].slice(1).toLowerCase());
+    if (!session) continue;
+    const start = match.index ?? 0;
+    fragment.append(document.createTextNode(value.slice(textOffset, start)));
+    const token = document.createElement("span");
+    token.className = "cinematic-prompt-mention-token";
+    token.style.setProperty("--mention-color", cinematicMentionAccent(session));
+    token.textContent = match[0];
+    fragment.append(token);
+    textOffset = start + match[0].length;
+    hasColorizedMention = true;
+  }
+  fragment.append(document.createTextNode(value.slice(textOffset)));
+  cinematicPromptHighlightText.replaceChildren(fragment);
+  field?.classList.toggle(
+    "has-colorized-mention",
+    cinematicModeEnabled && hasColorizedMention
+  );
+  syncCinematicPromptHighlightScroll();
+}
+
 function closeCinematicMentionMenu() {
   cinematicMentionMenu.hidden = true;
   cinematicMentionMenu.replaceChildren();
@@ -3618,6 +3672,7 @@ function renderCinematicMentionMenu() {
     button.dataset.mentionIndex = String(index);
     button.setAttribute("role", "option");
     button.setAttribute("aria-selected", String(index === cinematicMentionIndex));
+    button.style.setProperty("--mention-color", cinematicMentionAccent(choice.session));
     button.classList.add("has-profile");
     button.setAttribute("aria-label", `Mention ${choice.label}`);
     const avatar = document.createElement("span");
@@ -3640,6 +3695,7 @@ function insertCinematicMention(index = cinematicMentionIndex) {
   const choice = cinematicMentionChoicesState[index];
   if (!context || !choice) return;
   cinematicPromptInput.setRangeText(`@${choice.token} `, context.start, context.cursor, "end");
+  renderCinematicPromptHighlight();
   closeCinematicMentionMenu();
   cinematicPromptInput.focus();
 }
@@ -8177,8 +8233,10 @@ cinematicResultsButton.addEventListener("click", async () => {
 });
 cinematicPromptInput.addEventListener("input", () => {
   cinematicMentionIndex = 0;
+  renderCinematicPromptHighlight();
   renderCinematicMentionMenu();
 });
+cinematicPromptInput.addEventListener("scroll", syncCinematicPromptHighlightScroll);
 cinematicPromptInput.addEventListener("focus", renderCinematicMentionMenu);
 cinematicPromptInput.addEventListener("blur", () => {
   setTimeout(() => {
