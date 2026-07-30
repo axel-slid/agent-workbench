@@ -269,7 +269,7 @@ const CinematicScene = ({frame}) => {
 };
 
 export const BsCodeDemo = () => {
-  const frame = useCurrentFrame();
+  const frame = useCurrentFrame() * (240 / 360);
   const {fps} = useVideoConfig();
   const intro = spring({
     frame,
