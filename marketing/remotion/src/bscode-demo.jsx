@@ -4,6 +4,8 @@ import {
   Easing,
   Img,
   interpolate,
+  OffthreadVideo,
+  Sequence,
   spring,
   useCurrentFrame,
   useVideoConfig,
@@ -11,7 +13,7 @@ import {
 import agentGrid from "../../../docs/screenshots/agent-grid.jpg";
 import pixelMode from "../../../docs/screenshots/pixel-mode.jpg";
 import cinematicScene from "../../../assets/scenes/cotopaxi.webp";
-import appIcon from "../../../assets/app-icon.png";
+import iconAnimation from "../../../assets/bscode-loading-animation.mp4";
 import agentFace0 from "../../../assets/agent-face-0.png";
 import agentFace1 from "../../../assets/agent-face-1.png";
 import agentFace2 from "../../../assets/agent-face-2.png";
@@ -276,7 +278,7 @@ export const BsCodeDemo = () => {
     fps,
     config: {damping: 18, stiffness: 110, mass: 0.8},
   });
-  const close = interpolate(frame, [220, 239], [0, 1], clamp);
+  const close = interpolate(frame, [192, 209], [0, 1], clamp);
 
   return (
     <AbsoluteFill style={{overflow: "hidden", background: "#111318"}}>
@@ -293,27 +295,42 @@ export const BsCodeDemo = () => {
         </WindowChrome>
       </div>
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "grid",
-          placeItems: "center",
-          background: "#111318",
-          opacity: close,
-          color: "white",
-          fontFamily: "Inter, ui-sans-serif, system-ui",
-          textAlign: "center",
-        }}
-      >
-        <div style={{transform: `scale(${0.9 + close * 0.1})`}}>
-          <Img src={appIcon} style={{width: 92, height: 92, borderRadius: 22, marginBottom: 10}} />
-          <div style={{fontSize: 58, fontWeight: 930, letterSpacing: -3}}>BsCode</div>
-          <div style={{color: blue, fontSize: 14, fontWeight: 800, letterSpacing: 2.8, marginTop: 6}}>
-            COORDINATE · OBSERVE · SHIP
+      <Sequence from={288} layout="none">
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            background: "#111318",
+            opacity: close,
+            color: "white",
+            fontFamily: "Inter, ui-sans-serif, system-ui",
+            textAlign: "center",
+          }}
+        >
+          <div style={{transform: `scale(${0.92 + close * 0.08})`}}>
+            <OffthreadVideo
+              src={iconAnimation}
+              startFrom={36}
+              playbackRate={5}
+              muted
+              style={{
+                width: 320,
+                height: 180,
+                objectFit: "cover",
+                borderRadius: 24,
+                boxShadow: "0 22px 55px #000a",
+                marginBottom: 8,
+              }}
+            />
+            <div style={{fontSize: 52, fontWeight: 930, letterSpacing: -3}}>BsCode</div>
+            <div style={{color: blue, fontSize: 14, fontWeight: 800, letterSpacing: 2.8, marginTop: 5}}>
+              COORDINATE · OBSERVE · SHIP
+            </div>
           </div>
         </div>
-      </div>
+      </Sequence>
     </AbsoluteFill>
   );
 };
