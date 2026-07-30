@@ -201,6 +201,8 @@ const sceneBackground = document.getElementById("sceneBackground");
 const sceneBackgroundCanvas = document.getElementById("sceneBackgroundCanvas");
 const musicReactiveOverlay = document.querySelector(".music-reactive-overlay");
 const sceneThemeOptions = Array.from(document.querySelectorAll("[data-scene-theme]"));
+const sceneGallerySearch = document.getElementById("sceneGallerySearch");
+const sceneGalleryCount = document.getElementById("sceneGalleryCount");
 const settingsNavItems = Array.from(document.querySelectorAll("[data-settings-target]"));
 const settingsPages = Array.from(document.querySelectorAll("[data-settings-page]"));
 const appearanceCategories = Array.from(document.querySelectorAll(".appearance-category"));
@@ -1013,52 +1015,139 @@ const THEME_CATEGORY_DEFAULTS = {
   "Dark Contrast": "abyss",
   Pixelized: "pixel-night"
 };
-const SCENE_THEMES = {
-  none: null,
-  "copenhagen-moonlight": { label: "Copenhagen Moonlight", detail: "Johan Christian Dahl · 1846", image: "assets/scenes/copenhagen-moonlight.webp", source: "https://www.metmuseum.org/art/collection/search/439343", artist: "Johan Christian Dahl", license: "Public Domain · The Met Open Access", motion: "stars", colors: ["#111826", "#4b5a67", "#c1b69c"] },
-  "niagara-falls": { label: "Niagara Falls", detail: "Thomas Cole · 1830", image: "assets/scenes/niagara-falls.webp", source: "https://www.artic.edu/artworks/90048/distant-view-of-niagara-falls", artist: "Thomas Cole", license: "Public Domain · Art Institute of Chicago CC0", motion: "mist", colors: ["#1d2b26", "#718578", "#d4d5c1"] },
-  "cotopaxi": { label: "View of Cotopaxi", detail: "Frederic Edwin Church · 1857", image: "assets/scenes/cotopaxi.webp", source: "https://www.artic.edu/artworks/76571/view-of-cotopaxi", artist: "Frederic Edwin Church", license: "Public Domain · Art Institute of Chicago CC0", motion: "clouds", colors: ["#403a31", "#998a6e", "#e7d2a5"] },
-  "roman-campagna": { label: "Roman Campagna", detail: "Claude Lorrain · ca. 1639", image: "assets/scenes/roman-campagna.webp", source: "https://www.metmuseum.org/art/collection/search/435906", artist: "Claude Lorrain", license: "Public Domain · The Met Open Access", motion: "water", colors: ["#322d25", "#80745d", "#dac9a2"] },
-  "colonnade-ruins": { label: "Colonnade in Ruins", detail: "Hubert Robert · Roman ruins", image: "assets/scenes/colonnade-ruins.webp", source: "https://www.metmuseum.org/art/collection/search/437475", artist: "Hubert Robert", license: "Public Domain · The Met Open Access", motion: "dust", colors: ["#514438", "#a68b66", "#e8d3ac"] },
-  "paris-rain": { label: "Paris Street; Rainy Day", detail: "Gustave Caillebotte · 1877", image: "assets/scenes/paris-rain.webp", source: "https://www.artic.edu/artworks/20684/paris-street-rainy-day", artist: "Gustave Caillebotte", license: "Public Domain · Art Institute of Chicago CC0", motion: "water", colors: ["#3a3c3c", "#88877e", "#d0c9bd"] },
-  "parthenon-afterlight": { label: "Parthenon Afterlight", detail: "Frederic Edwin Church · 1871", image: "assets/scenes/parthenon-afterlight.webp", source: "https://www.metmuseum.org/art/collection/search/10482", artist: "Frederic Edwin Church", license: "Public Domain · The Met Open Access", motion: "light", colors: ["#564535", "#b98a5f", "#efd9ad"] },
-  "arches-in-ruins": { label: "Arches in Ruins", detail: "Hubert Robert · Roman ruins", image: "assets/scenes/arches-in-ruins.webp", source: "https://www.metmuseum.org/art/collection/search/437472", artist: "Hubert Robert", license: "Public Domain · The Met Open Access", motion: "dust", colors: ["#3e352c", "#9d8260", "#e4d1ad"] },
-  "tivoli-morning": { label: "Tivoli Morning", detail: "Thomas Cole · Italian landscape", image: "assets/scenes/tivoli-morning.webp", source: "https://www.metmuseum.org/art/collection/search/10500", artist: "Thomas Cole", license: "Public Domain · The Met Open Access", motion: "mist", colors: ["#3a3427", "#8f836b", "#d8c8a6"] },
-  "aegean-sea": { label: "The Aegean Sea", detail: "Frederic Edwin Church · ca. 1877", image: "assets/scenes/aegean-sea.webp", source: "https://www.metmuseum.org/art/collection/search/10480", artist: "Frederic Edwin Church", license: "Public Domain · The Met Open Access", motion: "light", colors: ["#302821", "#9a7653", "#e6c983"] },
-  "heart-of-andes": { label: "Heart of the Andes", detail: "Frederic Edwin Church · 1859", image: "assets/scenes/heart-of-andes.webp", source: "https://www.metmuseum.org/art/collection/search/10481", artist: "Frederic Edwin Church", license: "Public Domain · The Met Open Access", motion: "mist", colors: ["#223126", "#688260", "#d3d8b7"] },
-  "oxbow-storm": { label: "The Oxbow", detail: "Thomas Cole · 1836", image: "assets/scenes/oxbow-storm.webp", source: "https://www.metmuseum.org/art/collection/search/10497", artist: "Thomas Cole", license: "Public Domain · The Met Open Access", motion: "clouds", colors: ["#393a35", "#8e866c", "#d9d1b0"] },
-  "mountain-ford": { label: "The Mountain Ford", detail: "Thomas Cole · 1846", image: "assets/scenes/mountain-ford.webp", source: "https://www.metmuseum.org/art/collection/search/10496", artist: "Thomas Cole", license: "Public Domain · The Met Open Access", motion: "fireflies", colors: ["#242820", "#766c4b", "#c9b780"] },
-  "catskill-autumn": { label: "Catskill Autumn", detail: "Thomas Cole · 1836–37", image: "assets/scenes/catskill-autumn.webp", source: "https://www.metmuseum.org/art/collection/search/10501", artist: "Thomas Cole", license: "Public Domain · The Met Open Access", motion: "water", colors: ["#2d3425", "#7a7952", "#dfc58c"] },
-  "rocky-mountains": { label: "Rocky Mountains", detail: "Albert Bierstadt · 1863", image: "assets/scenes/rocky-mountains.webp", source: "https://www.metmuseum.org/art/collection/search/10154", artist: "Albert Bierstadt", license: "Public Domain · The Met Open Access", motion: "mist", colors: ["#26372f", "#748574", "#d9d5b6"] }
-};
+function buildSceneThemes(catalog) {
+  const scenes = { none: null };
+  for (const record of Array.isArray(catalog) ? catalog : []) {
+    if (
+      !record
+      || !/^[a-z][a-z0-9-]+$/.test(record.id)
+      || record.humanMade !== true
+      || !record.artist
+      || !record.asset
+      || !record.thumbnail
+      || !Array.isArray(record.colors)
+      || record.colors.length !== 3
+    ) {
+      continue;
+    }
+    scenes[record.id] = Object.freeze({
+      ...record,
+      image: `assets/scenes/${record.asset}`,
+      thumbnail: `assets/scenes/${record.thumbnail}`
+    });
+  }
+  return Object.freeze(scenes);
+}
+
+const SCENE_THEMES = buildSceneThemes(window.BSCODE_SCENE_CATALOG);
+const DEFAULT_SCENE_THEME = Object.keys(SCENE_THEMES).find((scene) => scene !== "none") || "none";
+
+let scenePreviewObserver = null;
+
+function loadSceneThumbnail(option) {
+  const preview = option?.querySelector("img.scene-theme-preview");
+  const thumbnail = option?.dataset.sceneThumbnail;
+  if (!preview || !thumbnail || preview.src) return;
+  preview.addEventListener("load", () => preview.classList.add("loaded"), { once: true });
+  preview.addEventListener("error", () => {
+    preview.removeAttribute("src");
+    preview.classList.add("unavailable");
+  }, { once: true });
+  preview.src = thumbnail;
+}
+
+function refreshSceneGallery(query = "") {
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+  let visibleArtwork = 0;
+  let totalArtwork = 0;
+  sceneThemeOptions.forEach((option) => {
+    const isArtwork = option.dataset.sceneTheme !== "none";
+    if (isArtwork) totalArtwork += 1;
+    const matches = !normalizedQuery || option.dataset.sceneSearch.includes(normalizedQuery);
+    option.hidden = !matches;
+    if (isArtwork && matches) visibleArtwork += 1;
+  });
+  if (sceneGalleryCount) {
+    sceneGalleryCount.value = normalizedQuery
+      ? `${visibleArtwork} of ${totalArtwork} human-made works`
+      : `${totalArtwork} human-made works`;
+  }
+}
 
 function hydrateSceneThemes() {
   const grid = document.querySelector(".scene-theme-grid");
   if (!grid) return;
+  scenePreviewObserver?.disconnect();
+  scenePreviewObserver = typeof IntersectionObserver === "function"
+    ? new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        loadSceneThumbnail(entry.target);
+        scenePreviewObserver?.unobserve(entry.target);
+      });
+    }, { root: grid, rootMargin: "160px 0px" })
+    : null;
   grid.replaceChildren();
   sceneThemeOptions.length = 0;
+  const artworkCount = Object.values(SCENE_THEMES).filter(Boolean).length;
+  let artworkIndex = 0;
   for (const [id, scene] of Object.entries(SCENE_THEMES)) {
     const option = document.createElement("button");
     option.className = "scene-theme-option";
     option.type = "button";
     option.dataset.sceneTheme = id;
+    option.dataset.sceneSearch = [
+      scene?.label,
+      scene?.artist,
+      scene?.detail,
+      scene?.license,
+      scene?.institution
+    ].filter(Boolean).join(" ").toLowerCase();
     option.setAttribute("role", "radio");
     option.setAttribute("aria-checked", "false");
     if (scene) {
+      artworkIndex += 1;
       option.style.setProperty("--scene-a", scene.colors[0]);
       option.style.setProperty("--scene-b", scene.colors[1]);
       option.style.setProperty("--scene-c", scene.colors[2]);
-      option.style.setProperty("--scene-preview", `url("${scene.image}")`);
+      option.dataset.sceneThumbnail = scene.thumbnail
+        || `assets/scenes/thumbnails/${id}.webp`;
       option.title = `${scene.label} — ${scene.artist}; ${scene.license}`;
+      option.setAttribute("aria-label", `${scene.label} by ${scene.artist}`);
+      option.setAttribute("aria-posinset", String(artworkIndex));
+      option.setAttribute("aria-setsize", String(artworkCount));
     }
-    option.innerHTML = `
-      <span class="scene-theme-preview ${scene ? "" : "scene-theme-none"}" aria-hidden="true"></span>
-      <strong>${scene?.label || "None"}<small>${scene?.detail || "Theme color"}</small></strong>
-      <b aria-hidden="true">✓</b>
-    `;
+    const preview = document.createElement(scene ? "img" : "span");
+    preview.className = `scene-theme-preview ${scene ? "" : "scene-theme-none"}`;
+    preview.setAttribute("aria-hidden", "true");
+    if (scene) {
+      preview.alt = "";
+      preview.decoding = "async";
+      preview.loading = "lazy";
+    }
+    const copy = document.createElement("strong");
+    const name = document.createElement("span");
+    name.className = "scene-theme-name";
+    name.textContent = scene?.label || "None";
+    const detail = document.createElement("small");
+    detail.textContent = scene
+      ? (scene.detail?.includes(scene.artist)
+        ? scene.detail
+        : [scene.artist, scene.detail].filter(Boolean).join(" · "))
+      : "Theme color";
+    copy.append(name, detail);
+    const selectedMark = document.createElement("b");
+    selectedMark.setAttribute("aria-hidden", "true");
+    selectedMark.textContent = "✓";
+    option.append(preview, copy, selectedMark);
     grid.appendChild(option);
     sceneThemeOptions.push(option);
+    if (scene) {
+      if (scenePreviewObserver) scenePreviewObserver.observe(option);
+      else loadSceneThumbnail(option);
+    }
   }
+  refreshSceneGallery(sceneGallerySearch?.value);
 }
 
 hydrateSceneThemes();
@@ -4208,8 +4297,8 @@ function selectedAppearanceCategory() {
 }
 
 function selectedSceneTheme() {
-  const saved = localStorage.getItem("agentWorkbenchSceneTheme") || "copenhagen-moonlight";
-  return Object.prototype.hasOwnProperty.call(SCENE_THEMES, saved) ? saved : "copenhagen-moonlight";
+  const saved = localStorage.getItem("agentWorkbenchSceneTheme") || DEFAULT_SCENE_THEME;
+  return Object.prototype.hasOwnProperty.call(SCENE_THEMES, saved) ? saved : DEFAULT_SCENE_THEME;
 }
 
 function refreshTerminalThemes() {
@@ -4774,7 +4863,7 @@ function syncSceneBackgroundPlayback() {
 }
 
 function selectSceneTheme(scene, { persist = true } = {}) {
-  const selected = Object.prototype.hasOwnProperty.call(SCENE_THEMES, scene) ? scene : "copenhagen-moonlight";
+  const selected = Object.prototype.hasOwnProperty.call(SCENE_THEMES, scene) ? scene : DEFAULT_SCENE_THEME;
   document.body.dataset.sceneTheme = selected;
   sceneThemeOptions.forEach((option) => {
     const active = option.dataset.sceneTheme === selected;
@@ -8140,6 +8229,15 @@ cinematicMentionMenu.addEventListener("pointermove", (event) => {
   cinematicMentionMenu.querySelectorAll(".cinematic-mention-choice").forEach((choice, index) => {
     choice.setAttribute("aria-selected", String(index === cinematicMentionIndex));
   });
+});
+sceneGallerySearch?.addEventListener("input", () => {
+  refreshSceneGallery(sceneGallerySearch.value);
+});
+sceneGallerySearch?.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape" || !sceneGallerySearch.value) return;
+  event.preventDefault();
+  sceneGallerySearch.value = "";
+  refreshSceneGallery();
 });
 sceneThemeOptions.forEach((option) => {
   option.addEventListener("click", () => selectSceneTheme(option.dataset.sceneTheme));

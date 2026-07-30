@@ -1,0 +1,1066 @@
+{
+  "schemaVersion": 1,
+  "target": {
+    "width": 2560,
+    "height": 1440,
+    "format": "webp",
+    "quality": 84,
+    "thumbnailWidth": 320,
+    "thumbnailHeight": 180,
+    "thumbnailQuality": 76
+  },
+  "institutions": {
+    "artic": {
+      "name": "Art Institute of Chicago",
+      "sourceHosts": [
+        "artic.edu"
+      ],
+      "imageHosts": [
+        "artic.edu"
+      ],
+      "license": {
+        "status": "cc0",
+        "name": "Public Domain · Art Institute of Chicago CC0",
+        "url": "https://www.artic.edu/open-access/open-access-images"
+      }
+    }
+  },
+  "artworks": [
+    {
+      "id": "a-marine",
+      "label": "A Marine",
+      "title": "A Marine",
+      "artist": "George Inness (American, 1825–1894)",
+      "date": "c. 1874–75",
+      "detail": "George Inness (American, 1825–1894) · c. 1874–75",
+      "alt": "A Marine, a human-made artwork by George Inness (American, 1825–1894).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "68792",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/68792",
+      "imageUrl": "https://www.artic.edu/iiif/2/3d2d0842-312e-8d48-708b-d6adde0777bf/full/2560,/0/default.jpg",
+      "asset": "a-marine.webp",
+      "thumbnail": "thumbnails/a-marine.webp",
+      "expectedSourceSha256": "bf3931ecd5274bddf1f30a7cc7dccfa862626d542e0073bf4192c67b78289fba",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "after-summer-shower",
+      "label": "After a Summer Shower",
+      "title": "After a Summer Shower",
+      "artist": "George Inness (American, 1825–1894)",
+      "date": "1894",
+      "detail": "George Inness (American, 1825–1894) · 1894",
+      "alt": "After a Summer Shower, a human-made artwork by George Inness (American, 1825–1894).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "64715",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/64715",
+      "imageUrl": "https://www.artic.edu/iiif/2/a9546ba5-6191-4e04-e209-d22a10e7d0d7/full/2560,/0/default.jpg",
+      "asset": "after-summer-shower.webp",
+      "thumbnail": "thumbnails/after-summer-shower.webp",
+      "expectedSourceSha256": "65461f8409aef7d57f3b83c63dddb4e138c4e39638144e4a2a18521132de984e",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "clouds",
+      "colors": [
+        "#283746",
+        "#73899d",
+        "#d9d2bc"
+      ]
+    },
+    {
+      "id": "catskill-mountains",
+      "label": "Catskill Mountains",
+      "title": "Catskill Mountains",
+      "artist": "George Inness (American, 1825–1894)",
+      "date": "1870",
+      "detail": "George Inness (American, 1825–1894) · 1870",
+      "alt": "Catskill Mountains, a human-made artwork by George Inness (American, 1825–1894).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "68388",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/68388",
+      "imageUrl": "https://www.artic.edu/iiif/2/842d212c-c755-f372-d73f-7d0581051c46/full/2560,/0/default.jpg",
+      "asset": "catskill-mountains.webp",
+      "thumbnail": "thumbnails/catskill-mountains.webp",
+      "expectedSourceSha256": "72197ac198f8f66e416c66dc628d709d2c7d8e20bad48ab06cc1cba1fa647259",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "mist",
+      "colors": [
+        "#25333a",
+        "#66777a",
+        "#c6cac2"
+      ]
+    },
+    {
+      "id": "new-england-scenery",
+      "label": "New England Scenery",
+      "title": "New England Scenery",
+      "artist": "Thomas Cole (American, born England, 1801–1848)",
+      "date": "1839",
+      "detail": "Thomas Cole (American, born England, 1801–1848) · 1839",
+      "alt": "New England Scenery, a human-made artwork by Thomas Cole (American, born England, 1801–1848).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "57163",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/57163",
+      "imageUrl": "https://www.artic.edu/iiif/2/99e276fd-f076-f396-b5c1-b22c3ce62b45/full/2560,/0/default.jpg",
+      "asset": "new-england-scenery.webp",
+      "thumbnail": "thumbnails/new-england-scenery.webp",
+      "expectedSourceSha256": "fbd44f5d765184e37b35b3a6c71f78dfe5bead8f016a2bf35e26f7832526bb37",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "clouds",
+      "colors": [
+        "#283746",
+        "#73899d",
+        "#d9d2bc"
+      ]
+    },
+    {
+      "id": "pastoral-landscape-ruins",
+      "label": "Pastoral Landscape with Ruins",
+      "title": "Pastoral Landscape with Ruins",
+      "artist": "Adriaen van de Velde (Dutch, 1636–1672)",
+      "date": "1664",
+      "detail": "Adriaen van de Velde (Dutch, 1636–1672) · 1664",
+      "alt": "Pastoral Landscape with Ruins, a human-made artwork by Adriaen van de Velde (Dutch, 1636–1672).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "863",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/863",
+      "imageUrl": "https://www.artic.edu/iiif/2/a34d9d72-c4ec-0750-389e-a01215c9aab0/full/2560,/0/default.jpg",
+      "asset": "pastoral-landscape-ruins.webp",
+      "thumbnail": "thumbnails/pastoral-landscape-ruins.webp",
+      "expectedSourceSha256": "52048680b2d6bed02a805cc5c97736f08dbccf51ec427f41c8ede170205e6df1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "dust",
+      "colors": [
+        "#3b3023",
+        "#8a7654",
+        "#d8c595"
+      ]
+    },
+    {
+      "id": "river-landscape-naarden",
+      "label": "River Landscape with a View of Naarden",
+      "title": "River Landscape with a View of Naarden",
+      "artist": "Salomon van Ruysdael (Dutch, about 1602–1670)",
+      "date": "1642",
+      "detail": "Salomon van Ruysdael (Dutch, about 1602–1670) · 1642",
+      "alt": "River Landscape with a View of Naarden, a human-made artwork by Salomon van Ruysdael (Dutch, about 1602–1670).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "238272",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/238272",
+      "imageUrl": "https://www.artic.edu/iiif/2/10429355-e9c3-c48d-1d2a-6fef025d140e/full/2560,/0/default.jpg",
+      "asset": "river-landscape-naarden.webp",
+      "thumbnail": "thumbnails/river-landscape-naarden.webp",
+      "expectedSourceSha256": "17afd97d307b6a8c139058ade89fb5a7cf2742de2f682dae253b3a1ed80e2595",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "italian-landscape-travelers",
+      "label": "Italian Landscape with Travelers",
+      "title": "Italian Landscape with Travelers",
+      "artist": "Jan Both (Dutch, c. 1618–1652)",
+      "date": "c. 1650",
+      "detail": "Jan Both (Dutch, c. 1618–1652) · c. 1650",
+      "alt": "Italian Landscape with Travelers, a human-made artwork by Jan Both (Dutch, c. 1618–1652).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "69041",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/69041",
+      "imageUrl": "https://www.artic.edu/iiif/2/96458291-2c6c-76ba-4be9-dca201687edf/full/2560,/0/default.jpg",
+      "asset": "italian-landscape-travelers.webp",
+      "thumbnail": "thumbnails/italian-landscape-travelers.webp",
+      "expectedSourceSha256": "5ec0586566dbf1263393cf3acad4bafcb4130376f3ed6600329702fb1d251ce8",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "light",
+      "colors": [
+        "#3a2c24",
+        "#967552",
+        "#e5c691"
+      ]
+    },
+    {
+      "id": "italian-landscape",
+      "label": "Italian Landscape",
+      "title": "Italian Landscape",
+      "artist": "Attributed to Heinrich Reinhold (German, 1788–1825)",
+      "date": "1821–24",
+      "detail": "Attributed to Heinrich Reinhold (German, 1788–1825) · 1821–24",
+      "alt": "Italian Landscape, a human-made artwork by Attributed to Heinrich Reinhold (German, 1788–1825).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "65848",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/65848",
+      "imageUrl": "https://www.artic.edu/iiif/2/9199e18e-3591-766e-79cd-23e81211cd1a/full/2560,/0/default.jpg",
+      "asset": "italian-landscape.webp",
+      "thumbnail": "thumbnails/italian-landscape.webp",
+      "expectedSourceSha256": "493a93af105fd2757ba2fb6cac47336de94facf34b57a7819798f666f4438df3",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "light",
+      "colors": [
+        "#3a2c24",
+        "#967552",
+        "#e5c691"
+      ]
+    },
+    {
+      "id": "landscape-sunset",
+      "label": "Landscape, Sunset",
+      "title": "Landscape, Sunset",
+      "artist": "George Inness (American, 1825–1894)",
+      "date": "1887–89",
+      "detail": "George Inness (American, 1825–1894) · 1887–89",
+      "alt": "Landscape, Sunset, a human-made artwork by George Inness (American, 1825–1894).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "64740",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/64740",
+      "imageUrl": "https://www.artic.edu/iiif/2/0b66bb30-3170-f7d1-543a-93e02ffe194f/full/2560,/0/default.jpg",
+      "asset": "landscape-sunset.webp",
+      "thumbnail": "thumbnails/landscape-sunset.webp",
+      "expectedSourceSha256": "8bacdf22ff5e0852aa2b6f4f6fe543dd8142ab5a800c553c348176882c5ab71f",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "light",
+      "colors": [
+        "#3a2c24",
+        "#967552",
+        "#e5c691"
+      ]
+    },
+    {
+      "id": "mist-rising-catskills",
+      "label": "Mist Rising at Sunset in the Catskills",
+      "title": "Mist Rising at Sunset in the Catskills",
+      "artist": "Sanford Robinson Gifford (American, 1823–1880)",
+      "date": "c. 1861",
+      "detail": "Sanford Robinson Gifford (American, 1823–1880) · c. 1861",
+      "alt": "Mist Rising at Sunset in the Catskills, a human-made artwork by Sanford Robinson Gifford (American, 1823–1880).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "71971",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/71971",
+      "imageUrl": "https://www.artic.edu/iiif/2/30491751-fb43-fc27-51fe-d068be7b6568/full/2560,/0/default.jpg",
+      "asset": "mist-rising-catskills.webp",
+      "thumbnail": "thumbnails/mist-rising-catskills.webp",
+      "expectedSourceSha256": "0356d8358fc60a91d39b756f69ae9ee27aae40e3328eac2e27547bb1739614d4",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "mist",
+      "colors": [
+        "#25333a",
+        "#66777a",
+        "#c6cac2"
+      ]
+    },
+    {
+      "id": "rock-hautepierre",
+      "label": "The Rock of Hautepierre",
+      "title": "The Rock of Hautepierre",
+      "artist": "Gustave Courbet (French, 1819–1877)",
+      "date": "c. 1869",
+      "detail": "Gustave Courbet (French, 1819–1877) · c. 1869",
+      "alt": "The Rock of Hautepierre, a human-made artwork by Gustave Courbet (French, 1819–1877).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "27027",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/27027",
+      "imageUrl": "https://www.artic.edu/iiif/2/e0f47937-a1ee-76b4-6505-35a33119a634/full/2560,/0/default.jpg",
+      "asset": "rock-hautepierre.webp",
+      "thumbnail": "thumbnails/rock-hautepierre.webp",
+      "expectedSourceSha256": "95945571a4749a08259e6df88afd144ddfa9b82a506ff72f12d442ff424adb94",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "clouds",
+      "colors": [
+        "#283746",
+        "#73899d",
+        "#d9d2bc"
+      ]
+    },
+    {
+      "id": "alpine-scene",
+      "label": "An Alpine Scene",
+      "title": "An Alpine Scene",
+      "artist": "Gustave Courbet (French, 1819–1877)",
+      "date": "1874",
+      "detail": "Gustave Courbet (French, 1819–1877) · 1874",
+      "alt": "An Alpine Scene, a human-made artwork by Gustave Courbet (French, 1819–1877).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "39554",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/39554",
+      "imageUrl": "https://www.artic.edu/iiif/2/54b7fd5e-3467-f777-45e7-0719400ecfc0/full/2560,/0/default.jpg",
+      "asset": "alpine-scene.webp",
+      "thumbnail": "thumbnails/alpine-scene.webp",
+      "expectedSourceSha256": "445d701fca4349228d5ea5c9717edfcdd039b8a27d5785aaa7568d04583bde28",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "mist",
+      "colors": [
+        "#25333a",
+        "#66777a",
+        "#c6cac2"
+      ]
+    },
+    {
+      "id": "bay-marseille",
+      "label": "The Bay of Marseille, Seen from L'Estaque",
+      "title": "The Bay of Marseille, Seen from L'Estaque",
+      "artist": "Paul Cezanne (French, 1839–1906)",
+      "date": "c. 1885",
+      "detail": "Paul Cezanne (French, 1839–1906) · c. 1885",
+      "alt": "The Bay of Marseille, Seen from L'Estaque, a human-made artwork by Paul Cezanne (French, 1839–1906).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "16487",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/16487",
+      "imageUrl": "https://www.artic.edu/iiif/2/d4ca6321-8656-3d3f-a362-2ee297b2b813/full/2560,/0/default.jpg",
+      "asset": "bay-marseille.webp",
+      "thumbnail": "thumbnails/bay-marseille.webp",
+      "expectedSourceSha256": "3d68695d915d2f87b615d350ea991ea5830681949e65664bb6cd489eade028d0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "landscape-chailly",
+      "label": "Landscape at Chailly",
+      "title": "Landscape at Chailly",
+      "artist": "Frédéric Bazille (French, 1841-1870)",
+      "date": "1865",
+      "detail": "Frédéric Bazille (French, 1841-1870) · 1865",
+      "alt": "Landscape at Chailly, a human-made artwork by Frédéric Bazille (French, 1841-1870).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "44017",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/44017",
+      "imageUrl": "https://www.artic.edu/iiif/2/c4648834-49dd-3589-6ac3-66d41fd574ef/full/2560,/0/default.jpg",
+      "asset": "landscape-chailly.webp",
+      "thumbnail": "thumbnails/landscape-chailly.webp",
+      "expectedSourceSha256": "02f02ed62f18ad3a391091b2daad8b14dd4bfcb7229e8f86801ee3cd86c96cf5",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "clouds",
+      "colors": [
+        "#283746",
+        "#73899d",
+        "#d9d2bc"
+      ]
+    },
+    {
+      "id": "foret-compiegne",
+      "label": "Forêt de Compiègne",
+      "title": "Forêt de Compiègne",
+      "artist": "Berthe Morisot (French, 1841–1895)",
+      "date": "1885",
+      "detail": "Berthe Morisot (French, 1841–1895) · 1885",
+      "alt": "Forêt de Compiègne, a human-made artwork by Berthe Morisot (French, 1841–1895).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "53058",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/53058",
+      "imageUrl": "https://www.artic.edu/iiif/2/bfc9b17a-cc18-7bd3-4d78-e925bb1a8b27/full/2560,/0/default.jpg",
+      "asset": "foret-compiegne.webp",
+      "thumbnail": "thumbnails/foret-compiegne.webp",
+      "expectedSourceSha256": "3c61ccc4e4a52888c2661f1f94443dd41fd769d45c4848fe4acc2e47f12c14ee",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "fireflies",
+      "colors": [
+        "#1c2d23",
+        "#597c52",
+        "#d5c675"
+      ]
+    },
+    {
+      "id": "pond-in-woods",
+      "label": "Pond in the Woods",
+      "title": "Pond in the Woods",
+      "artist": "Narcisse Virgile Diaz de la Peña (French, 1807–1876)",
+      "date": "1862",
+      "detail": "Narcisse Virgile Diaz de la Peña (French, 1807–1876) · 1862",
+      "alt": "Pond in the Woods, a human-made artwork by Narcisse Virgile Diaz de la Peña (French, 1807–1876).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "95993",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/95993",
+      "imageUrl": "https://www.artic.edu/iiif/2/44c6f2f1-90fc-f386-734b-fbb9427b6ff3/full/2560,/0/default.jpg",
+      "asset": "pond-in-woods.webp",
+      "thumbnail": "thumbnails/pond-in-woods.webp",
+      "expectedSourceSha256": "c8c030462978c6d92a14caa85979d7065994b73feae73a2260c9e86a3c55df63",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "wooded-landscape-cottage",
+      "label": "Wooded Landscape with Cottage and Horseman",
+      "title": "Wooded Landscape with Cottage and Horseman",
+      "artist": "Meindert Hobbema (Dutch, 1638–1709)",
+      "date": "1663",
+      "detail": "Meindert Hobbema (Dutch, 1638–1709) · 1663",
+      "alt": "Wooded Landscape with Cottage and Horseman, a human-made artwork by Meindert Hobbema (Dutch, 1638–1709).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "4770",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/4770",
+      "imageUrl": "https://www.artic.edu/iiif/2/b68961a6-eed0-da9d-2196-fe5732503064/full/2560,/0/default.jpg",
+      "asset": "wooded-landscape-cottage.webp",
+      "thumbnail": "thumbnails/wooded-landscape-cottage.webp",
+      "expectedSourceSha256": "78e958472615172418680e2a771dd57cfe2c2c80b6345dd40adf97c690f4cb3d",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "fireflies",
+      "colors": [
+        "#1c2d23",
+        "#597c52",
+        "#d5c675"
+      ]
+    },
+    {
+      "id": "york-harbor",
+      "label": "York Harbor, Coast of Maine",
+      "title": "York Harbor, Coast of Maine",
+      "artist": "Martin Johnson Heade (American, 1819–1904)",
+      "date": "1877",
+      "detail": "Martin Johnson Heade (American, 1819–1904) · 1877",
+      "alt": "York Harbor, Coast of Maine, a human-made artwork by Martin Johnson Heade (American, 1819–1904).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "152747",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/152747",
+      "imageUrl": "https://www.artic.edu/iiif/2/3192ae4d-ffca-fe91-af12-2ca681f43e13/full/,1440/0/default.jpg",
+      "asset": "york-harbor.webp",
+      "thumbnail": "thumbnails/york-harbor.webp",
+      "expectedSourceSha256": "313d0b4f4b3d104c08d4cced9fa5a8ea00bd23566eff328c4c0a13082f3598cc",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "renoir-seascape",
+      "label": "Seascape",
+      "title": "Seascape",
+      "artist": "Pierre-Auguste Renoir (French, 1841–1919)",
+      "date": "1879",
+      "detail": "Pierre-Auguste Renoir (French, 1841–1919) · 1879",
+      "alt": "Seascape, a human-made artwork by Pierre-Auguste Renoir (French, 1841–1919).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "81557",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/81557",
+      "imageUrl": "https://www.artic.edu/iiif/2/caf4fa39-e2e8-344a-542c-2d9a03ec9d4b/full/2560,/0/default.jpg",
+      "asset": "renoir-seascape.webp",
+      "thumbnail": "thumbnails/renoir-seascape.webp",
+      "expectedSourceSha256": "3b3e71396ea61293847a25aef3838816b4d68fc1c734a71eaae443f81d98cae4",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "departure-boats-etretat",
+      "label": "The Departure of the Boats, Étretat",
+      "title": "The Departure of the Boats, Étretat",
+      "artist": "Claude Monet (French, 1840–1926)",
+      "date": "1885",
+      "detail": "Claude Monet (French, 1840–1926) · 1885",
+      "alt": "The Departure of the Boats, Étretat, a human-made artwork by Claude Monet (French, 1840–1926).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "81540",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/81540",
+      "imageUrl": "https://www.artic.edu/iiif/2/6ca224d1-c3dc-a223-a127-0492301a2ebb/full/2560,/0/default.jpg",
+      "asset": "departure-boats-etretat.webp",
+      "thumbnail": "thumbnails/departure-boats-etretat.webp",
+      "expectedSourceSha256": "0ef2c1f27401a38aea6f33e0e1671e4fdbdc35b88d53da74ef768257184b76a4",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "gulf-salerno",
+      "label": "The Gulf of Salerno",
+      "title": "The Gulf of Salerno",
+      "artist": "Joseph Wright of Derby (English, 1734-1797)",
+      "date": "1783–85",
+      "detail": "Joseph Wright of Derby (English, 1734-1797) · 1783–85",
+      "alt": "The Gulf of Salerno, a human-made artwork by Joseph Wright of Derby (English, 1734-1797).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "180711",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/180711",
+      "imageUrl": "https://www.artic.edu/iiif/2/67b46720-1589-0d13-3597-f03c7b618094/full/2560,/0/default.jpg",
+      "asset": "gulf-salerno.webp",
+      "thumbnail": "thumbnails/gulf-salerno.webp",
+      "expectedSourceSha256": "8b3e000c828d82b77d4ba71ee1e50eb24cb886aa9c13f6395cfc8d7ce30601d3",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "light",
+      "colors": [
+        "#3a2c24",
+        "#967552",
+        "#e5c691"
+      ]
+    },
+    {
+      "id": "douarnenez-sunshine",
+      "label": "Douarnenez in Sunshine",
+      "title": "Douarnenez in Sunshine",
+      "artist": "Maxime Maufra (French, 1861–1918)",
+      "date": "1897",
+      "detail": "Maxime Maufra (French, 1861–1918) · 1897",
+      "alt": "Douarnenez in Sunshine, a human-made artwork by Maxime Maufra (French, 1861–1918).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "111632",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/111632",
+      "imageUrl": "https://www.artic.edu/iiif/2/5d1261c0-11bd-eb2c-91c5-653aa98c2b5a/full/2560,/0/default.jpg",
+      "asset": "douarnenez-sunshine.webp",
+      "thumbnail": "thumbnails/douarnenez-sunshine.webp",
+      "expectedSourceSha256": "6be8c952ffce478860d6ce6ae0063c629c71b5085d4a9a2cd02fbf667dbc83fb",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "breaking-storm-maine",
+      "label": "Breaking Storm, Coast of Maine",
+      "title": "Breaking Storm, Coast of Maine",
+      "artist": "Winslow Homer / American, 1836-1910",
+      "date": "1894",
+      "detail": "Winslow Homer / American, 1836-1910 · 1894",
+      "alt": "Breaking Storm, Coast of Maine, a human-made artwork by Winslow Homer / American, 1836-1910.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "16779",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/16779",
+      "imageUrl": "https://www.artic.edu/iiif/2/6794f986-98db-4e2e-9b38-8d13b7201d10/full/2560,/0/default.jpg",
+      "asset": "breaking-storm-maine.webp",
+      "thumbnail": "thumbnails/breaking-storm-maine.webp",
+      "expectedSourceSha256": "a1708b3194a643cd1c77f422a6e63e529b4a37670050d9def1461aaeee6440bd",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "clouds",
+      "colors": [
+        "#283746",
+        "#73899d",
+        "#d9d2bc"
+      ]
+    },
+    {
+      "id": "prouts-neck-evening",
+      "label": "Prout's Neck, Evening",
+      "title": "Prout's Neck, Evening",
+      "artist": "Winslow Homer / American, 1836-1910",
+      "date": "c. 1894",
+      "detail": "Winslow Homer / American, 1836-1910 · c. 1894",
+      "alt": "Prout's Neck, Evening, a human-made artwork by Winslow Homer / American, 1836-1910.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "16821",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/16821",
+      "imageUrl": "https://www.artic.edu/iiif/2/32106368-7e47-4c41-b05b-8df4c415cc79/full/2560,/0/default.jpg",
+      "asset": "prouts-neck-evening.webp",
+      "thumbnail": "thumbnails/prouts-neck-evening.webp",
+      "expectedSourceSha256": "961e7fd795b5854c6826cb52b5757c3de1b94b39c6414da9d6f0f2a4fee7165f",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "venice-palazzo-dario",
+      "label": "Venice, Palazzo Dario",
+      "title": "Venice, Palazzo Dario",
+      "artist": "Claude Monet (French, 1840–1926)",
+      "date": "1908",
+      "detail": "Claude Monet (French, 1840–1926) · 1908",
+      "alt": "Venice, Palazzo Dario, a human-made artwork by Claude Monet (French, 1840–1926).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "14630",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/14630",
+      "imageUrl": "https://www.artic.edu/iiif/2/64c38f6d-f0d5-b553-a27e-3552550f351a/full/2560,/0/default.jpg",
+      "asset": "venice-palazzo-dario.webp",
+      "thumbnail": "thumbnails/venice-palazzo-dario.webp",
+      "expectedSourceSha256": "c7fba1696b4aba8dcf933e8bfac5e0a30c75b87355295888f9cb0cd4e25f784e",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "palazzo-contarini-garden",
+      "label": "The Garden of Palazzo Contarini dal Zaffo",
+      "title": "The Garden of Palazzo Contarini dal Zaffo",
+      "artist": "Francesco Guardi (Italian, 1712–1793)",
+      "date": "Late 1770s",
+      "detail": "Francesco Guardi (Italian, 1712–1793) · Late 1770s",
+      "alt": "The Garden of Palazzo Contarini dal Zaffo, a human-made artwork by Francesco Guardi (Italian, 1712–1793).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "111610",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/111610",
+      "imageUrl": "https://www.artic.edu/iiif/2/b553d1fe-da1f-dd9e-ff0f-c36fc22aac0e/full/2560,/0/default.jpg",
+      "asset": "palazzo-contarini-garden.webp",
+      "thumbnail": "thumbnails/palazzo-contarini-garden.webp",
+      "expectedSourceSha256": "9cfc4d7b7f4cf3df20dabaa82c67d2ba54c0e2ca8098ba01c51bddabc1ff5af7",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "light",
+      "colors": [
+        "#3a2c24",
+        "#967552",
+        "#e5c691"
+      ]
+    },
+    {
+      "id": "grand-canal-venice",
+      "label": "The Grand Canal, Venice",
+      "title": "The Grand Canal, Venice",
+      "artist": "Francesco Guardi (Italian, 1712–1793)",
+      "date": "c. 1760",
+      "detail": "Francesco Guardi (Italian, 1712–1793) · c. 1760",
+      "alt": "The Grand Canal, Venice, a human-made artwork by Francesco Guardi (Italian, 1712–1793).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "111074",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/111074",
+      "imageUrl": "https://www.artic.edu/iiif/2/f23f8a3b-66b8-9061-811c-c65dd0a32ebd/full/2560,/0/default.jpg",
+      "asset": "grand-canal-venice.webp",
+      "thumbnail": "thumbnails/grand-canal-venice.webp",
+      "expectedSourceSha256": "a64b1c60e5d0446ea67c376b91c5565295d450f89a89d7cf012fa533add8f527",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "santa-maria-salute",
+      "label": "The Church of Santa Maria della Salute, Venice",
+      "title": "The Church of Santa Maria della Salute, Venice",
+      "artist": "Michele Marieschi (Italian, 1710–1743)",
+      "date": "1740–41",
+      "detail": "Michele Marieschi (Italian, 1710–1743) · 1740–41",
+      "alt": "The Church of Santa Maria della Salute, Venice, a human-made artwork by Michele Marieschi (Italian, 1710–1743).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "55621",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/55621",
+      "imageUrl": "https://www.artic.edu/iiif/2/70ebfef5-7a98-2834-1be7-cc95e038fe82/full/2560,/0/default.jpg",
+      "asset": "santa-maria-salute.webp",
+      "thumbnail": "thumbnails/santa-maria-salute.webp",
+      "expectedSourceSha256": "74cb192d182b9f2921fa2c6ae424d72a1a82a7ebab3729c041f8c56025938313",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "landing-place",
+      "label": "The Landing Place",
+      "title": "The Landing Place",
+      "artist": "Hubert Robert (French, 1733-1808)",
+      "date": "1788",
+      "detail": "Hubert Robert (French, 1733-1808) · 1788",
+      "alt": "The Landing Place, a human-made artwork by Hubert Robert (French, 1733-1808).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "57050",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/57050",
+      "imageUrl": "https://www.artic.edu/iiif/2/83092988-7180-21d1-b8a3-cf39ddf39a68/full/2560,/0/default.jpg",
+      "asset": "landing-place.webp",
+      "thumbnail": "thumbnails/landing-place.webp",
+      "expectedSourceSha256": "53aaa7a849674826bfac21abe809a220f057d90c4c6e47a06e244e1b0fdea80e",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "obelisk",
+      "label": "The Obelisk",
+      "title": "The Obelisk",
+      "artist": "Hubert Robert (French, 1733-1808)",
+      "date": "1787",
+      "detail": "Hubert Robert (French, 1733-1808) · 1787",
+      "alt": "The Obelisk, a human-made artwork by Hubert Robert (French, 1733-1808).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "57049",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/57049",
+      "imageUrl": "https://www.artic.edu/iiif/2/3b8084b4-5fb4-700a-bc0a-16e6fa4698b8/full/2560,/0/default.jpg",
+      "asset": "obelisk.webp",
+      "thumbnail": "thumbnails/obelisk.webp",
+      "expectedSourceSha256": "769f7fb897fe217ec387e330f8487729a149341594ab82f166a18d89349d50fa",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "dust",
+      "colors": [
+        "#3b3023",
+        "#8a7654",
+        "#d8c595"
+      ]
+    },
+    {
+      "id": "castle-egmond-ruins",
+      "label": "Landscape with the Ruins of the Castle of Egmond",
+      "title": "Landscape with the Ruins of the Castle of Egmond",
+      "artist": "Jacob van Ruisdael (Dutch, 1628/29-1682)",
+      "date": "1650–55",
+      "detail": "Jacob van Ruisdael (Dutch, 1628/29-1682) · 1650–55",
+      "alt": "Landscape with the Ruins of the Castle of Egmond, a human-made artwork by Jacob van Ruisdael (Dutch, 1628/29-1682).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "60755",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/60755",
+      "imageUrl": "https://www.artic.edu/iiif/2/12086520-2e48-cc75-df86-916bb801e61f/full/2560,/0/default.jpg",
+      "asset": "castle-egmond-ruins.webp",
+      "thumbnail": "thumbnails/castle-egmond-ruins.webp",
+      "expectedSourceSha256": "af220e630133849e112d9a766694b1908f90d7266e9037ce8bbb2db80bfab13f",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "mist",
+      "colors": [
+        "#25333a",
+        "#66777a",
+        "#c6cac2"
+      ]
+    },
+    {
+      "id": "watermill-red-roof",
+      "label": "The Watermill with the Great Red Roof",
+      "title": "The Watermill with the Great Red Roof",
+      "artist": "Meindert Hobbema (Dutch, 1638–1709)",
+      "date": "c. 1665",
+      "detail": "Meindert Hobbema (Dutch, 1638–1709) · c. 1665",
+      "alt": "The Watermill with the Great Red Roof, a human-made artwork by Meindert Hobbema (Dutch, 1638–1709).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "869",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/869",
+      "imageUrl": "https://www.artic.edu/iiif/2/237c25a2-6051-a8e7-1610-a01938d4deab/full/2560,/0/default.jpg",
+      "asset": "watermill-red-roof.webp",
+      "thumbnail": "thumbnails/watermill-red-roof.webp",
+      "expectedSourceSha256": "66a0c258b3d78bd42991c2b93591944111be9a1e836d71414659e64451236e3f",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "waterloo-bridge-sunlight",
+      "label": "Waterloo Bridge, Sunlight Effect",
+      "title": "Waterloo Bridge, Sunlight Effect",
+      "artist": "Claude Monet (French, 1840–1926)",
+      "date": "1903",
+      "detail": "Claude Monet (French, 1840–1926) · 1903",
+      "alt": "Waterloo Bridge, Sunlight Effect, a human-made artwork by Claude Monet (French, 1840–1926).",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "20701",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/20701",
+      "imageUrl": "https://www.artic.edu/iiif/2/827d02ef-6765-9728-c07e-52ad22b73fd3/full/2560,/0/default.jpg",
+      "asset": "waterloo-bridge-sunlight.webp",
+      "thumbnail": "thumbnails/waterloo-bridge-sunlight.webp",
+      "expectedSourceSha256": "0c644fde969defb03e6720fb059a16383f1c664756961405061567d83202c8a4",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#152d3b",
+        "#4f7890",
+        "#c7d8d9"
+      ]
+    },
+    {
+      "id": "shower-below-summit",
+      "label": "Shower Below the Summit (Sanka hakuu), from the series \"Thirty-Six Views of Mount Fuji (Fugaku sanjurokkei)\"",
+      "title": "Shower Below the Summit (Sanka hakuu), from the series \"Thirty-Six Views of Mount Fuji (Fugaku sanjurokkei)\"",
+      "artist": "Katsushika Hokusai 葛飾 北斎 / Japanese, 1760-1849",
+      "date": "c. 1830/33",
+      "detail": "Katsushika Hokusai 葛飾 北斎 / Japanese, 1760-1849 · c. 1830/33",
+      "alt": "Shower Below the Summit (Sanka hakuu), from the series \"Thirty-Six Views of Mount Fuji (Fugaku sanjurokkei)\", a human-made artwork by Katsushika Hokusai 葛飾 北斎 / Japanese, 1760-1849.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "87008",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/87008",
+      "imageUrl": "https://www.artic.edu/iiif/2/bbb6d024-f931-2e2f-eb95-750991834b1c/full/2560,/0/default.jpg",
+      "asset": "shower-below-summit.webp",
+      "thumbnail": "thumbnails/shower-below-summit.webp",
+      "expectedSourceSha256": "87686a531f577d20da47e5919e08efc067dee202ce890bf12cb72ffd64ed585f",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "clouds",
+      "colors": [
+        "#283746",
+        "#73899d",
+        "#d9d2bc"
+      ]
+    },
+    {
+      "id": "shirasuka-shiomi-slope",
+      "label": "Shirasuka: Shiomi Slope,no. 33 from the series Fifty-Three Stations of the Tokaido (Tōkaidō gojūsan tsugi)",
+      "title": "Shirasuka: Shiomi Slope,no. 33 from the series Fifty-Three Stations of the Tokaido (Tōkaidō gojūsan tsugi)",
+      "artist": "Utagawa Hiroshige 歌川 広重 / Japanese, 1797-1858",
+      "date": "1847-52",
+      "detail": "Utagawa Hiroshige 歌川 広重 / Japanese, 1797-1858 · 1847-52",
+      "alt": "Shirasuka: Shiomi Slope,no. 33 from the series Fifty-Three Stations of the Tokaido (Tōkaidō gojūsan tsugi), a human-made artwork by Utagawa Hiroshige 歌川 広重 / Japanese, 1797-1858.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "18307",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/18307",
+      "imageUrl": "https://www.artic.edu/iiif/2/b0416125-7910-a0a3-75bb-b01f935c2af3/full/2560,/0/default.jpg",
+      "asset": "shirasuka-shiomi-slope.webp",
+      "thumbnail": "thumbnails/shirasuka-shiomi-slope.webp",
+      "expectedSourceSha256": "507f3b552f45d73c7cabc314ab23c7aa3eaa451e9e4cdf331874a7042ac3af15",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "clouds",
+      "colors": [
+        "#283746",
+        "#73899d",
+        "#d9d2bc"
+      ]
+    },
+    {
+      "id": "ejiri-suruga",
+      "label": "Ejiri in Suruga Province (Sunshu Ejiri), from the series \"Thirty-six Views of Mount Fuji (Fugaku sanjurokkei)\"",
+      "title": "Ejiri in Suruga Province (Sunshu Ejiri), from the series \"Thirty-six Views of Mount Fuji (Fugaku sanjurokkei)\"",
+      "artist": "Katsushika Hokusai 葛飾 北斎 / Japanese, 1760-1849",
+      "date": "c. 1830/33",
+      "detail": "Katsushika Hokusai 葛飾 北斎 / Japanese, 1760-1849 · c. 1830/33",
+      "alt": "Ejiri in Suruga Province (Sunshu Ejiri), from the series \"Thirty-six Views of Mount Fuji (Fugaku sanjurokkei)\", a human-made artwork by Katsushika Hokusai 葛飾 北斎 / Japanese, 1760-1849.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "24800",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/24800",
+      "imageUrl": "https://www.artic.edu/iiif/2/5f3cc8e1-a024-9d9c-4d75-a18c5fcbbe65/full/2560,/0/default.jpg",
+      "asset": "ejiri-suruga.webp",
+      "thumbnail": "thumbnails/ejiri-suruga.webp",
+      "expectedSourceSha256": "725771065cf0949d56097ff42bd24cd1bb627eefc98b8d1c98f97f70c324484c",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "clouds",
+      "colors": [
+        "#283746",
+        "#73899d",
+        "#d9d2bc"
+      ]
+    },
+    {
+      "id": "mild-breeze-fuji",
+      "label": "A Mild Breeze on a Fine Day (Gaifu kaisei), from the series \"Thirty-six Views of Mount Fuji (Fugaku sanjurokkei)\"",
+      "title": "A Mild Breeze on a Fine Day (Gaifu kaisei), from the series \"Thirty-six Views of Mount Fuji (Fugaku sanjurokkei)\"",
+      "artist": "Katsushika Hokusai 葛飾 北斎 / Japanese, 1760-1849",
+      "date": "c. 1830/33",
+      "detail": "Katsushika Hokusai 葛飾 北斎 / Japanese, 1760-1849 · c. 1830/33",
+      "alt": "A Mild Breeze on a Fine Day (Gaifu kaisei), from the series \"Thirty-six Views of Mount Fuji (Fugaku sanjurokkei)\", a human-made artwork by Katsushika Hokusai 葛飾 北斎 / Japanese, 1760-1849.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "87005",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/87005",
+      "imageUrl": "https://www.artic.edu/iiif/2/38726da7-8122-dc49-9243-766a1eeba9ed/full/2560,/0/default.jpg",
+      "asset": "mild-breeze-fuji.webp",
+      "thumbnail": "thumbnails/mild-breeze-fuji.webp",
+      "expectedSourceSha256": "d32594d47cb6882252c85314c8f170170e5b7e8093b95cb219e83128ecdbf6a8",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "clouds",
+      "colors": [
+        "#283746",
+        "#73899d",
+        "#d9d2bc"
+      ]
+    }
+  ]
+}

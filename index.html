@@ -605,8 +605,20 @@
         </div>
 
         <div class="scene-theme-setting">
-          <h2>Living backgrounds</h2>
-          <p>Artist-made scenery with restrained local atmosphere. The artwork itself never pans or zooms.</p>
+          <div class="scene-gallery-heading">
+            <div>
+              <h2>Living backgrounds</h2>
+              <p>Human-made scenery with restrained local atmosphere. The artwork itself never pans or zooms.</p>
+            </div>
+            <output id="sceneGalleryCount" aria-live="polite"></output>
+          </div>
+          <label class="scene-gallery-search">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="5.25"></circle>
+              <path d="m12.5 12.5 4 4"></path>
+            </svg>
+            <input id="sceneGallerySearch" type="search" autocomplete="off" placeholder="Find artwork or artist…" aria-label="Find artwork or artist">
+          </label>
           <div class="scene-theme-grid" role="radiogroup" aria-label="Living background"></div>
         </div>
 
@@ -854,6 +866,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/openleaf-themes.js"></script>
+  <script src="assets/scenes/catalog.js"></script>
   <script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
   <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
   <script src="renderer.js"></script>

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "target": {
+    "width": 2560,
+    "height": 1440,
+    "format": "webp",
+    "quality": 84,
+    "thumbnailWidth": 320,
+    "thumbnailHeight": 180,
+    "thumbnailQuality": 76
+  },
+  "institutions": {
+    "met": {
+      "name": "The Metropolitan Museum of Art",
+      "sourceHosts": [
+        "metmuseum.org"
+      ],
+      "imageHosts": [
+        "images.metmuseum.org"
+      ],
+      "license": {
+        "status": "public-domain",
+        "name": "Public Domain · The Met Open Access",
+        "url": "https://www.metmuseum.org/policies/image-resources"
+      }
+    },
+    "artic": {
+      "name": "Art Institute of Chicago",
+      "sourceHosts": [
+        "artic.edu"
+      ],
+      "imageHosts": [
+        "artic.edu"
+      ],
+      "license": {
+        "status": "cc0",
+        "name": "Public Domain · Art Institute of Chicago CC0",
+        "url": "https://www.artic.edu/open-access/open-access-images"
+      }
+    }
+  },
+  "artworks": []
+}

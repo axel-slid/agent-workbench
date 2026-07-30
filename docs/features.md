@@ -541,25 +541,13 @@ scene; the floating close button remains in the top-right. Dragging the resize
 grip on any pane changes the width and height of all four panes together with a
 mirrored spring animation.
 
-Appearance settings provide 15 bundled 2560 × 1440 artist-made backgrounds:
-
-| Scene | Artist |
-| --- | --- |
-| Copenhagen Harbor by Moonlight | Johan Christian Dahl |
-| Distant View of Niagara Falls | Thomas Cole |
-| View of Cotopaxi | Frederic Edwin Church |
-| Pastoral Landscape: The Roman Campagna | Claude Lorrain |
-| A Colonnade in Ruins | Hubert Robert |
-| Paris Street; Rainy Day | Gustave Caillebotte |
-| Parthenon Afterlight | Frederic Edwin Church |
-| Arches in Ruins | Hubert Robert |
-| Tivoli Morning | Thomas Cole |
-| The Aegean Sea | Frederic Edwin Church |
-| Heart of the Andes | Frederic Edwin Church |
-| The Oxbow | Thomas Cole |
-| The Mountain Ford | Thomas Cole |
-| Catskill Autumn | Thomas Cole |
-| Rocky Mountains | Albert Bierstadt |
+Appearance settings provide a searchable gallery of 52 bundled 2560 × 1440
+human-made artworks. The collection spans landscape, coastal, mountain,
+architectural, ruin, Venetian, and ukiyo-e scenery by named artists including
+Thomas Cole, Claude Monet, Winslow Homer, Hubert Robert, Katsushika Hokusai,
+Utagawa Hiroshige, George Inness, and many others. Gallery cards use lazy
+320 × 180 thumbnails, expose artist and license details, and never decode the
+master artwork until it is selected.
 
 Every work is Public Domain and distributed through The Met Open Access or the
 Art Institute of Chicago CC0 program. The base art never pans, zooms, or
@@ -571,7 +559,10 @@ the scene frame-rate setting is capped at 30 fps. Optional Spotify-reactive
 mode anchors its restrained perimeter pulse to Spotify playback position,
 stops cleanly on pause, and never moves the underlying artwork.
 Complete source URLs and license details are recorded in
-[`assets/scenes/README.md`](../assets/scenes/README.md).
+[`assets/scenes/README.md`](../assets/scenes/README.md) and
+[`assets/scenes/LICENSES.md`](../assets/scenes/LICENSES.md). New works must pass
+the documented museum-host allowlist, explicit human-origin, open-rights,
+no-upscale, and duplicate-image checks before they can enter the catalog.
 
 PDF rendering has three independent modes:
 

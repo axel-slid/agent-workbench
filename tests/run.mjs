@@ -1317,6 +1317,7 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   const mainSource = read("main.js");
   const styles = read("styles.css");
   const sceneCatalog = JSON.parse(read("assets/scenes/catalog.json"));
+  const sceneCatalogJavaScript = read("assets/scenes/catalog.js");
   assert.match(html, /id="sceneBackgroundCanvas"[\s\S]*?aria-hidden="true"/);
   assert.match(html, /<img id="sceneBackground"[\s\S]*?decoding="async"/);
   assert.doesNotMatch(html, /<video id="sceneBackground"/);
@@ -1327,19 +1328,44 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   assert.match(html, /id="cinematicNextSceneButton"[\s\S]*?title="Next animated scene"/);
   assert.match(html, /id="cinematicMentionMenu"[\s\S]*?role="listbox"/);
   assert.match(html, /id="cinematicPromptDock"[\s\S]*?id="cinematicPromptInput"[\s\S]*?⌘K[\s\S]*?id="cinematicPromptSendButton"/);
-  const sceneCatalogSource = rendererSource.match(/const SCENE_THEMES\s*=\s*\{([\s\S]*?)\n\};/)?.[1] || "";
-  const runtimeCatalog = vm.runInNewContext(`({${sceneCatalogSource}})`, Object.create(null));
-  assert.equal(sceneCatalog.length, 15);
-  assert.equal((sceneCatalogSource.match(/\bimage:\s*"assets\/scenes\//g) || []).length, 15);
+  assert.match(html, /assets\/scenes\/catalog\.js[\s\S]*?renderer\.js/);
+  const catalogSandbox = { window: {} };
+  vm.runInNewContext(sceneCatalogJavaScript, catalogSandbox);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(catalogSandbox.window.BSCODE_SCENE_CATALOG)),
+    sceneCatalog
+  );
+  const buildSceneThemesSource = extractFunction(rendererSource, "buildSceneThemes");
+  const buildSceneThemes = vm.runInNewContext(`(${buildSceneThemesSource})`, Object.create(null));
+  const runtimeCatalog = buildSceneThemes(sceneCatalog);
+  assert.equal(sceneCatalog.length, 52, "Cinematic gallery must ship all curated human-made works");
+  assert.equal(Object.keys(runtimeCatalog).length - 1, sceneCatalog.length);
+  const expandedCatalog = Array.from({ length: 52 }, (_, index) => ({
+    ...sceneCatalog[index % sceneCatalog.length],
+    id: `gallery-work-${index + 1}`,
+    asset: `gallery-work-${index + 1}.webp`,
+    thumbnail: `thumbnails/gallery-work-${index + 1}.webp`
+  }));
+  assert.equal(Object.keys(buildSceneThemes(expandedCatalog)).length - 1, 52);
+  assert.equal(
+    Object.keys(buildSceneThemes([{ ...expandedCatalog[0], humanMade: false }])).length,
+    1,
+    "Runtime gallery must reject art without explicit human-made provenance"
+  );
   for (const scene of sceneCatalog) {
     assert.match(scene.id, /^[a-z][a-z0-9-]+$/);
     assert.ok(scene.artist);
+    assert.equal(scene.humanMade, true);
     assert.match(scene.source, /^https:\/\//);
     assert.ok(scene.license);
     assert.ok(["clouds", "mist", "water", "stars", "fireflies", "dust", "light"].includes(scene.motion));
     const assetPath = path.join(projectRoot, "assets", "scenes", scene.asset);
     assert.ok(fs.existsSync(assetPath), `${scene.asset} is missing`);
     assert.ok(fs.statSync(assetPath).size > 20_000, `${scene.asset} is unexpectedly small`);
+    const thumbnailPath = path.join(projectRoot, "assets", "scenes", scene.thumbnail);
+    assert.match(scene.thumbnail, /^thumbnails\/[a-z][a-z0-9-]+\.webp$/);
+    assert.ok(fs.existsSync(thumbnailPath), `${scene.thumbnail} is missing`);
+    assert.ok(fs.statSync(thumbnailPath).size < fs.statSync(assetPath).size, `${scene.thumbnail} must stay lightweight`);
     assert.equal(runtimeCatalog[scene.id]?.image, `assets/scenes/${scene.asset}`);
     assert.equal(runtimeCatalog[scene.id]?.artist, scene.artist);
     assert.equal(runtimeCatalog[scene.id]?.source, scene.source);
@@ -1352,6 +1378,16 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
     "Cinematic art must not reintroduce short video or GIF loops"
   );
   assert.match(rendererSource, /function drawLivingScene\(/);
+  assert.match(html, /Human-made scenery/);
+  assert.match(html, /id="sceneGallerySearch"[\s\S]*?Find artwork or artist/);
+  const sceneHydrationSource = extractFunction(rendererSource, "hydrateSceneThemes");
+  assert.match(rendererSource, /function loadSceneThumbnail\(/);
+  assert.match(rendererSource, /function refreshSceneGallery\(/);
+  assert.match(sceneHydrationSource, /IntersectionObserver/);
+  assert.match(sceneHydrationSource, /assets\/scenes\/thumbnails\//);
+  assert.doesNotMatch(sceneHydrationSource, /scene\.image/);
+  assert.match(styles, /\.scene-theme-grid\s*\{[\s\S]*?max-height:[\s\S]*?overflow:\s*auto/);
+  assert.match(styles, /\.scene-theme-option\s*\{[\s\S]*?content-visibility:\s*auto/);
   assert.match(rendererSource, /function drawAmbientClouds\(/);
   assert.match(rendererSource, /function drawAmbientMist\(/);
   assert.match(rendererSource, /function drawAmbientWater\(/);
@@ -1865,9 +1901,9 @@ test("Pixelized appearance uses square workspace tabs", () => {
 test("the release metadata and application icon are complete", () => {
   const packageJson = JSON.parse(read("package.json"));
   const iconSource = read("assets/app-icon-symbol.svg");
-  assert.equal(packageJson.version, "0.2.1");
+  assert.equal(packageJson.version, "0.2.2");
   assert.equal(packageJson.productName, "BsCode");
-  assert.equal(packageJson.scripts.test, "node tests/run.mjs");
+  assert.equal(packageJson.scripts.test, "node tests/run.mjs && node tests/artwork-import.mjs");
   assert.equal(packageJson.scripts["icon:mac"], "node scripts/generate-app-icon.mjs");
   assert.match(iconSource, /<rect width="1024" height="1024" rx="238"/);
   assert.match(iconSource, /scale\(1\.12\)/);

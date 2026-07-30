@@ -7,7 +7,7 @@
 
   Local and SSH workspaces · Four live agents · Cinematic scenes · Pixel tower
 
-  [![Version](https://img.shields.io/badge/version-0.2.1-70b7ff?style=for-the-badge)](https://github.com/axel-slid/agent-workbench/releases/tag/v0.2.1)
+  [![Version](https://img.shields.io/badge/version-0.2.2-70b7ff?style=for-the-badge)](https://github.com/axel-slid/agent-workbench/releases/tag/v0.2.2)
   [![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon-111827?style=for-the-badge&logo=apple)](https://github.com/axel-slid/agent-workbench/releases/latest)
   [![Electron](https://img.shields.io/badge/Electron-42-47848f?style=for-the-badge&logo=electron)](https://www.electronjs.org/)
   [![Tests](https://img.shields.io/badge/regression%20checks-46-63d69f?style=for-the-badge)](tests/run.mjs)
@@ -15,7 +15,7 @@
   [Download](https://github.com/axel-slid/agent-workbench/releases/latest) ·
   [Feature reference](docs/features.md) ·
   [Build guide](docs/cross-platform.md) ·
-  [Release notes](docs/release-v0.2.1.md)
+  [Release notes](docs/release-v0.2.2.md)
 </div>
 
 ---
@@ -33,7 +33,7 @@ metadata.
 | Surface | What it does |
 | --- | --- |
 | **Agent wall** | One, two, or four Codex, Claude, or shell PTYs with live model, state, task, ETA, checklist, and files |
-| **Cinematic Mode** | True full-screen four-pane view over 15 licensed, artist-made 1440p landscapes and architectural paintings with `⌘K`, `@mentions`, Results, scene shuffle, and synchronized pane resizing |
+| **Cinematic Mode** | True full-screen four-pane view over 52 licensed, human-made 1440p landscapes and architectural artworks with `⌘K`, `@mentions`, Results, scene shuffle, searchable gallery, and synchronized pane resizing |
 | **Pixel Mode** | A 20-floor Art Deco tower with premade previews, collision-aware diverse rooms, arrow-key floor navigation, time-of-day skies, and RPG pet stats anchored beside the clicked pet |
 | **Workspace Notes** | Notes, todos, and an undoable sketch canvas saved beside the project so agents can read the same plan |
 | **Home** | A clean, keyboard-first B launch screen and fast return to recent local and SSH workspaces; immersive modes stay disabled until a workspace is open |
@@ -91,7 +91,7 @@ Type `@` to open a compact picker containing only the names and faces of agents
 that are actually active in the current workspace. Pick a name to route the
 message directly to that agent.
 
-The 15 bundled scenes are public-domain landscape and architectural paintings
+The 52 bundled scenes are public-domain landscape and architectural artworks
 from The Met and the Art Institute of Chicago. Each fixed 2560 × 1440 artwork
 receives one restrained local effect—slow clouds, mist, water glints, light,
 dust, fireflies, or stars—without moving the camera or the artwork. There is no
@@ -99,9 +99,10 @@ AI art, stock footage, game art, CGI spectacle, or short video seam. Only the
 selected WebP is decoded; Reduce Motion disables all atmosphere. The optional
 Spotify response is a faint perimeter glow: it leaves the center, agent panes,
 and player still while playback gently changes the outer edge. Spotify stays
-available as a compact player in the top-left of full screen. Full credits and
-source licenses are recorded in
-[`assets/scenes/README.md`](assets/scenes/README.md).
+available as a compact player in the top-left of full screen. Full credits,
+museum records, and source licenses are recorded in
+[`assets/scenes/README.md`](assets/scenes/README.md) and the generated
+[`assets/scenes/LICENSES.md`](assets/scenes/LICENSES.md) ledger.
 
 ## Workspace Notes
 
@@ -204,7 +205,7 @@ selected workspace. Use trusted workspaces and review `createAgent` in
 ## Documentation
 
 - [Complete feature breakdown](docs/features.md)
-- [v0.2.1 release notes](docs/release-v0.2.1.md)
+- [v0.2.2 release notes](docs/release-v0.2.2.md)
 - [Cross-platform build and smoke-test guide](docs/cross-platform.md)
 - [Visual QA and release matrix](docs/visual-qa.md)
 - [Pixel Agents integration](pixel-agents-mode/AGENT-WORKBENCH-INTEGRATION.md)

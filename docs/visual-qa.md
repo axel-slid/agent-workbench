@@ -1,8 +1,9 @@
 # Visual QA and release matrix
 
-BsCode uses screenshot-driven visual testing in addition to its 51 automated
-regression checks. A release is not complete until the packaged Apple Silicon
-application passes the same smoke test as the development build.
+BsCode uses screenshot-driven visual testing in addition to its 53 core
+regression checks and dedicated artwork-import regression test. A release is
+not complete until the packaged Apple Silicon application passes the same
+smoke test as the development build.
 
 ## Required view states
 
@@ -17,7 +18,7 @@ application passes the same smoke test as the development build.
 | Workspace Notes | notes, todos, sketch canvas, brush controls, generated `.bscode-notes.md`, and `.bscode-notes.json` |
 | Pixel Mode | all 20 premade floor previews; connected crown and ground; four time-of-day skies; clipboard empty/active; agent-floor navigation |
 | Pet sheets | actual sprite click; species portrait; HP, energy, level, mood, food, hobbies, trait, and talent |
-| Cinematic Mode | idle and four active panes; true full screen; 15 scene changes; borderless panes; multi-line terminal viewport; readable light-theme content; shared resizing; named-agent-only typed-`@` picker; Spotify at top-left; subtle playback-synchronized perimeter glow with an untouched center/player; aligned command dock; Results and exit controls |
+| Cinematic Mode | idle and four active panes; true full screen; searchable 52-work gallery and scene changes; borderless panes; multi-line terminal viewport; readable light-theme content; shared resizing; named-agent-only typed-`@` picker; Spotify at top-left; subtle playback-synchronized perimeter glow with an untouched center/player; aligned command dock; Results and exit controls |
 
 ## Size and motion checks
 
@@ -50,7 +51,9 @@ The test suite verifies, among other things:
 - exactly 20 unique 640 × 320 tower preview PNGs;
 - pet clicks route to the RPG stat sheet;
 - Zen and bullet-point prompts submit on `Enter`;
-- all 15 Cinematic scenes and their local 1440p WebP assets resolve;
+- all 52 Cinematic scenes, 1440p master WebPs, and lazy 320 × 180 thumbnails resolve;
+- every Cinematic catalog record is explicitly human-made and carries a named
+  artist, museum record, and open-access license;
 - workspace tabs show faces and optional ETAs only for live agents;
 - compact tab faces use the correct head-and-shoulders crop;
 - light-mode agent names meet the intended contrast;
@@ -79,9 +82,10 @@ After `npm run package:mac`:
 
 ## Evidence
 
-Release screenshots live in [`docs/screenshots`](screenshots/). The 15
+Release screenshots live in [`docs/screenshots`](screenshots/). The 52
 Cinematic source credits and licenses are recorded in
-[`assets/scenes/README.md`](../assets/scenes/README.md). The product page owns
+[`assets/scenes/README.md`](../assets/scenes/README.md) and
+[`assets/scenes/LICENSES.md`](../assets/scenes/LICENSES.md). The product page owns
 its own desktop/tablet/phone capture script and fails on horizontal overflow,
 broken images, missing videos, missing download links, or off-viewport key
 headings.

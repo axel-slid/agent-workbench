@@ -1,6 +1,6 @@
 # Cinematic art catalog
 
-BsCode ships a focused library of 15 artist-made, 2560 × 1440 scenery images.
+BsCode ships a focused library of 52 human-made, 2560 × 1440 scenery images.
 Every scene is a public-domain landscape or architectural painting from The
 Metropolitan Museum of Art or the Art Institute of Chicago. There is no stock
 footage, AI-generated imagery, game art, CGI spectacle, or whole-image
@@ -12,8 +12,10 @@ fireflies, or star twinkles. Those effects run at the configured scene frame
 rate, stop when the window is hidden, and turn off completely with Reduce
 Motion. Their independently phased motion has no short video seam.
 
-Only the selected WebP is decoded. The complete catalog is about 6 MB, down
-from the former 146 MB video bundle.
+Only 320 × 180 thumbnails are requested while browsing Settings, and only the
+selected 2560 × 1440 WebP is decoded as the Cinematic background. The complete
+master-art catalog remains under 25 MB, down from the former 146 MB video
+bundle.
 
 ## Credits and licenses
 
@@ -37,7 +39,25 @@ from the former 146 MB video bundle.
 
 The Metropolitan Museum of Art and the Art Institute of Chicago make the
 listed public-domain images available under their Open Access/CC0 programs.
+The table above records the original 15-scene collection. The 37-work expansion
+and its authoritative object-by-object credits are in
+[`LICENSES.md`](LICENSES.md).
 
 `catalog.json` is the machine-readable attribution ledger. Every catalog entry
 must have a matching local image, named artist, source page, license, and motion
 type.
+
+`catalog.js` contains the same entries for the Electron renderer, and
+`thumbnails/<id>.webp` contains a 320 × 180 gallery preview for each full-size
+image. Gallery settings load those previews lazily; choosing a scene is what
+decodes its 2560 × 1440 artwork.
+
+`curated-artworks.json` is the source-pinned, reproducible manifest for the
+37-work expansion. Its source-image SHA-256 values, normalized image hashes,
+and crop records are preserved in `catalog.json`.
+
+New artwork must go through the reproducible, museum-host-allowlisted importer
+described in
+[`docs/artwork-import-pipeline.md`](../../docs/artwork-import-pipeline.md).
+The importer refuses uncertain-origin or generated art, non-open rights,
+upscaling, unexpected redirects, animated sources, and duplicate images.

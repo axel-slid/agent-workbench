@@ -4,6 +4,8 @@ dist/
 *.log
 .codex/
 outputs/
+.artwork-import/
+.cache/artwork-imports/
 cs170-algorithms-quiz.html
 result-*.png
 smiley-face.png
