@@ -20,7 +20,7 @@
 
 ---
 
-![BsCode agent grid](docs/screenshots/agent-grid.jpg)
+![BsCode animated product tour](docs/bscode-demo.gif)
 
 BsCode turns one project into a coordinated multi-agent workspace. Run four
 independent terminals, monitor concise progress in Zen view, inspect their
@@ -209,6 +209,7 @@ selected workspace. Use trusted workspaces and review `createAgent` in
 - [Cross-platform build and smoke-test guide](docs/cross-platform.md)
 - [Visual QA and release matrix](docs/visual-qa.md)
 - [Pixel Agents integration](pixel-agents-mode/AGENT-WORKBENCH-INTEGRATION.md)
+- [Remotion source for the README animation](marketing/remotion)
 
 <div align="center">
   Built for people who would rather direct a small studio than stare at one terminal.
