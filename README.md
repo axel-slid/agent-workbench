@@ -7,12 +7,12 @@
 
   Local and SSH workspaces · Four live agents · Cinematic scenes · Pixel tower
 
-  [![Version](https://img.shields.io/badge/version-0.2.2-70b7ff?style=for-the-badge)](https://github.com/axel-slid/agent-workbench/releases/tag/v0.2.2)
-  [![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon-111827?style=for-the-badge&logo=apple)](https://github.com/axel-slid/agent-workbench/releases/latest)
+  [![Version](https://img.shields.io/badge/version-0.2.2-70b7ff?style=for-the-badge)](https://github.com/axel-slid/bscode/releases/tag/v0.2.2)
+  [![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon-111827?style=for-the-badge&logo=apple)](https://github.com/axel-slid/bscode/releases/latest)
   [![Electron](https://img.shields.io/badge/Electron-42-47848f?style=for-the-badge&logo=electron)](https://www.electronjs.org/)
   [![Tests](https://img.shields.io/badge/regression%20checks-46-63d69f?style=for-the-badge)](tests/run.mjs)
 
-  [Download](https://github.com/axel-slid/agent-workbench/releases/latest) ·
+  [Download](https://github.com/axel-slid/bscode/releases/latest) ·
   [Feature reference](docs/features.md) ·
   [Build guide](docs/cross-platform.md) ·
   [Release notes](docs/release-v0.2.2.md)
@@ -121,7 +121,7 @@ summary in `.bscode-notes.md`. SSH workspaces write the same files remotely.
 ### macOS Apple Silicon
 
 1. Download `BsCode-macOS-arm64.zip` from the
-   [latest release](https://github.com/axel-slid/agent-workbench/releases/latest).
+   [latest release](https://github.com/axel-slid/bscode/releases/latest).
 2. Unzip it and drag `BsCode.app` to Applications.
 3. Open BsCode and choose a local folder or SSH workspace.
 

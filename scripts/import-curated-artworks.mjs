@@ -590,7 +590,7 @@ async function downloadOnce(url, destination, allowedHosts, maxBytes) {
       signal: controller.signal,
       headers: {
         Accept: "image/avif,image/webp,image/png,image/jpeg,image/tiff,*/*;q=0.5",
-        "User-Agent": "BsCode-curated-art-import/1.0 (+https://github.com/axel-slid/agent-workbench)"
+        "User-Agent": "BsCode-curated-art-import/1.0 (+https://github.com/axel-slid/bscode)"
       }
     });
     if (!response.ok) fail(`Download returned HTTP ${response.status} for ${url}.`);
