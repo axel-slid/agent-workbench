@@ -30,16 +30,6 @@ jobs:
             architecture: arm64
             artifact: BsCode-macOS-arm64
             archive: dist/BsCode-macOS-arm64.zip
-          - label: Windows x64
-            runner: windows-2022
-            architecture: x64
-            artifact: BsCode-Windows-x64
-            archive: dist/BsCode-Windows-x64.zip
-          - label: Linux x64
-            runner: ubuntu-24.04
-            architecture: x64
-            artifact: BsCode-Linux-x64
-            archive: dist/BsCode-Linux-x64.tar.gz
 
     steps:
       - name: Check out source
@@ -90,21 +80,6 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent \
             dist/mac/BsCode.app \
             dist/BsCode-macOS-arm64.zip
-
-      - name: Archive Windows application
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Compress-Archive `
-            -Path "dist/win/BsCode-win32-x64" `
-            -DestinationPath "dist/BsCode-Windows-x64.zip" `
-            -CompressionLevel Optimal
-
-      - name: Archive Linux application
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          tar -C dist/linux -czf dist/BsCode-Linux-x64.tar.gz BsCode-linux-x64
 
       - name: Upload ${{ matrix.label }} artifact
         uses: actions/upload-artifact@v4
