@@ -57,6 +57,7 @@ thumbnail hashes are recorded in `catalog.json`.
 | The Poet's Garden | Vincent van Gogh (Dutch, 1853–1890) | Art Institute of Chicago | [Object](https://www.artic.edu/artworks/14586) | [Public Domain · Art Institute of Chicago CC0](https://www.artic.edu/open-access/open-access-images) | cc0 |
 | Nocturne: Blue and Gold—Southampton Water | James McNeill Whistler (American, 1834–1903) | Art Institute of Chicago | [Object](https://www.artic.edu/artworks/56905) | [Public Domain · Art Institute of Chicago CC0](https://www.artic.edu/open-access/open-access-images) | cc0 |
 | The Starry Night | Vincent van Gogh (Dutch, 1853–1890) | Museum of Modern Art / Wikimedia Commons | [Object](https://www.moma.org/collection/works/79802) | [Public Domain · Wikimedia Commons Public Domain Mark](https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg) | public-domain |
+| Bridge over a Pond of Water Lilies | Claude Monet (French, 1840–1926) | The Metropolitan Museum of Art / Wikimedia Commons | [Object](https://www.metmuseum.org/art/collection/search/437127) | [CC0 1.0 · The Met / Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Bridge_over_a_Pond_of_Water_Lilies_MET_DT1854.jpg) | cc0 |
 
 License links describe each institution's open-access program. Object links are
 the authoritative provenance records. The direct image URLs in `catalog.json`

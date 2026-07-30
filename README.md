@@ -33,7 +33,7 @@ metadata.
 | Surface | What it does |
 | --- | --- |
 | **Agent wall** | One, two, or four Codex, Claude, or shell PTYs with live model, state, task, ETA, checklist, and files |
-| **Cinematic Mode** | True full-screen four-pane view over 61 licensed, human-made 1440p paintings and architectural artworks with `⌘K`, `@mentions`, Results, scene shuffle, searchable gallery, and synchronized pane resizing |
+| **Cinematic Mode** | True full-screen four-pane view over 62 licensed, human-made 1440p paintings and architectural artworks with `⌘K`, `@mentions`, Results, scene shuffle, searchable gallery, and synchronized pane resizing |
 | **Pixel Mode** | A 20-floor Art Deco tower with premade previews, collision-aware diverse rooms, arrow-key floor navigation, time-of-day skies, and RPG pet stats anchored beside the clicked pet |
 | **Workspace Notes** | Notes, todos, and an undoable sketch canvas saved beside the project so agents can read the same plan |
 | **Home** | A clean, keyboard-first B launch screen and fast return to recent local and SSH workspaces; immersive modes stay disabled until a workspace is open |
@@ -91,12 +91,12 @@ Type `@` to open a compact picker containing only the names and faces of agents
 that are actually active in the current workspace. Pick a name to route the
 message directly to that agent.
 
-The 61 bundled scenes are public-domain paintings and architectural artworks
+The 62 bundled scenes are public-domain paintings and architectural artworks
 from The Met, the Art Institute of Chicago, and MoMA. Featured masterworks now
 appear first, led by Vincent van Gogh's *The Starry Night*, followed by Claude
-Monet's *Water Lilies*, van Gogh's *The Bedroom*, Georges Seurat's *A Sunday
-on La Grande Jatte*, Hokusai's *The Great Wave*, and other museum-cleared
-works. Each fixed 2560 × 1440 artwork
+Monet's *Bridge over a Pond of Water Lilies* and *Water Lilies*, van Gogh's
+*The Bedroom*, Georges Seurat's *A Sunday on La Grande Jatte*, Hokusai's
+*The Great Wave*, and other museum-cleared works. Each fixed 2560 × 1440 artwork
 receives one restrained local effect—slow clouds, mist, water glints, light,
 dust, fireflies, or stars—without moving the camera or the artwork. There is no
 AI art, stock footage, game art, CGI spectacle, or short video seam. Only the

@@ -38,6 +38,21 @@
         "name": "Public Domain · Wikimedia Commons Public Domain Mark",
         "url": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
       }
+    },
+    "met-commons": {
+      "name": "The Metropolitan Museum of Art / Wikimedia Commons",
+      "sourceHosts": [
+        "metmuseum.org",
+        "commons.wikimedia.org"
+      ],
+      "imageHosts": [
+        "upload.wikimedia.org"
+      ],
+      "license": {
+        "status": "cc0",
+        "name": "CC0 1.0 · The Met / Wikimedia Commons",
+        "url": "https://commons.wikimedia.org/wiki/File:Bridge_over_a_Pond_of_Water_Lilies_MET_DT1854.jpg"
+      }
     }
   },
   "artworks": [
@@ -1327,6 +1342,34 @@
         "#111d4a",
         "#3156a2",
         "#d8c25b"
+      ]
+    },
+    {
+      "id": "monet-bridge-water-lilies",
+      "label": "Bridge over a Pond of Water Lilies",
+      "title": "Bridge over a Pond of Water Lilies",
+      "artist": "Claude Monet (French, 1840–1926)",
+      "date": "1899",
+      "detail": "Claude Monet · Giverny, 1899",
+      "alt": "Claude Monet's Japanese footbridge curving over a pond filled with water lilies.",
+      "humanMade": true,
+      "institution": "met-commons",
+      "objectId": "437127",
+      "accessionNumber": "29.100.113",
+      "sourcePage": "https://www.metmuseum.org/art/collection/search/437127",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/53/Bridge_over_a_Pond_of_Water_Lilies_MET_DT1854.jpg",
+      "asset": "monet-bridge-water-lilies.webp",
+      "thumbnail": "thumbnails/monet-bridge-water-lilies.webp",
+      "expectedSourceSha256": "4187b3db6ded1bd282f7df1034b041b91599a19b2ea0f9c30955b3dfc4e51041",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#315a49",
+        "#6f8d6c",
+        "#b9c3a7"
       ]
     }
   ]

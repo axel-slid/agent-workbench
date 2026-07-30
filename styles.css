@@ -12767,6 +12767,32 @@ body.cinematic-mode .agent-clean-compose textarea {
   z-index: -1;
 }
 
+.home-github-link {
+  color: color-mix(in srgb, var(--theme-muted) 88%, transparent);
+  height: 34px;
+  position: absolute;
+  right: 26px;
+  top: 24px;
+  transition: color 150ms ease, filter 150ms ease, transform 150ms ease;
+  width: 34px;
+  z-index: 3;
+}
+
+.home-github-link svg {
+  display: block;
+  fill: currentColor;
+  height: 100%;
+  width: 100%;
+}
+
+.home-github-link:hover,
+.home-github-link:focus-visible {
+  color: var(--theme-text);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--theme-accent) 48%, transparent));
+  outline: 0;
+  transform: translateY(-1px);
+}
+
 .home-content {
   max-width: 1220px;
   padding-top: clamp(50px, 8vh, 96px);
@@ -14056,6 +14082,13 @@ html[data-appearance-tone="light"] .home-workspace-card.active:focus-visible {
 }
 
 @media (max-height: 680px) {
+  .home-github-link {
+    height: 28px;
+    right: 18px;
+    top: 16px;
+    width: 28px;
+  }
+
   .home-content {
     padding-block: 20px 24px;
   }

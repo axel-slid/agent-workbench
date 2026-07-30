@@ -384,6 +384,10 @@ test("Home view DOM and renderer navigation stay wired together", () => {
     "Home must not cover the workspace on startup"
   );
   assert.match(html, /class="home-logo-stage"[\s\S]*?assets\/home-b-logo\.png/);
+  assert.match(
+    html,
+    /class="home-github-link"[\s\S]*?href="https:\/\/github\.com\/axel-slid\/bscode"[\s\S]*?aria-label="Open BsCode on GitHub"/
+  );
   assert.doesNotMatch(html, /class="home-logo-orbit"/);
   assert.doesNotMatch(html, /Open a workspace, jump to a command/);
   assert.ok(fs.existsSync(path.join(projectRoot, "assets/home-b-logo.png")));
@@ -1400,11 +1404,11 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   const buildSceneThemesSource = extractFunction(rendererSource, "buildSceneThemes");
   const buildSceneThemes = vm.runInNewContext(`(${buildSceneThemesSource})`, Object.create(null));
   const runtimeCatalog = buildSceneThemes(sceneCatalog);
-  assert.equal(sceneCatalog.length, 61, "Cinematic gallery must ship all curated human-made works");
+  assert.equal(sceneCatalog.length, 62, "Cinematic gallery must ship all curated human-made works");
   assert.equal(
     curatedArtworkManifest.artworks.length,
-    46,
-    "The reproducible expansion must include all 46 source-pinned works"
+    47,
+    "The reproducible expansion must include all 47 source-pinned works"
   );
   assert.equal(
     new Set(sceneCatalog.map((scene) => scene.id)).size,
@@ -1507,6 +1511,41 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
       `${relativeAsset} must match its catalog digest`
     );
   }
+  const monetBridgeCatalog = catalogById.get("monet-bridge-water-lilies");
+  const monetBridgeManifest = manifestById.get("monet-bridge-water-lilies");
+  assert.ok(monetBridgeCatalog, "Monet's bridge must be present in the shipped catalog");
+  assert.ok(monetBridgeManifest, "Monet's bridge must be present in the pinned import manifest");
+  assert.equal(monetBridgeCatalog.objectId, "437127");
+  assert.equal(monetBridgeCatalog.accessionNumber, "29.100.113");
+  assert.equal(monetBridgeCatalog.artist, "Claude Monet (French, 1840–1926)");
+  assert.equal(
+    monetBridgeCatalog.source,
+    "https://www.metmuseum.org/art/collection/search/437127"
+  );
+  assert.equal(
+    monetBridgeCatalog.sourceImage,
+    "https://upload.wikimedia.org/wikipedia/commons/5/53/Bridge_over_a_Pond_of_Water_Lilies_MET_DT1854.jpg"
+  );
+  assert.equal(monetBridgeCatalog.license, "CC0 1.0 · The Met / Wikimedia Commons");
+  assert.equal(monetBridgeManifest.institution, "met-commons");
+  assert.equal(monetBridgeManifest.expectedSourceSha256, monetBridgeCatalog.sourceSha256);
+  assert.deepEqual(monetBridgeCatalog.crop, {
+    x: 0,
+    y: 1027,
+    width: 2966,
+    height: 1668
+  });
+  for (const [relativeAsset, expectedSha] of [
+    [monetBridgeCatalog.asset, monetBridgeCatalog.sha256],
+    [monetBridgeCatalog.thumbnail, monetBridgeCatalog.thumbnailSha256]
+  ]) {
+    const asset = fs.readFileSync(path.join(projectRoot, "assets", "scenes", relativeAsset));
+    assert.equal(
+      crypto.createHash("sha256").update(asset).digest("hex"),
+      expectedSha,
+      `${relativeAsset} must match its catalog digest`
+    );
+  }
   const orderSceneThemeEntriesSource = extractFunction(rendererSource, "orderSceneThemeEntries");
   const orderSceneThemeEntries = vm.runInNewContext(
     `(${orderSceneThemeEntriesSource})`,
@@ -1515,17 +1554,20 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   const orderedSceneIds = JSON.parse(JSON.stringify(orderSceneThemeEntries({
     none: null,
     "copenhagen-moonlight": {},
+    "monet-bridge-water-lilies": {},
     "monet-water-lilies": {},
     "van-gogh-starry-night": {},
     "van-gogh-bedroom": {}
   }, [
     "van-gogh-starry-night",
+    "monet-bridge-water-lilies",
     "monet-water-lilies",
     "van-gogh-bedroom"
   ]).map(([id]) => id)));
   assert.deepEqual(orderedSceneIds, [
     "none",
     "van-gogh-starry-night",
+    "monet-bridge-water-lilies",
     "monet-water-lilies",
     "van-gogh-bedroom",
     "copenhagen-moonlight"
@@ -1538,13 +1580,13 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   assert.match(styles, /\.scene-theme-featured\s*\{/);
   assert.match(html, /Featured masterworks appear first/);
   assert.equal(Object.keys(runtimeCatalog).length - 1, sceneCatalog.length);
-  const expandedCatalog = Array.from({ length: 61 }, (_, index) => ({
+  const expandedCatalog = Array.from({ length: 62 }, (_, index) => ({
     ...sceneCatalog[index % sceneCatalog.length],
     id: `gallery-work-${index + 1}`,
     asset: `gallery-work-${index + 1}.webp`,
     thumbnail: `thumbnails/gallery-work-${index + 1}.webp`
   }));
-  assert.equal(Object.keys(buildSceneThemes(expandedCatalog)).length - 1, 61);
+  assert.equal(Object.keys(buildSceneThemes(expandedCatalog)).length - 1, 62);
   assert.equal(
     Object.keys(buildSceneThemes([{ ...expandedCatalog[0], humanMade: false }])).length,
     1,

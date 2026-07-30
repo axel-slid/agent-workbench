@@ -2215,5 +2215,47 @@
       "width": 3840,
       "height": 2160
     }
+  },
+  {
+    "id": "monet-bridge-water-lilies",
+    "label": "Bridge over a Pond of Water Lilies",
+    "title": "Bridge over a Pond of Water Lilies",
+    "detail": "Claude Monet · Giverny, 1899",
+    "asset": "monet-bridge-water-lilies.webp",
+    "thumbnail": "thumbnails/monet-bridge-water-lilies.webp",
+    "alt": "Claude Monet's Japanese footbridge curving over a pond filled with water lilies.",
+    "artist": "Claude Monet (French, 1840–1926)",
+    "date": "1899",
+    "humanMade": true,
+    "institution": "The Metropolitan Museum of Art / Wikimedia Commons",
+    "objectId": "437127",
+    "accessionNumber": "29.100.113",
+    "source": "https://www.metmuseum.org/art/collection/search/437127",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/commons/5/53/Bridge_over_a_Pond_of_Water_Lilies_MET_DT1854.jpg",
+    "license": "CC0 1.0 · The Met / Wikimedia Commons",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/File:Bridge_over_a_Pond_of_Water_Lilies_MET_DT1854.jpg",
+    "rightsStatus": "cc0",
+    "motion": "water",
+    "colors": [
+      "#315a49",
+      "#6f8d6c",
+      "#b9c3a7"
+    ],
+    "width": 2560,
+    "height": 1440,
+    "thumbnailWidth": 320,
+    "thumbnailHeight": 180,
+    "sourceWidth": 2966,
+    "sourceHeight": 3722,
+    "sourceSha256": "4187b3db6ded1bd282f7df1034b041b91599a19b2ea0f9c30955b3dfc4e51041",
+    "sha256": "76e921851ad3ce44b7a7909cc58165a4441aba3427dd5a8b965cc220d608f131",
+    "thumbnailSha256": "d97b10dd29751f6d0ebe2dcfd7a8c2bf2c7686374e9705f2b0d3f63a2e6a2ea2",
+    "perceptualHash": "a9a9a4e325477333",
+    "crop": {
+      "x": 0,
+      "y": 1027,
+      "width": 2966,
+      "height": 1668
+    }
   }
 ]

@@ -1043,6 +1043,7 @@ function buildSceneThemes(catalog) {
 const SCENE_THEMES = buildSceneThemes(window.BSCODE_SCENE_CATALOG);
 const FEATURED_SCENE_IDS = Object.freeze([
   "van-gogh-starry-night",
+  "monet-bridge-water-lilies",
   "monet-water-lilies",
   "van-gogh-bedroom",
   "seurat-grande-jatte",
