@@ -271,7 +271,7 @@ const CinematicScene = ({frame}) => {
 };
 
 export const BsCodeDemo = () => {
-  const frame = useCurrentFrame() * (240 / 360);
+  const frame = useCurrentFrame() * (240 / 480);
   const {fps} = useVideoConfig();
   const intro = spring({
     frame,
@@ -295,7 +295,7 @@ export const BsCodeDemo = () => {
         </WindowChrome>
       </div>
 
-      <Sequence from={288} layout="none">
+      <Sequence from={384} layout="none">
         <div
           style={{
             position: "absolute",
