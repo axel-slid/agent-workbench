@@ -2173,5 +2173,47 @@ window.BSCODE_SCENE_CATALOG = [
       "width": 2560,
       "height": 1440
     }
+  },
+  {
+    "id": "van-gogh-starry-night",
+    "label": "The Starry Night",
+    "title": "The Starry Night",
+    "detail": "Vincent van Gogh · Saint-Rémy, June 1889",
+    "asset": "van-gogh-starry-night.webp",
+    "thumbnail": "thumbnails/van-gogh-starry-night.webp",
+    "alt": "The Starry Night, a human-made painting by Vincent van Gogh.",
+    "artist": "Vincent van Gogh (Dutch, 1853–1890)",
+    "date": "1889",
+    "humanMade": true,
+    "institution": "Museum of Modern Art / Wikimedia Commons",
+    "objectId": "79802",
+    "accessionNumber": "472.1941",
+    "source": "https://www.moma.org/collection/works/79802",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/3840px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+    "license": "Public Domain · Wikimedia Commons Public Domain Mark",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+    "rightsStatus": "public-domain",
+    "motion": "stars",
+    "colors": [
+      "#111d4a",
+      "#3156a2",
+      "#d8c25b"
+    ],
+    "width": 2560,
+    "height": 1440,
+    "thumbnailWidth": 320,
+    "thumbnailHeight": 180,
+    "sourceWidth": 3840,
+    "sourceHeight": 3041,
+    "sourceSha256": "bbd4df2538ef9e7e34ea9f415ec4f60c4007a841cb757f7d1f94da42910e0103",
+    "sha256": "fa28076be3684c047e3d18b2c58d5c1f4ce9f6df68e509feeadf9f4cb73f3f52",
+    "thumbnailSha256": "e3c1e427cbeaded1128a90fffef53384dc34ca8836d32ebe6bc5a5d5a43f8ace",
+    "perceptualHash": "84a8acd49193ccc4",
+    "crop": {
+      "x": 0,
+      "y": 300,
+      "width": 3840,
+      "height": 2160
+    }
   }
 ];

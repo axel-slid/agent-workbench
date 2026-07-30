@@ -309,7 +309,7 @@ test("Openleaf theme catalog has complete palettes and readable contrast", () =>
   vm.runInNewContext(read("assets/openleaf-themes.js"), context);
   const catalog = context.window.OPENLEAF_THEME_CATALOG;
   assert.ok(Array.isArray(catalog));
-  assert.ok(catalog.length >= 60, `Expected the full theme catalog, found ${catalog.length}`);
+  assert.ok(catalog.length >= 61, `Expected the full theme catalog, found ${catalog.length}`);
 
   const requiredKeys = [
     "background", "bg", "panel", "elevated", "hover", "active", "border",
@@ -1400,11 +1400,11 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   const buildSceneThemesSource = extractFunction(rendererSource, "buildSceneThemes");
   const buildSceneThemes = vm.runInNewContext(`(${buildSceneThemesSource})`, Object.create(null));
   const runtimeCatalog = buildSceneThemes(sceneCatalog);
-  assert.equal(sceneCatalog.length, 60, "Cinematic gallery must ship all curated human-made works");
+  assert.equal(sceneCatalog.length, 61, "Cinematic gallery must ship all curated human-made works");
   assert.equal(
     curatedArtworkManifest.artworks.length,
-    45,
-    "The reproducible Art Institute expansion must include all 45 reviewed works"
+    46,
+    "The reproducible expansion must include all 46 source-pinned works"
   );
   assert.equal(
     new Set(sceneCatalog.map((scene) => scene.id)).size,
@@ -1479,14 +1479,72 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
     assert.equal(catalogEntry.thumbnailWidth, 320);
     assert.equal(catalogEntry.thumbnailHeight, 180);
   }
+  const starryNightCatalog = catalogById.get("van-gogh-starry-night");
+  const starryNightManifest = manifestById.get("van-gogh-starry-night");
+  assert.ok(starryNightCatalog, "The Starry Night must be present in the shipped catalog");
+  assert.ok(starryNightManifest, "The Starry Night must be present in the pinned import manifest");
+  assert.equal(starryNightCatalog.objectId, "79802");
+  assert.equal(starryNightCatalog.artist, "Vincent van Gogh (Dutch, 1853–1890)");
+  assert.equal(starryNightCatalog.source, "https://www.moma.org/collection/works/79802");
+  assert.equal(
+    starryNightCatalog.sourceImage,
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/3840px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
+  );
+  assert.equal(
+    starryNightCatalog.license,
+    "Public Domain · Wikimedia Commons Public Domain Mark"
+  );
+  assert.equal(starryNightManifest.institution, "moma-commons");
+  assert.equal(starryNightManifest.expectedSourceSha256, starryNightCatalog.sourceSha256);
+  for (const [relativeAsset, expectedSha] of [
+    [starryNightCatalog.asset, starryNightCatalog.sha256],
+    [starryNightCatalog.thumbnail, starryNightCatalog.thumbnailSha256]
+  ]) {
+    const asset = fs.readFileSync(path.join(projectRoot, "assets", "scenes", relativeAsset));
+    assert.equal(
+      crypto.createHash("sha256").update(asset).digest("hex"),
+      expectedSha,
+      `${relativeAsset} must match its catalog digest`
+    );
+  }
+  const orderSceneThemeEntriesSource = extractFunction(rendererSource, "orderSceneThemeEntries");
+  const orderSceneThemeEntries = vm.runInNewContext(
+    `(${orderSceneThemeEntriesSource})`,
+    Object.create(null)
+  );
+  const orderedSceneIds = JSON.parse(JSON.stringify(orderSceneThemeEntries({
+    none: null,
+    "copenhagen-moonlight": {},
+    "monet-water-lilies": {},
+    "van-gogh-starry-night": {},
+    "van-gogh-bedroom": {}
+  }, [
+    "van-gogh-starry-night",
+    "monet-water-lilies",
+    "van-gogh-bedroom"
+  ]).map(([id]) => id)));
+  assert.deepEqual(orderedSceneIds, [
+    "none",
+    "van-gogh-starry-night",
+    "monet-water-lilies",
+    "van-gogh-bedroom",
+    "copenhagen-moonlight"
+  ]);
+  assert.match(
+    rendererSource,
+    /for \(const \[id, scene\] of orderSceneThemeEntries\(SCENE_THEMES\)\)/
+  );
+  assert.match(rendererSource, /featuredMark\.className = "scene-theme-featured"/);
+  assert.match(styles, /\.scene-theme-featured\s*\{/);
+  assert.match(html, /Featured masterworks appear first/);
   assert.equal(Object.keys(runtimeCatalog).length - 1, sceneCatalog.length);
-  const expandedCatalog = Array.from({ length: 60 }, (_, index) => ({
+  const expandedCatalog = Array.from({ length: 61 }, (_, index) => ({
     ...sceneCatalog[index % sceneCatalog.length],
     id: `gallery-work-${index + 1}`,
     asset: `gallery-work-${index + 1}.webp`,
     thumbnail: `thumbnails/gallery-work-${index + 1}.webp`
   }));
-  assert.equal(Object.keys(buildSceneThemes(expandedCatalog)).length - 1, 60);
+  assert.equal(Object.keys(buildSceneThemes(expandedCatalog)).length - 1, 61);
   assert.equal(
     Object.keys(buildSceneThemes([{ ...expandedCatalog[0], humanMade: false }])).length,
     1,
@@ -2054,7 +2112,7 @@ test("Pixelized appearance uses square workspace tabs", () => {
 test("the release metadata and application icon are complete", () => {
   const packageJson = JSON.parse(read("package.json"));
   const iconSource = read("assets/app-icon-symbol.svg");
-  assert.equal(packageJson.version, "0.2.4");
+  assert.equal(packageJson.version, "0.2.5");
   assert.equal(packageJson.productName, "BsCode");
   assert.equal(packageJson.scripts.test, "node tests/run.mjs && node tests/artwork-import.mjs");
   assert.equal(packageJson.scripts["icon:mac"], "node scripts/generate-app-icon.mjs");

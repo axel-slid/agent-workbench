@@ -1230,27 +1230,15 @@ export const BsCodeDemo = () => {
   });
   const end = progress(frame, 776, 809);
   const cam = cameraForFrame(frame);
-  const ambientX = interpolate(frame, [0, 809], [-3, 3], clamp);
 
   return (
     <AbsoluteFill
       style={{
         overflow: "hidden",
-        background:
-          "radial-gradient(circle at 48% 44%,#172235 0%,#0b1019 52%,#06080d 100%)",
+        background: "#07080a",
         fontFamily: "Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          inset: -120,
-          opacity: 0.58,
-          background:
-            "radial-gradient(circle at 18% 30%,#4f8cd828,transparent 28%), radial-gradient(circle at 82% 70%,#7f5ae323,transparent 30%), radial-gradient(circle at 55% 12%,#67d4ad18,transparent 24%)",
-          transform: `translateX(${ambientX}px)`,
-        }}
-      />
       <div
         style={{
           position: "absolute",
@@ -1279,7 +1267,7 @@ export const BsCodeDemo = () => {
           position: "absolute",
           inset: 0,
           opacity: end,
-          background: "#06080d",
+          background: "#07080a",
           display: "grid",
           placeItems: "center",
         }}

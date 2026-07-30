@@ -1,6 +1,6 @@
 {
   "name": "agent-workbench",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "productName": "BsCode",
   "description": "Electron workspace for running and organizing Codex and Claude agents.",
   "homepage": "https://github.com/axel-slid/bscode",

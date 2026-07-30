@@ -23,6 +23,21 @@
         "name": "Public Domain · Art Institute of Chicago CC0",
         "url": "https://www.artic.edu/open-access/open-access-images"
       }
+    },
+    "moma-commons": {
+      "name": "Museum of Modern Art / Wikimedia Commons",
+      "sourceHosts": [
+        "moma.org",
+        "commons.wikimedia.org"
+      ],
+      "imageHosts": [
+        "upload.wikimedia.org"
+      ],
+      "license": {
+        "status": "public-domain",
+        "name": "Public Domain · Wikimedia Commons Public Domain Mark",
+        "url": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
+      }
     }
   },
   "artworks": [
@@ -1284,6 +1299,34 @@
         "#47493d",
         "#5b5e54",
         "#7f806e"
+      ]
+    },
+    {
+      "id": "van-gogh-starry-night",
+      "label": "The Starry Night",
+      "title": "The Starry Night",
+      "artist": "Vincent van Gogh (Dutch, 1853–1890)",
+      "date": "1889",
+      "detail": "Vincent van Gogh · Saint-Rémy, June 1889",
+      "alt": "The Starry Night, a human-made painting by Vincent van Gogh.",
+      "humanMade": true,
+      "institution": "moma-commons",
+      "objectId": "79802",
+      "accessionNumber": "472.1941",
+      "sourcePage": "https://www.moma.org/collection/works/79802",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/3840px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+      "asset": "van-gogh-starry-night.webp",
+      "thumbnail": "thumbnails/van-gogh-starry-night.webp",
+      "expectedSourceSha256": "bbd4df2538ef9e7e34ea9f415ec4f60c4007a841cb757f7d1f94da42910e0103",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.34
+      },
+      "motion": "stars",
+      "colors": [
+        "#111d4a",
+        "#3156a2",
+        "#d8c25b"
       ]
     }
   ]

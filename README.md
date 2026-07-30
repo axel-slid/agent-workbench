@@ -7,7 +7,7 @@
 
   Local and SSH workspaces · Four live agents · Cinematic scenes · Pixel tower
 
-  [![Version](https://img.shields.io/badge/version-0.2.4-70b7ff?style=for-the-badge)](https://github.com/axel-slid/bscode/releases/tag/v0.2.4)
+  [![Version](https://img.shields.io/badge/version-0.2.5-70b7ff?style=for-the-badge)](https://github.com/axel-slid/bscode/releases/tag/v0.2.5)
   [![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon-111827?style=for-the-badge&logo=apple)](https://github.com/axel-slid/bscode/releases/latest)
   [![Electron](https://img.shields.io/badge/Electron-42-47848f?style=for-the-badge&logo=electron)](https://www.electronjs.org/)
   [![Tests](https://img.shields.io/badge/core%20checks-53%20passing-63d69f?style=for-the-badge)](tests/run.mjs)
@@ -15,7 +15,7 @@
   [Download](https://github.com/axel-slid/bscode/releases/latest) ·
   [Feature reference](docs/features.md) ·
   [Build guide](docs/cross-platform.md) ·
-  [Release notes](docs/release-v0.2.4.md)
+  [Release notes](docs/release-v0.2.5.md)
 </div>
 
 ---
@@ -33,7 +33,7 @@ metadata.
 | Surface | What it does |
 | --- | --- |
 | **Agent wall** | One, two, or four Codex, Claude, or shell PTYs with live model, state, task, ETA, checklist, and files |
-| **Cinematic Mode** | True full-screen four-pane view over 60 licensed, human-made 1440p paintings and architectural artworks with `⌘K`, `@mentions`, Results, scene shuffle, searchable gallery, and synchronized pane resizing |
+| **Cinematic Mode** | True full-screen four-pane view over 61 licensed, human-made 1440p paintings and architectural artworks with `⌘K`, `@mentions`, Results, scene shuffle, searchable gallery, and synchronized pane resizing |
 | **Pixel Mode** | A 20-floor Art Deco tower with premade previews, collision-aware diverse rooms, arrow-key floor navigation, time-of-day skies, and RPG pet stats anchored beside the clicked pet |
 | **Workspace Notes** | Notes, todos, and an undoable sketch canvas saved beside the project so agents can read the same plan |
 | **Home** | A clean, keyboard-first B launch screen and fast return to recent local and SSH workspaces; immersive modes stay disabled until a workspace is open |
@@ -91,11 +91,12 @@ Type `@` to open a compact picker containing only the names and faces of agents
 that are actually active in the current workspace. Pick a name to route the
 message directly to that agent.
 
-The 60 bundled scenes are public-domain paintings and architectural artworks
-from The Met and the Art Institute of Chicago. The expanded gallery includes
-Claude Monet's *Water Lilies*, Vincent van Gogh's *The Bedroom*, Georges
-Seurat's *A Sunday on La Grande Jatte*, Hokusai's *The Great Wave*, and other
-museum-cleared masterworks. Each fixed 2560 × 1440 artwork
+The 61 bundled scenes are public-domain paintings and architectural artworks
+from The Met, the Art Institute of Chicago, and MoMA. Featured masterworks now
+appear first, led by Vincent van Gogh's *The Starry Night*, followed by Claude
+Monet's *Water Lilies*, van Gogh's *The Bedroom*, Georges Seurat's *A Sunday
+on La Grande Jatte*, Hokusai's *The Great Wave*, and other museum-cleared
+works. Each fixed 2560 × 1440 artwork
 receives one restrained local effect—slow clouds, mist, water glints, light,
 dust, fireflies, or stars—without moving the camera or the artwork. There is no
 AI art, stock footage, game art, CGI spectacle, or short video seam. Only the
@@ -215,6 +216,7 @@ selected workspace. Use trusted workspaces and review `createAgent` in
 ## Documentation
 
 - [Complete feature breakdown](docs/features.md)
+- [v0.2.5 release notes](docs/release-v0.2.5.md)
 - [v0.2.4 release notes](docs/release-v0.2.4.md)
 - [v0.2.3 release notes](docs/release-v0.2.3.md)
 - [v0.2.2 release notes](docs/release-v0.2.2.md)

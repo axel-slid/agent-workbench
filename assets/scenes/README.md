@@ -1,8 +1,9 @@
 # Cinematic art catalog
 
-BsCode ships a focused library of 60 human-made, 2560 × 1440 artwork images.
+BsCode ships a focused library of 61 human-made, 2560 × 1440 artwork images.
 Every scene is a public-domain landscape or architectural
-painting from The Metropolitan Museum of Art or the Art Institute of Chicago.
+painting from The Metropolitan Museum of Art, the Art Institute of Chicago,
+or the Museum of Modern Art.
 There is no stock footage, AI-generated imagery, game art, CGI spectacle, or
 whole-image pan/zoom.
 
@@ -39,8 +40,10 @@ application.
 
 The Metropolitan Museum of Art and the Art Institute of Chicago make the
 listed public-domain images available under their Open Access/CC0 programs.
-The table above records the original 15-scene collection. The 45-work expansion
-and its authoritative object-by-object credits are in
+MoMA's *The Starry Night* record is paired with Wikimedia Commons' faithful
+public-domain scan. The table above records the original 15-scene collection.
+The 46-work source-pinned expansion and its authoritative object-by-object
+credits are in
 [`LICENSES.md`](LICENSES.md).
 
 `catalog.json` is the machine-readable attribution ledger. Every catalog entry
@@ -53,7 +56,7 @@ image. Gallery settings load those previews lazily; choosing a scene is what
 decodes its 2560 × 1440 artwork.
 
 `curated-artworks.json` is the source-pinned, reproducible manifest for the
-45-work expansion. Its source-image SHA-256 values, normalized image hashes,
+46-work expansion. Its source-image SHA-256 values, normalized image hashes,
 and crop records are preserved in `catalog.json`.
 
 New artwork must go through the reproducible, museum-host-allowlisted importer

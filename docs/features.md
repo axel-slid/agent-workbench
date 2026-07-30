@@ -541,7 +541,7 @@ scene; the floating close button remains in the top-right. Dragging the resize
 grip on any pane changes the width and height of all four panes together with a
 mirrored spring animation.
 
-Appearance settings provide a searchable gallery of 60 bundled 2560 × 1440
+Appearance settings provide a searchable gallery of 61 bundled 2560 × 1440
 human-made artworks. The collection spans landscape, coastal, mountain,
 architectural, ruin, Venetian, and ukiyo-e scenery by named artists including
 Thomas Cole, Claude Monet, Winslow Homer, Hubert Robert, Katsushika Hokusai,

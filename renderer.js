@@ -1041,9 +1041,35 @@ function buildSceneThemes(catalog) {
 }
 
 const SCENE_THEMES = buildSceneThemes(window.BSCODE_SCENE_CATALOG);
+const FEATURED_SCENE_IDS = Object.freeze([
+  "van-gogh-starry-night",
+  "monet-water-lilies",
+  "van-gogh-bedroom",
+  "seurat-grande-jatte",
+  "hokusai-great-wave",
+  "monet-stacks-wheat",
+  "monet-gare-saint-lazare",
+  "van-gogh-poets-garden",
+  "whistler-nocturne"
+]);
 const DEFAULT_SCENE_THEME = Object.keys(SCENE_THEMES).find((scene) => scene !== "none") || "none";
 
 let scenePreviewObserver = null;
+
+function orderSceneThemeEntries(sceneThemes, featuredSceneIds = FEATURED_SCENE_IDS) {
+  const featuredRanks = new Map(featuredSceneIds.map((id, index) => [id, index]));
+  return Object.entries(sceneThemes).sort(([leftId], [rightId]) => {
+    if (leftId === "none") return -1;
+    if (rightId === "none") return 1;
+    const leftRank = featuredRanks.get(leftId);
+    const rightRank = featuredRanks.get(rightId);
+    if (leftRank !== undefined || rightRank !== undefined) {
+      return (leftRank ?? Number.MAX_SAFE_INTEGER)
+        - (rightRank ?? Number.MAX_SAFE_INTEGER);
+    }
+    return 0;
+  });
+}
 
 function loadSceneThumbnail(option) {
   const preview = option?.querySelector("img.scene-theme-preview");
@@ -1091,8 +1117,9 @@ function hydrateSceneThemes() {
   grid.replaceChildren();
   sceneThemeOptions.length = 0;
   const artworkCount = Object.values(SCENE_THEMES).filter(Boolean).length;
+  const featuredSceneIds = new Set(FEATURED_SCENE_IDS);
   let artworkIndex = 0;
-  for (const [id, scene] of Object.entries(SCENE_THEMES)) {
+  for (const [id, scene] of orderSceneThemeEntries(SCENE_THEMES)) {
     const option = document.createElement("button");
     option.className = "scene-theme-option";
     option.type = "button";
@@ -1140,7 +1167,15 @@ function hydrateSceneThemes() {
     const selectedMark = document.createElement("b");
     selectedMark.setAttribute("aria-hidden", "true");
     selectedMark.textContent = "✓";
-    option.append(preview, copy, selectedMark);
+    option.append(preview, copy);
+    if (scene && featuredSceneIds.has(id)) {
+      const featuredMark = document.createElement("span");
+      featuredMark.className = "scene-theme-featured";
+      featuredMark.setAttribute("aria-hidden", "true");
+      featuredMark.textContent = "Featured";
+      option.append(featuredMark);
+    }
+    option.append(selectedMark);
     grid.appendChild(option);
     sceneThemeOptions.push(option);
     if (scene) {

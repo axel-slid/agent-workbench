@@ -10468,6 +10468,22 @@ body.scene-background-active::before {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-accent) 48%, transparent);
 }
 
+.scene-theme-featured {
+  background: color-mix(in srgb, var(--theme-bg) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-accent) 48%, transparent);
+  border-radius: 999px;
+  color: var(--theme-text);
+  font-size: 6.5px;
+  font-weight: 700;
+  left: 6px;
+  letter-spacing: 0.06em;
+  padding: 3px 5px;
+  pointer-events: none;
+  position: absolute;
+  text-transform: uppercase;
+  top: 6px;
+}
+
 .scene-theme-preview {
   background:
     linear-gradient(135deg, var(--scene-a, var(--theme-panel)), var(--scene-b, var(--theme-elevated)));

@@ -56,6 +56,7 @@ thumbnail hashes are recorded in `catalog.json`.
 | Arrival of the Normandy Train, Gare Saint-Lazare | Claude Monet (French, 1840–1926) | Art Institute of Chicago | [Object](https://www.artic.edu/artworks/16571) | [Public Domain · Art Institute of Chicago CC0](https://www.artic.edu/open-access/open-access-images) | cc0 |
 | The Poet's Garden | Vincent van Gogh (Dutch, 1853–1890) | Art Institute of Chicago | [Object](https://www.artic.edu/artworks/14586) | [Public Domain · Art Institute of Chicago CC0](https://www.artic.edu/open-access/open-access-images) | cc0 |
 | Nocturne: Blue and Gold—Southampton Water | James McNeill Whistler (American, 1834–1903) | Art Institute of Chicago | [Object](https://www.artic.edu/artworks/56905) | [Public Domain · Art Institute of Chicago CC0](https://www.artic.edu/open-access/open-access-images) | cc0 |
+| The Starry Night | Vincent van Gogh (Dutch, 1853–1890) | Museum of Modern Art / Wikimedia Commons | [Object](https://www.moma.org/collection/works/79802) | [Public Domain · Wikimedia Commons Public Domain Mark](https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg) | public-domain |
 
 License links describe each institution's open-access program. Object links are
 the authoritative provenance records. The direct image URLs in `catalog.json`
