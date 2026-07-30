@@ -1,21 +1,30 @@
 # Cinematic art catalog
 
-BsCode ships a focused library of 52 human-made, 2560 × 1440 scenery images.
-Every scene is a public-domain landscape or architectural painting from The
-Metropolitan Museum of Art or the Art Institute of Chicago. There is no stock
-footage, AI-generated imagery, game art, CGI spectacle, or whole-image
-pan/zoom.
+BsCode's core Cinematic gallery contains 52 human-made, 2560 × 1440 scenery
+images. Every fixed scene is a public-domain landscape or architectural
+painting from The Metropolitan Museum of Art or the Art Institute of Chicago.
+There is no AI-generated imagery, game art, CGI spectacle, or whole-image
+pan/zoom in this museum collection.
 
-The base artwork stays fixed. A transparent canvas adds one restrained,
+Each base artwork stays fixed. A transparent canvas adds one restrained,
 scene-specific atmosphere layer: slow clouds, mist, water glints, light, dust,
 fireflies, or star twinkles. Those effects run at the configured scene frame
 rate, stop when the window is hidden, and turn off completely with Reduce
 Motion. Their independently phased motion has no short video seam.
 
-Only 320 × 180 thumbnails are requested while browsing Settings, and only the
-selected 2560 × 1440 WebP is decoded as the Cinematic background. The complete
-master-art catalog remains under 25 MB, down from the former 146 MB video
-bundle.
+Six optional, locally stored animated landscapes extend the gallery. They were
+selected from work published by Pixabay creators Joe_hackney and Favorisxp and
+manually reviewed as human-made and not AI-generated. BsCode embeds
+audio-stripped, 1280 × 720, 24 fps H.264 derivatives rather than loading video
+from the network. Only the selected video plays, playback is always muted, and
+it pauses outside Cinematic Mode or while the window is hidden. Reduce Motion
+uses the scene's poster frame without starting video playback.
+
+Only 320 × 180 thumbnails are requested while browsing Settings. Selecting a
+fixed scene decodes its 2560 × 1440 WebP; selecting an animated scene decodes
+its local MP4. The complete master-art catalog remains under 25 MB, down from
+the former 146 MB video bundle. The optional six-video set is encoded
+separately so users who prefer fixed art retain the lower-cost path.
 
 ## Credits and licenses
 
@@ -56,8 +65,17 @@ decodes its 2560 × 1440 artwork.
 37-work expansion. Its source-image SHA-256 values, normalized image hashes,
 and crop records are preserved in `catalog.json`.
 
+`curated-videos.json` is the source-pinned manifest for the six optional
+animated landscapes. It records each creator and Pixabay record, source CDN
+URL and SHA-256, human/non-AI review, derivative settings, and expected local
+asset, poster, and thumbnail paths. Creator credits and distribution notes are
+in [`VIDEO_LICENSES.md`](VIDEO_LICENSES.md).
+
 New artwork must go through the reproducible, museum-host-allowlisted importer
 described in
 [`docs/artwork-import-pipeline.md`](../../docs/artwork-import-pipeline.md).
 The importer refuses uncertain-origin or generated art, non-open rights,
 upscaling, unexpected redirects, animated sources, and duplicate images.
+Animated landscapes are a separate, manually reviewed collection governed by
+the [Pixabay Content License](https://pixabay.com/service/license-summary/);
+they do not pass through the museum artwork importer.

@@ -1380,7 +1380,10 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   const sceneCatalogJavaScript = read("assets/scenes/catalog.js");
   assert.match(html, /id="sceneBackgroundCanvas"[\s\S]*?aria-hidden="true"/);
   assert.match(html, /<img id="sceneBackground"[\s\S]*?decoding="async"/);
-  assert.doesNotMatch(html, /<video id="sceneBackground"/);
+  assert.match(
+    html,
+    /<video id="sceneVideoBackground"[\s\S]*?muted[\s\S]*?loop[\s\S]*?playsinline[\s\S]*?preload="metadata"/
+  );
   assert.doesNotMatch(html, /class="scene-atmosphere"/);
   assert.match(html, /id="cinematicModeButton"[\s\S]*?title="Cinematic mode"/);
   assert.match(html, /id="cinematicModeButton"[\s\S]*?class="yin-yang-symbol"/);
@@ -1398,7 +1401,11 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   const buildSceneThemesSource = extractFunction(rendererSource, "buildSceneThemes");
   const buildSceneThemes = vm.runInNewContext(`(${buildSceneThemesSource})`, Object.create(null));
   const runtimeCatalog = buildSceneThemes(sceneCatalog);
-  assert.equal(sceneCatalog.length, 52, "Cinematic gallery must ship all curated human-made works");
+  assert.equal(
+    sceneCatalog.filter((scene) => scene.mediaType !== "video").length,
+    52,
+    "Cinematic gallery must keep all curated human-made still artworks"
+  );
   assert.equal(Object.keys(runtimeCatalog).length - 1, sceneCatalog.length);
   const expandedCatalog = Array.from({ length: 52 }, (_, index) => ({
     ...sceneCatalog[index % sceneCatalog.length],
@@ -1412,14 +1419,52 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
     1,
     "Runtime gallery must reject art without explicit human-made provenance"
   );
+  const videoFixture = {
+    ...expandedCatalog[0],
+    id: "fixture-video",
+    mediaType: "video",
+    asset: "videos/fixture-video.mp4",
+    poster: "video-posters/fixture-video.webp",
+    thumbnail: "thumbnails/video-fixture-video.webp"
+  };
+  const videoRuntimeCatalog = buildSceneThemes([videoFixture]);
+  assert.equal(videoRuntimeCatalog["fixture-video"]?.mediaType, "video");
+  assert.equal(videoRuntimeCatalog["fixture-video"]?.image, "assets/scenes/videos/fixture-video.mp4");
+  assert.equal(videoRuntimeCatalog["fixture-video"]?.poster, "assets/scenes/video-posters/fixture-video.webp");
+  for (const unsafeAsset of [
+    "../fixture-video.mp4",
+    "fixture-video.mp4",
+    "videos/../fixture-video.mp4",
+    "https://cdn.example/fixture-video.mp4"
+  ]) {
+    assert.equal(
+      Object.keys(buildSceneThemes([{ ...videoFixture, asset: unsafeAsset }])).length,
+      1,
+      `Video asset escaped assets/scenes/videos: ${unsafeAsset}`
+    );
+  }
+  assert.equal(
+    Object.keys(buildSceneThemes([{ ...videoFixture, poster: "../fixture-video.webp" }])).length,
+    1,
+    "Video posters must remain inside assets/scenes/video-posters"
+  );
   for (const scene of sceneCatalog) {
     assert.match(scene.id, /^[a-z][a-z0-9-]+$/);
     assert.ok(scene.artist);
     assert.equal(scene.humanMade, true);
     assert.match(scene.source, /^https:\/\//);
     assert.ok(scene.license);
-    assert.ok(["clouds", "mist", "water", "stars", "fireflies", "dust", "light"].includes(scene.motion));
+    assert.ok(["clouds", "mist", "water", "stars", "fireflies", "dust", "light", "source"].includes(scene.motion));
     const assetPath = path.join(projectRoot, "assets", "scenes", scene.asset);
+    if (scene.mediaType === "video") {
+      assert.match(scene.asset, /^videos\/[a-z0-9][a-z0-9._-]*\.(?:mp4|webm)$/i);
+      assert.match(scene.poster, /^video-posters\/[a-z0-9][a-z0-9._-]*\.(?:webp|png|jpe?g)$/i);
+      assert.equal(runtimeCatalog[scene.id]?.mediaType, "video");
+      assert.equal(runtimeCatalog[scene.id]?.poster, `assets/scenes/${scene.poster}`);
+      assert.ok(fs.existsSync(path.join(projectRoot, "assets", "scenes", scene.poster)), `${scene.poster} is missing`);
+    } else {
+      assert.equal(runtimeCatalog[scene.id]?.mediaType, "image");
+    }
     assert.ok(fs.existsSync(assetPath), `${scene.asset} is missing`);
     assert.ok(fs.statSync(assetPath).size > 20_000, `${scene.asset} is unexpectedly small`);
     const thumbnailPath = path.join(projectRoot, "assets", "scenes", scene.thumbnail);
@@ -1433,9 +1478,9 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
     assert.equal(runtimeCatalog[scene.id]?.motion, scene.motion);
   }
   assert.equal(
-    fs.readdirSync(path.join(projectRoot, "assets", "scenes")).filter((name) => /\.(?:mp4|mov|gif)$/i.test(name)).length,
+    fs.readdirSync(path.join(projectRoot, "assets", "scenes")).filter((name) => /\.(?:mp4|mov|gif|webm)$/i.test(name)).length,
     0,
-    "Cinematic art must not reintroduce short video or GIF loops"
+    "Cinematic video files must remain isolated in assets/scenes/videos"
   );
   assert.match(rendererSource, /function drawLivingScene\(/);
   assert.match(html, /Human-made scenery/);
@@ -1465,7 +1510,33 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   assert.match(scenePlaybackSource, /sceneBackground\.src\s*=\s*config\.image/);
   assert.match(scenePlaybackSource, /sceneBackground\.decode\?\.\(\)/);
   assert.match(scenePlaybackSource, /sceneBackground\.removeAttribute\("src"\)/);
-  assert.doesNotMatch(scenePlaybackSource, /\.(?:play|pause|load)\(/);
+  assert.match(scenePlaybackSource, /config\?\.mediaType\s*===\s*"video"/);
+  assert.match(scenePlaybackSource, /sceneVideoBackground\.src\s*=\s*videoSource/);
+  assert.match(scenePlaybackSource, /sceneVideoBackground\.play\(\)\.catch/);
+  assert.match(scenePlaybackSource, /unloadSceneVideo\(\)/);
+  assert.match(scenePlaybackSource, /showVideoPoster/);
+  assert.match(rendererSource, /function safeSceneVideoSource\([\s\S]*?assets\\\/scenes\\\/videos/);
+  assert.match(rendererSource, /function unloadSceneVideo\([\s\S]*?sceneVideoBackground\.pause\(\)/);
+  assert.match(rendererSource, /prefers-reduced-motion:\s*reduce/);
+  const safeSceneVideoSource = vm.runInNewContext(
+    `(${extractFunction(rendererSource, "safeSceneVideoSource")})`,
+    Object.create(null)
+  );
+  assert.equal(
+    safeSceneVideoSource({ mediaType: "video", image: "assets/scenes/videos/forest-pool.mp4" }),
+    "assets/scenes/videos/forest-pool.mp4"
+  );
+  for (const unsafeSource of [
+    "https://cdn.example/forest-pool.mp4",
+    "assets/scenes/forest-pool.mp4",
+    "assets/scenes/videos/../forest-pool.mp4"
+  ]) {
+    assert.equal(safeSceneVideoSource({ mediaType: "video", image: unsafeSource }), "");
+  }
+  assert.equal(
+    safeSceneVideoSource({ mediaType: "image", image: "assets/scenes/videos/forest-pool.mp4" }),
+    ""
+  );
   assert.match(scenePlaybackSource, /sceneBackgroundCanvas\.classList\.toggle\("active",\s*animate\)/);
   assert.match(scenePlaybackSource, /cinematicModeEnabled\s*&&\s*homeView\.hidden/);
   assert.match(sceneAnimationSource, /agentWorkbenchSceneFrameRate",\s*24,\s*15,\s*30/);
@@ -1508,6 +1579,7 @@ test("Cinematic Mode uses licensed fixed artwork with restrained local atmospher
   assert.match(styles, /\.cinematic-prompt-shortcut\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?border:\s*0;[\s\S]*?font:\s*680 15px/);
   assert.match(styles, /\.cinematic-prompt-dock > button\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?border:\s*0;[\s\S]*?font:\s*680 24px/);
   assert.match(styles, /\.scene-background\s*\{[\s\S]*?object-fit:\s*cover;[\s\S]*?transform:\s*none/);
+  assert.match(html, /id="sceneBackground" class="scene-background"[\s\S]*?id="sceneVideoBackground" class="scene-background"/);
   assert.match(styles, /body\.cinematic-mode \.agent-slot\.clean-mode \.agent-clean-view\s*\{[\s\S]*?grid-template-rows:\s*auto auto minmax\(0, 1fr\) auto auto/);
   assert.match(rendererSource, /function beginCinematicPaneResize\([\s\S]*?cinematic-resizing/);
   assert.match(rendererSource, /function finishCinematicPaneResize\([\s\S]*?agentWorkbenchCinematicPaneWidth/);
@@ -1972,9 +2044,12 @@ test("Pixelized appearance uses square workspace tabs", () => {
 test("the release metadata and application icon are complete", () => {
   const packageJson = JSON.parse(read("package.json"));
   const iconSource = read("assets/app-icon-symbol.svg");
-  assert.equal(packageJson.version, "0.2.2");
+  assert.equal(packageJson.version, "0.2.3");
   assert.equal(packageJson.productName, "BsCode");
-  assert.equal(packageJson.scripts.test, "node tests/run.mjs && node tests/artwork-import.mjs");
+  assert.equal(
+    packageJson.scripts.test,
+    "node tests/run.mjs && node tests/artwork-import.mjs && node tests/scene-videos.mjs"
+  );
   assert.equal(packageJson.scripts["icon:mac"], "node scripts/generate-app-icon.mjs");
   assert.match(iconSource, /<rect width="1024" height="1024" rx="238"/);
   assert.match(iconSource, /scale\(1\.12\)/);

@@ -8,6 +8,13 @@ without changing its quiet, fixed-camera character.
 The macOS release is packaged natively for Apple Silicon (`arm64`) as
 `BsCode-macOS-arm64.zip`.
 
+After dragging `BsCode.app` into Applications, remove macOS quarantine once
+before the first launch:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/BsCode.app"
+```
+
 ## Human-made Cinematic gallery
 
 - 52 bundled 2560 × 1440 landscape and architectural artworks.

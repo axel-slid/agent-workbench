@@ -199,6 +199,7 @@ const settingsProfileRoleInput = document.getElementById("settingsProfileRoleInp
 const settingsProfileFocusInput = document.getElementById("settingsProfileFocusInput");
 const settingsCycleProfileAvatar = document.getElementById("settingsCycleProfileAvatar");
 const sceneBackground = document.getElementById("sceneBackground");
+const sceneVideoBackground = document.getElementById("sceneVideoBackground");
 const sceneBackgroundCanvas = document.getElementById("sceneBackgroundCanvas");
 const musicReactiveOverlay = document.querySelector(".music-reactive-overlay");
 const sceneThemeOptions = Array.from(document.querySelectorAll("[data-scene-theme]"));
@@ -1019,6 +1020,11 @@ const THEME_CATEGORY_DEFAULTS = {
 function buildSceneThemes(catalog) {
   const scenes = { none: null };
   for (const record of Array.isArray(catalog) ? catalog : []) {
+    const mediaType = record?.mediaType === "video" ? "video" : "image";
+    const hasSafeVideoAsset = mediaType !== "video"
+      || /^videos\/[a-z0-9][a-z0-9._-]*\.(?:mp4|webm)$/i.test(record.asset || "");
+    const hasSafeVideoPoster = mediaType !== "video"
+      || /^video-posters\/[a-z0-9][a-z0-9._-]*\.(?:webp|png|jpe?g)$/i.test(record.poster || "");
     if (
       !record
       || !/^[a-z][a-z0-9-]+$/.test(record.id)
@@ -1028,12 +1034,16 @@ function buildSceneThemes(catalog) {
       || !record.thumbnail
       || !Array.isArray(record.colors)
       || record.colors.length !== 3
+      || !hasSafeVideoAsset
+      || !hasSafeVideoPoster
     ) {
       continue;
     }
     scenes[record.id] = Object.freeze({
       ...record,
+      mediaType,
       image: `assets/scenes/${record.asset}`,
+      ...(mediaType === "video" ? { poster: `assets/scenes/${record.poster}` } : {}),
       thumbnail: `assets/scenes/${record.thumbnail}`
     });
   }
@@ -4889,21 +4899,72 @@ function drawLivingScene(timestamp = performance.now()) {
   sceneAnimationFrame = requestAnimationFrame(drawLivingScene);
 }
 
+function safeSceneVideoSource(config) {
+  const source = typeof config?.image === "string" ? config.image : "";
+  if (config?.mediaType !== "video") return "";
+  return /^assets\/scenes\/videos\/[a-z0-9][a-z0-9._-]*\.(?:mp4|webm)$/i.test(source)
+    ? source
+    : "";
+}
+
+function safeSceneVideoPoster(config) {
+  const poster = typeof config?.poster === "string" ? config.poster : "";
+  if (config?.mediaType !== "video") return "";
+  return /^assets\/scenes\/video-posters\/[a-z0-9][a-z0-9._-]*\.(?:webp|png|jpe?g)$/i.test(poster)
+    ? poster
+    : "";
+}
+
+function unloadSceneVideo() {
+  sceneVideoBackground.pause();
+  if (sceneVideoBackground.hasAttribute("src")) {
+    sceneVideoBackground.removeAttribute("src");
+    sceneVideoBackground.load();
+  }
+}
+
 function syncSceneBackgroundPlayback() {
   const sceneId = document.body.dataset.sceneTheme || selectedSceneTheme();
   const config = SCENE_THEMES[sceneId] || null;
   const active = Boolean(config && cinematicModeEnabled && homeView.hidden);
-  const reduceMotion = booleanPreference("agentWorkbenchReduceMotion", false);
-  const animate = active && !reduceMotion && document.visibilityState === "visible";
+  const visible = document.visibilityState === "visible";
+  const reduceMotion = booleanPreference("agentWorkbenchReduceMotion", false)
+    || Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+  const videoSource = safeSceneVideoSource(config);
+  const videoPoster = safeSceneVideoPoster(config);
+  const videoScene = Boolean(active && config?.mediaType === "video" && videoSource);
+  const playVideo = videoScene && visible && !reduceMotion;
+  const showVideoPoster = videoScene && reduceMotion && Boolean(videoPoster);
+  const showImage = active && config?.mediaType !== "video";
+  const animate = active && !reduceMotion && visible;
   document.body.classList.toggle("scene-background-active", active);
-  sceneBackground.classList.toggle("active", active);
-  if (active) {
+  sceneBackground.classList.toggle("active", showImage);
+  sceneVideoBackground.classList.toggle("active", playVideo || showVideoPoster);
+  if (showImage) {
     if (sceneBackground.getAttribute("src") !== config.image) {
       sceneBackground.src = config.image;
       sceneBackground.decode?.().catch(() => {});
     }
   } else {
     sceneBackground.removeAttribute("src");
+  }
+  if (videoScene) {
+    if (videoPoster && sceneVideoBackground.getAttribute("poster") !== videoPoster) {
+      sceneVideoBackground.poster = videoPoster;
+    }
+    if (playVideo) {
+      if (sceneVideoBackground.getAttribute("src") !== videoSource) {
+        sceneVideoBackground.src = videoSource;
+        sceneVideoBackground.load();
+      }
+      sceneVideoBackground.muted = true;
+      sceneVideoBackground.play().catch(() => {});
+    } else {
+      unloadSceneVideo();
+    }
+  } else {
+    unloadSceneVideo();
+    sceneVideoBackground.removeAttribute("poster");
   }
   sceneBackgroundCanvas.classList.toggle("active", animate);
   if (sceneAnimationFrame) cancelAnimationFrame(sceneAnimationFrame);
@@ -8530,6 +8591,7 @@ settingsCycleProfileAvatar.addEventListener("click", () => {
   settingsProfileAvatar.src = `assets/agent-face-${next}.png`;
 });
 document.addEventListener("visibilitychange", syncSceneBackgroundPlayback);
+window.matchMedia?.("(prefers-reduced-motion: reduce)")?.addEventListener?.("change", syncSceneBackgroundPlayback);
 settingsSearchInput.addEventListener("input", () => {
   const query = settingsSearchInput.value.trim().toLowerCase();
   if (!document.querySelector('[data-settings-page="appearance"]').hidden) {

@@ -44,7 +44,7 @@ The primary application surfaces are:
 3. **Zen view** for checklist-first progress monitoring and follow-up prompts.
 4. **Pixel Mode** for a visual office representation of the same live agents.
 5. **Cinematic Mode** for a distraction-free, full-screen agent wall over
-   credited artist-made animated landscapes.
+   credited museum artworks or locally stored animated landscapes.
 6. **Files** for workspace browsing and file operations.
 7. **Outputs** for generated artifact discovery and preview.
 8. **Workspace Notes** for shared notes, todos, and sketches that agents can
@@ -542,27 +542,39 @@ grip on any pane changes the width and height of all four panes together with a
 mirrored spring animation.
 
 Appearance settings provide a searchable gallery of 52 bundled 2560 × 1440
-human-made artworks. The collection spans landscape, coastal, mountain,
-architectural, ruin, Venetian, and ukiyo-e scenery by named artists including
-Thomas Cole, Claude Monet, Winslow Homer, Hubert Robert, Katsushika Hokusai,
-Utagawa Hiroshige, George Inness, and many others. Gallery cards use lazy
-320 × 180 thumbnails, expose artist and license details, and never decode the
-master artwork until it is selected.
+human-made museum artworks plus six optional local animated landscapes. The
+fixed collection spans landscape, coastal, mountain, architectural, ruin,
+Venetian, and ukiyo-e scenery by named artists including Thomas Cole, Claude
+Monet, Winslow Homer, Hubert Robert, Katsushika Hokusai, Utagawa Hiroshige,
+George Inness, and many others. The video collection contains six manually
+reviewed human-made scenes by Pixabay creators Joe_hackney and Favorisxp.
+Gallery cards use lazy 320 × 180 thumbnails, expose artist or creator and
+license details, and never decode the master artwork or video until selected.
 
-Every work is Public Domain and distributed through The Met Open Access or the
-Art Institute of Chicago CC0 program. The base art never pans, zooms, or
-scrolls. A transparent canvas adds one slow, localized atmosphere effect per
-scene, with independently phased motion rather than a short repeating clip.
-BsCode decodes only the selected local WebP.
+Every fixed museum work is Public Domain and distributed through The Met Open
+Access or the Art Institute of Chicago CC0 program. The base art never pans,
+zooms, or scrolls. A transparent canvas adds one slow, localized atmosphere
+effect per scene, with independently phased motion rather than a short
+repeating clip. BsCode decodes only the selected local WebP.
 Reduce Motion stops all atmosphere, hidden windows stop scheduling frames, and
 the scene frame-rate setting is capped at 30 fps. Optional Spotify-reactive
 mode anchors its restrained perimeter pulse to Spotify playback position,
 stops cleanly on pause, and never moves the underlying artwork.
+
+The six animated landscapes are audio-stripped, 1280 × 720, 24 fps H.264
+derivatives embedded in BsCode under the Pixabay Content License. Playback is
+muted and limited to the selected scene while Cinematic Mode is visible.
+Leaving the mode or hiding the window pauses the video. Reduce Motion displays
+the local poster frame instead of starting playback.
+
 Complete source URLs and license details are recorded in
 [`assets/scenes/README.md`](../assets/scenes/README.md) and
 [`assets/scenes/LICENSES.md`](../assets/scenes/LICENSES.md). New works must pass
 the documented museum-host allowlist, explicit human-origin, open-rights,
 no-upscale, and duplicate-image checks before they can enter the catalog.
+Pixabay video provenance and derivative records are separate in
+[`assets/scenes/VIDEO_LICENSES.md`](../assets/scenes/VIDEO_LICENSES.md) and
+[`assets/scenes/curated-videos.json`](../assets/scenes/curated-videos.json).
 
 PDF rendering has three independent modes:
 
@@ -797,8 +809,8 @@ BsCode uses several live surfaces that can consume CPU/GPU time:
 - Remote workspace and metadata polling.
 - Static premade tower preview compositing.
 - Transparent/vibrant macOS window compositing.
-- One local 1440p scene image plus a restrained transparent atmosphere canvas
-  when Cinematic Mode is active.
+- One local 1440p scene image plus a restrained transparent atmosphere canvas,
+  or one hardware-decodable 720p video, when Cinematic Mode is active.
 
 Controls that reduce load:
 
