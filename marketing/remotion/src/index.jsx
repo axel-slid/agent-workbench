@@ -3,12 +3,12 @@ import {BsCodeDemo} from "./bscode-demo";
 
 const RemotionRoot = () => (
   <Composition
-    id="BsCodeDemo"
+    id="BsCodeDigitalTwin"
     component={BsCodeDemo}
-    durationInFrames={480}
-    fps={60}
-    width={960}
-    height={540}
+    durationInFrames={810}
+    fps={30}
+    width={1920}
+    height={1080}
   />
 );
 

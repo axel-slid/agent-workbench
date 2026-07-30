@@ -1,5 +1,9 @@
 # BsCode 0.2.3
 
+> Superseded by 0.2.4. The experimental 720p video scenes described below
+> were removed from the current source and release package after visual review.
+> BsCode now ships only its 52 high-resolution museum artworks.
+
 BsCode 0.2.3 adds a small, carefully reviewed animated-landscape collection
 to Cinematic Mode while preserving the quiet fixed-art gallery and its
 performance controls.
@@ -42,7 +46,5 @@ xattr -dr com.apple.quarantine "/Applications/BsCode.app"
   frame-rate, duration, and no-audio verification.
 - Native Apple Silicon package and deep code-sign verification passed.
 
-Complete source credits are in
-[`assets/scenes/VIDEO_LICENSES.md`](../assets/scenes/VIDEO_LICENSES.md), with
-machine-readable provenance in
-[`assets/scenes/curated-videos.json`](../assets/scenes/curated-videos.json).
+The experimental assets and provenance ledger remain recoverable from the
+tagged `v0.2.3` source history but are intentionally absent from later builds.

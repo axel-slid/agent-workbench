@@ -1,6 +1,6 @@
 {
   "name": "agent-workbench",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "productName": "BsCode",
   "description": "Electron workspace for running and organizing Codex and Claude agents.",
   "homepage": "https://github.com/axel-slid/bscode",
@@ -19,7 +19,7 @@
     "icon:mac": "node scripts/generate-app-icon.mjs",
     "art:import": "node scripts/import-curated-artworks.mjs",
     "check": "node --check main.js && node --check preload.js && node --check renderer.js && node --check scripts/import-openleaf-themes.mjs && node --check scripts/import-curated-artworks.mjs && node --check scripts/package-mac.mjs && node --check scripts/package-platform.mjs && node --check scripts/package-current.mjs && node scripts/validate-package-config.mjs",
-    "test": "node tests/run.mjs && node tests/artwork-import.mjs && node tests/scene-videos.mjs",
+    "test": "node tests/run.mjs && node tests/artwork-import.mjs",
     "package:current": "node scripts/package-current.mjs",
     "package:mac": "node scripts/package-mac.mjs",
     "package:windows": "node scripts/package-platform.mjs win32",

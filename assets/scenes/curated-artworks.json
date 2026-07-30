@@ -1061,6 +1061,230 @@
         "#73899d",
         "#d9d2bc"
       ]
+    },
+    {
+      "id": "monet-water-lilies",
+      "label": "Water Lilies",
+      "title": "Water Lilies",
+      "artist": "Claude Monet (French, 1840–1926)",
+      "date": "1906",
+      "detail": "Claude Monet (French, 1840–1926) · 1906",
+      "alt": "Water Lilies, a human-made painting by Claude Monet.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "16568",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/16568",
+      "imageUrl": "https://www.artic.edu/iiif/2/3c27b499-af56-f0d5-93b5-a7f2f1ad5813/full/2560,/0/default.jpg",
+      "asset": "monet-water-lilies.webp",
+      "thumbnail": "thumbnails/monet-water-lilies.webp",
+      "expectedSourceSha256": "62f44c192be0813a5789a53ed3cb053300e0dd8220508eeb516f61dedccb3dd0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#44656b",
+        "#4e728d",
+        "#6c8b93"
+      ]
+    },
+    {
+      "id": "van-gogh-bedroom",
+      "label": "The Bedroom",
+      "title": "The Bedroom",
+      "artist": "Vincent van Gogh (Dutch, 1853–1890)",
+      "date": "1889",
+      "detail": "Vincent van Gogh (Dutch, 1853–1890) · 1889",
+      "alt": "The Bedroom, a human-made painting by Vincent van Gogh.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "28560",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/28560",
+      "imageUrl": "https://www.artic.edu/iiif/2/6644829f-f292-c5c4-a73c-0356a6fdbf0d/full/2560,/0/default.jpg",
+      "asset": "van-gogh-bedroom.webp",
+      "thumbnail": "thumbnails/van-gogh-bedroom.webp",
+      "expectedSourceSha256": "87bc4de5ed02302d2927b0c62f38f73a7344f8f7766bb5c21a068b6dac1500dc",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "light",
+      "colors": [
+        "#7d8c8c",
+        "#968d66",
+        "#9b732c"
+      ]
+    },
+    {
+      "id": "seurat-grande-jatte",
+      "label": "A Sunday on La Grande Jatte — 1884",
+      "title": "A Sunday on La Grande Jatte — 1884",
+      "artist": "Georges Seurat (French, 1859–1891)",
+      "date": "1884–86, border added 1888–89",
+      "detail": "Georges Seurat (French, 1859–1891) · 1884–86",
+      "alt": "A Sunday on La Grande Jatte — 1884, a human-made painting by Georges Seurat.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "27992",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/27992",
+      "imageUrl": "https://www.artic.edu/iiif/2/2d484387-2509-5e8e-2c43-22f9981972eb/full/2560,/0/default.jpg",
+      "asset": "seurat-grande-jatte.webp",
+      "thumbnail": "thumbnails/seurat-grande-jatte.webp",
+      "expectedSourceSha256": "46b9ee7d5400dd23841cb08870ea072767d55d648344d00b886412eff9230eef",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "light",
+      "colors": [
+        "#3e4645",
+        "#5c605c",
+        "#948e7a"
+      ]
+    },
+    {
+      "id": "hokusai-great-wave",
+      "label": "The Great Wave",
+      "title": "Under the Wave off Kanagawa, also known as The Great Wave",
+      "artist": "Katsushika Hokusai 葛飾 北斎 (Japanese, 1760–1849)",
+      "date": "1830/33",
+      "detail": "Katsushika Hokusai 葛飾 北斎 · 1830/33",
+      "alt": "The Great Wave, a human-made print by Katsushika Hokusai.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "24645",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/24645",
+      "imageUrl": "https://www.artic.edu/iiif/2/b3974542-b9b4-7568-fc4b-966738f61d78/full/2560,/0/default.jpg",
+      "asset": "hokusai-great-wave.webp",
+      "thumbnail": "thumbnails/hokusai-great-wave.webp",
+      "expectedSourceSha256": "4d8a4c1fa7f050b2fdbe4b837d92fd6f4744272bb5bab0a4af14743ca1da8eec",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#38495c",
+        "#728187",
+        "#c9bea6"
+      ]
+    },
+    {
+      "id": "monet-stacks-wheat",
+      "label": "Stacks of Wheat (End of Summer)",
+      "title": "Stacks of Wheat (End of Summer)",
+      "artist": "Claude Monet (French, 1840–1926)",
+      "date": "1890–91",
+      "detail": "Claude Monet (French, 1840–1926) · 1890–91",
+      "alt": "Stacks of Wheat (End of Summer), a human-made painting by Claude Monet.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "64818",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/64818",
+      "imageUrl": "https://www.artic.edu/iiif/2/a38e2828-ec6f-ece1-a30f-70243449197b/full/2560,/0/default.jpg",
+      "asset": "monet-stacks-wheat.webp",
+      "thumbnail": "thumbnails/monet-stacks-wheat.webp",
+      "expectedSourceSha256": "5d9a08c1299cc52d0faaac1801221093a977d5141d60cd2c6271b649cc9a0f64",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "light",
+      "colors": [
+        "#6c6960",
+        "#888075",
+        "#aaa59c"
+      ]
+    },
+    {
+      "id": "monet-gare-saint-lazare",
+      "label": "Arrival of the Normandy Train, Gare Saint-Lazare",
+      "title": "Arrival of the Normandy Train, Gare Saint-Lazare",
+      "artist": "Claude Monet (French, 1840–1926)",
+      "date": "1877",
+      "detail": "Claude Monet (French, 1840–1926) · 1877",
+      "alt": "Arrival of the Normandy Train, Gare Saint-Lazare, a human-made painting by Claude Monet.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "16571",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/16571",
+      "imageUrl": "https://www.artic.edu/iiif/2/0f1cc0e0-e42e-be16-3f71-2022da38cb93/full/2560,/0/default.jpg",
+      "asset": "monet-gare-saint-lazare.webp",
+      "thumbnail": "thumbnails/monet-gare-saint-lazare.webp",
+      "expectedSourceSha256": "9999d781a7601ad0aa7308f0d90f5f88b735d36e2409fdb109105772704fc0ec",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "mist",
+      "colors": [
+        "#324146",
+        "#566662",
+        "#8e9a9d"
+      ]
+    },
+    {
+      "id": "van-gogh-poets-garden",
+      "label": "The Poet's Garden",
+      "title": "The Poet's Garden",
+      "artist": "Vincent van Gogh (Dutch, 1853–1890)",
+      "date": "1888",
+      "detail": "Vincent van Gogh (Dutch, 1853–1890) · 1888",
+      "alt": "The Poet's Garden, a human-made painting by Vincent van Gogh.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "14586",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/14586",
+      "imageUrl": "https://www.artic.edu/iiif/2/d4bc1723-7cbc-d36d-a9cb-f84553f2a6f6/full/2560,/0/default.jpg",
+      "asset": "van-gogh-poets-garden.webp",
+      "thumbnail": "thumbnails/van-gogh-poets-garden.webp",
+      "expectedSourceSha256": "3768268a9bc6c50b119203005b44e33aa073271d3fcd92ab560a7c752db35e9d",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "light",
+      "colors": [
+        "#354227",
+        "#545c26",
+        "#989742"
+      ]
+    },
+    {
+      "id": "whistler-nocturne",
+      "label": "Nocturne: Blue and Gold—Southampton Water",
+      "title": "Nocturne: Blue and Gold—Southampton Water",
+      "artist": "James McNeill Whistler (American, 1834–1903)",
+      "date": "1872",
+      "detail": "James McNeill Whistler (American, 1834–1903) · 1872",
+      "alt": "Nocturne: Blue and Gold—Southampton Water, a human-made painting by James McNeill Whistler.",
+      "humanMade": true,
+      "institution": "artic",
+      "objectId": "56905",
+      "accessionNumber": "",
+      "sourcePage": "https://www.artic.edu/artworks/56905",
+      "imageUrl": "https://www.artic.edu/iiif/2/50034c7f-ce51-00f1-430e-a6f7efc233fc/full/2560,/0/default.jpg",
+      "asset": "whistler-nocturne.webp",
+      "thumbnail": "thumbnails/whistler-nocturne.webp",
+      "expectedSourceSha256": "e0105fe9808dc53f2c8aa35aa916a6dfdee3757a8248cf289c5651163a838d22",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "motion": "water",
+      "colors": [
+        "#47493d",
+        "#5b5e54",
+        "#7f806e"
+      ]
     }
   ]
 }

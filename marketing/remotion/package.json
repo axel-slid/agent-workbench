@@ -3,7 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "render": "remotion render src/index.jsx BsCodeDemo ../../docs/bscode-demo.gif --codec=gif --every-nth-frame=2 --scale=0.65 --overwrite"
+    "check": "remotion compositions src/index.jsx",
+    "poster": "remotion still src/index.jsx BsCodeDigitalTwin ../../../personal-website/assets/bscode/motion/bscode-digital-twin-poster.jpg --frame=86 --image-format=jpeg --jpeg-quality=92 --overwrite",
+    "render": "node scripts/render-web.mjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.501",
